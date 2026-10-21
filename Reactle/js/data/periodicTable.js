@@ -1,0 +1,23 @@
+export const PERIODIC_TABLE = {
+    H:  { name: 'Hydrogen', number: 1, mass: '1.008', category: 'Nonmetal' },
+    He: { name: 'Helium', number: 2, mass: '4.0026', category: 'Noble Gas' },
+    C:  { name: 'Carbon', number: 6, mass: '12.011', category: 'Nonmetal' },
+    N:  { name: 'Nitrogen', number: 7, mass: '14.007', category: 'Nonmetal' },
+    O:  { name: 'Oxygen', number: 8, mass: '15.999', category: 'Nonmetal' },
+    Na: { name: 'Sodium', number: 11, mass: '22.990', category: 'Alkali Metal' },
+    Mg: { name: 'Magnesium', number: 12, mass: '24.305', category: 'Alkaline Earth' },
+    Al: { name: 'Aluminum', number: 13, mass: '26.982', category: 'Post-Transition Metal' },
+    S:  { name: 'Sulfur', number: 16, mass: '32.06', category: 'Nonmetal' },
+    Cl: { name: 'Chlorine', number: 17, mass: '35.45', category: 'Halogen' },
+    K:  { name: 'Potassium', number: 19, mass: '39.098', category: 'Alkali Metal' },
+    Ca: { name: 'Calcium', number: 20, mass: '40.078', category: 'Alkaline Earth' },
+    Fe: { name: 'Iron', number: 26, mass: '55.845', category: 'Transition Metal' },
+    Cu: { name: 'Copper', number: 29, mass: '63.546', category: 'Transition Metal' },
+    Zn: { name: 'Zinc', number: 30, mass: '65.38', category: 'Transition Metal' },
+    Br: { name: 'Bromine', number: 35, mass: '79.904', category: 'Halogen' },
+    Ag: { name: 'Silver', number: 47, mass: '107.87', category: 'Transition Metal' },
+    I:  { name: 'Iodine', number: 53, mass: '126.90', category: 'Halogen' },
+    Ba: { name: 'Barium', number: 56, mass: '137.33', category: 'Alkaline Earth' },
+    Hg: { name: 'Mercury', number: 80, mass: '200.59', category: 'Transition Metal' },
+    Pb: { name: 'Lead', number: 82, mass: '207.2', category: 'Post-Transition Metal' }
+};
