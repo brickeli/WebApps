@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-y-scroll">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reactle - The Interactive Chemical Equation Balancer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        chemistry: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.8);
+        }
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+        }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Pulse glow animation */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(20, 184, 166, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(20, 184, 166, 0.8); }
+        }
+        .glow-active {
+            animation: pulseGlow 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col selection:bg-chemistry-500 selection:text-white">
+
+    <!-- Navigation Bar -->
+    <header class="glass-panel sticky top-0 z-30 shadow-sm transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-chemistry-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-chemistry-500/20">
+                    <i class="fa-solid font-bold text-xl">⚛️</i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-chemistry-600 to-teal-500 bg-clip-text text-transparent dark:from-chemistry-500 dark:to-teal-300">
+                        Reactle
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Chemical Equation Balancer</p>
+                </div>
+            </div>
+
+            <!-- Desktop Mode Selector Tabs (Visible above 768px) -->
+            <nav class="hidden md:flex items-center bg-slate-200/60 dark:bg-slate-800/60 p-1 rounded-xl text-sm font-medium">
+                <button id="nav-practice" onclick="switchMode('practice')" class="px-4 py-1.5 rounded-lg transition-all text-chemistry-700 dark:text-chemistry-300 bg-white dark:bg-slate-700 shadow-sm">
+                    <i class="fa-solid fa-flask mr-1.5"></i>Practice
+                </button>
+                <button id="nav-daily" onclick="switchMode('daily')" class="px-4 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-calendar-day mr-1.5"></i>Daily Challenge
+                </button>
+                <button id="nav-solver" onclick="switchMode('solver')" class="px-4 py-1.5 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-calculator mr-1.5"></i>Custom Solver
+                </button>
+            </nav>
+
+            <!-- Tablet & Mobile Mode Selector Dropdown (Visible on 768px and below) -->
+            <div class="md:hidden flex-1 max-w-[180px] sm:max-w-[220px]">
+                <label for="mode-dropdown" class="sr-only">Select Mode</label>
+                <div class="relative group">
+                    <select id="mode-dropdown" onchange="switchMode(this.value)" class="w-full bg-white/80 dark:bg-slate-800/80 border border-chemistry-500/30 hover:border-chemistry-500/60 text-slate-800 dark:text-slate-100 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-chemistry-500/40 focus:border-chemistry-500 outline-none appearance-none pr-8 cursor-pointer shadow-sm transition-all duration-200">
+                        <option value="practice" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-semibold py-1">🧪 Practice Mode</option>
+                        <option value="daily" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-semibold py-1">📅 Daily Challenge</option>
+                        <option value="solver" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-semibold py-1">🧮 Custom Solver</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-chemistry-500 dark:text-chemistry-400 group-hover:scale-110 transition-transform duration-200">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utility Controls & Settings Menu -->
+            <div class="flex items-center gap-2">
+                <!-- Streak Badge -->
+                <div id="streak-badge" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold text-xs sm:text-sm">
+                    <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                    <span id="streak-count">0</span>
+                </div>
+
+                <!-- Utilities Dropdown Menu -->
+                <div class="relative">
+                    <button id="nav-menu-btn" onclick="toggleNavMenu()" class="p-2.5 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 transition flex items-center gap-1.5" title="App Settings & Info">
+                        <i class="fa-solid fa-sliders text-base"></i>
+                        <i id="nav-menu-chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                    </button>
+
+                    <!-- Dropdown Panel -->
+                    <div id="nav-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 glass-panel rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in">
+                        <button onclick="toggleSound()" class="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="sound-icon" class="fa-solid fa-volume-high w-4 text-chemistry-500"></i> Sound FX
+                            </span>
+                            <span id="sound-status-label" class="text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400">ON</span>
+                        </button>
+
+                        <button onclick="toggleTheme()" class="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="theme-icon" class="fa-solid fa-moon w-4 text-chemistry-500"></i> Theme Mode
+                            </span>
+                            <span id="theme-status-label" class="text-xs font-mono font-bold text-slate-400">DARK</span>
+                        </button>
+
+                        <!-- NEW TOGGLE: Matrix Status Chip -->
+                        <button onclick="toggleMatrixBadgeSetting()" class="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="matrix-badge-icon" class="fa-solid fa-scale-balanced w-4 text-slate-400"></i> Matrix Status Chip
+                            </span>
+                            <span id="matrix-badge-status-label" class="text-xs font-mono font-bold text-rose-500">OFF</span>
+                        </button>
+
+                        <div class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
+
+                        <button onclick="toggleModal('help-modal'); toggleNavMenu(false);" class="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center gap-2.5 transition">
+                            <i class="fa-solid fa-circle-question w-4 text-chemistry-500"></i> How to Play
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+        <!-- PRACTICE & DAILY GAME VIEW -->
+        <div id="game-view" class="space-y-6">
+
+            <!-- Controls & Filters Bar -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm w-full">
+
+                <!-- TABLET / MOBILE ACCORDION FILTER CONTAINER (< 768px) -->
+                <div class="md:hidden w-full">
+                    <button id="filter-accordion-toggle" onclick="toggleFilterAccordion()" class="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-chemistry-500"></i>
+                            <span>Filter Reactions</span>
+                            <span id="filter-active-summary" class="text-[10px] font-normal text-slate-400 ml-1">(All Categories)</span>
+                        </div>
+                        <i id="filter-accordion-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+                    </button>
+
+                    <div id="filter-accordion-wrapper" class="max-h-0 overflow-hidden transition-all duration-300 opacity-0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">REACTION TYPE</label>
+                                <select id="category-filter-mobile" onchange="onFilterChange(this.value, 'cat')" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-chemistry-500 outline-none">
+                                    <option value="ALL">All Categories</option>
+                                    <option value="Synthesis">Synthesis</option>
+                                    <option value="Decomposition">Decomposition</option>
+                                    <option value="Combustion">Combustion</option>
+                                    <option value="Single Replacement">Single Replacement</option>
+                                    <option value="Double Replacement">Double Replacement</option>
+                                    <option value="Acid-Base">Acid-Base / Neutralization</option>
+                                    <option value="Biological">Biological</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1">DIFFICULTY</label>
+                                <select id="difficulty-filter-mobile" onchange="onFilterChange(this.value, 'diff')" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-chemistry-500 outline-none">
+                                    <option value="ALL">Any Difficulty</option>
+                                    <option value="Easy">Easy (2-3 terms)</option>
+                                    <option value="Medium">Medium (3-4 terms)</option>
+                                    <option value="Hard">Hard (Complex/High Coefficients)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESKTOP INLINE FILTERS (>= 768px) -->
+                <div class="hidden md:grid grid-cols-2 gap-3 w-auto">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">REACTION TYPE</label>
+                        <select id="category-filter-desktop" onchange="onFilterChange(this.value, 'cat')" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-chemistry-500 outline-none">
+                            <option value="ALL">All Categories</option>
+                            <option value="Synthesis">Synthesis</option>
+                            <option value="Decomposition">Decomposition</option>
+                            <option value="Combustion">Combustion</option>
+                            <option value="Single Replacement">Single Replacement</option>
+                            <option value="Double Replacement">Double Replacement</option>
+                            <option value="Acid-Base">Acid-Base / Neutralization</option>
+                            <option value="Biological">Biological</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">DIFFICULTY</label>
+                        <select id="difficulty-filter-desktop" onchange="onFilterChange(this.value, 'diff')" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-chemistry-500 outline-none">
+                            <option value="ALL">Any Difficulty</option>
+                            <option value="Easy">Easy (2-3 terms)</option>
+                            <option value="Medium">Medium (3-4 terms)</option>
+                            <option value="Hard">Hard (Complex/High Coefficients)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Scorecard / Stats -->
+                <div class="flex items-center justify-around md:justify-end gap-3 sm:gap-4 bg-slate-100 dark:bg-slate-800/80 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 w-full md:w-auto">
+                    <div class="text-center">
+                        <span class="block text-xs text-slate-400 font-semibold">SOLVED</span>
+                        <span id="score-correct" class="text-lg font-bold text-emerald-500">0</span>
+                    </div>
+                    <div class="w-px h-8 bg-slate-300 dark:bg-slate-700"></div>
+                    <div class="text-center">
+                        <span class="block text-xs text-slate-400 font-semibold">ATTEMPTS</span>
+                        <span id="score-attempts" class="text-lg font-bold text-slate-700 dark:text-slate-300">0</span>
+                    </div>
+                    <div class="w-px h-8 bg-slate-300 dark:bg-slate-700"></div>
+                    <div class="text-center">
+                        <span class="block text-xs text-slate-400 font-semibold">ACCURACY</span>
+                        <span id="score-accuracy" class="text-lg font-bold text-chemistry-500">0%</span>
+                    </div>
+                    <button onclick="resetScoreboard()" class="ml-2 text-slate-400 hover:text-rose-500 transition p-1" title="Reset Score Stats">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Primary Equation Card -->
+            <div id="main-card" class="glass-panel p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300">
+
+                <!-- Daily Header / Practice Tag -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2">
+                        <span id="badge-category" class="px-3 py-1 rounded-full text-xs font-semibold bg-chemistry-500/10 text-chemistry-600 dark:text-chemistry-400 border border-chemistry-500/20">
+                            Synthesis
+                        </span>
+                        <span id="badge-difficulty" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            Easy
+                        </span>
+                    </div>
+                    <span id="daily-header-tag" class="invisible text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i class="fa-solid fa-calendar text-chemistry-500 mr-1"></i> Today's Daily Reaction
+                    </span>
+                </div>
+
+                <!-- Equation Area -->
+                <div id="equation-container" class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 my-8 min-h-[100px]">
+                    <!-- Dynamic Chemical Elements Injected Here -->
+                </div>
+
+                <!-- Real-time Atom Balance Table Visualizer (Accordion) -->
+                <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                    <button id="atom-matrix-toggle" onclick="toggleAtomMatrixAccordion()" class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 transition-all duration-200 cursor-pointer text-left group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-chemistry-500/10 text-chemistry-600 dark:text-chemistry-400 flex items-center justify-center font-bold text-sm">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                    Real-time Atom Count Matrix
+                                </h3>
+                                <p class="text-xs text-slate-400 font-normal">Click to toggle atom balancing helper</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <span id="balance-status" class="hidden text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                Unbalanced
+                            </span>
+                            <i id="atom-matrix-chevron" class="fa-solid fa-chevron-down text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-300"></i>
+                        </div>
+                    </button>
+
+                    <div id="atom-matrix-wrapper" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0">
+                        <div class="pt-4">
+                            <div id="atom-count-matrix" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                <!-- Atom count cards dynamically injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hint & Feedback Banner -->
+                <div id="feedback-banner" class="hidden mt-6 p-4 rounded-xl text-center font-medium transition-all duration-300"></div>
+
+                <!-- Interactive Action Controls -->
+                <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+                    <button id="check-btn" onclick="checkAnswer()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-chemistry-600 to-teal-500 hover:from-chemistry-700 hover:to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-chemistry-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Check Balance
+                    </button>
+
+                    <button id="share-btn" onclick="shareDailyResult()" class="hidden w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i> Share Score
+                    </button>
+
+                    <button id="next-btn" onclick="loadNextEquation()" class="hidden w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        Next Equation <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <button id="hint-btn" onclick="triggerHint()" class="px-4 py-3.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-xl transition flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i> <span id="hint-btn-text">Hint</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Post-Solve Reaction Explanation Card -->
+            <div id="insight-card" class="hidden glass-panel p-6 rounded-2xl border-l-4 border-chemistry-500 shadow-md space-y-3 animate-fade-in">
+                <div class="flex items-center gap-2 text-chemistry-600 dark:text-chemistry-400 font-bold text-lg">
+                    <i class="fa-solid fa-flask-vial"></i> Chemical Insight & Explanation
+                </div>
+                <p id="insight-text" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+                <div class="text-xs text-slate-400 font-mono pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between">
+                    <span id="insight-formula"></span>
+                    <span>Conservation of Mass Preserved</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CUSTOM SOLVER VIEW -->
+        <div id="solver-view" class="hidden space-y-6">
+            <div class="glass-panel p-6 sm:p-10 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
+                        <i class="fa-solid fa-wand-magic-sparkles text-chemistry-500"></i> Automatic Equation Balancer & Quiz Generator
+                    </h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                        Type any chemical reaction using standard chemical symbols. Use <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-xs">+</code> between compounds and <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-xs">-&gt;</code> or <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-xs">=</code> for reaction direction.
+                    </p>
+                </div>
+
+                <!-- Input Box -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input id="custom-input" type="text" placeholder="e.g., C6H12O6 + O2 -> CO2 + H2O" class="flex-grow px-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-base focus:ring-2 focus:ring-chemistry-500 outline-none">
+                    <button onclick="solveCustomEquation()" class="px-6 py-3 bg-chemistry-600 hover:bg-chemistry-700 text-white font-semibold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Balance Equation
+                    </button>
+                </div>
+
+                <!-- Example Pills -->
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-slate-400 font-semibold">Try examples:</span>
+                    <button onclick="setCustomExample('Fe + O2 -> Fe2O3')" class="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-chemistry-500 hover:text-white rounded-lg transition font-mono">Fe + O2 -> Fe2O3</button>
+                    <button onclick="setCustomExample('KClO3 -> KCl + O2')" class="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-chemistry-500 hover:text-white rounded-lg transition font-mono">KClO3 -> KCl + O2</button>
+                    <button onclick="setCustomExample('Al + HCl -> AlCl3 + H2')" class="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-chemistry-500 hover:text-white rounded-lg transition font-mono">Al + HCl -> AlCl3 + H2</button>
+                </div>
+
+                <!-- Output Results Panel -->
+                <div id="solver-result" class="hidden p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Balanced Result</h3>
+                    <div id="solver-output-eq" class="text-xl sm:text-2xl font-bold font-mono text-chemistry-600 dark:text-chemistry-400"></div>
+                    <div id="solver-coefficients-breakdown" class="text-sm text-slate-600 dark:text-slate-300"></div>
+                    <div class="pt-2">
+                        <button onclick="playCustomAsQuiz()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow transition flex items-center gap-2">
+                            <i class="fa-solid fa-gamepad"></i> Play This Reaction as a Quiz!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- INTERACTIVE ELEMENT TOOLTIP CARD -->
+        <div id="element-tooltip" class="hidden fixed z-50 pointer-events-none glass-panel px-3 py-2 rounded-xl shadow-xl border border-chemistry-500/30 text-xs transition-opacity duration-150">
+            <div class="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
+                <span id="tooltip-symbol" class="w-6 h-6 rounded bg-chemistry-500/20 text-chemistry-600 dark:text-chemistry-400 font-mono flex items-center justify-center"></span>
+                <span id="tooltip-name"></span>
+                <span id="tooltip-number" class="text-[10px] text-slate-400 font-mono ml-auto"></span>
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex justify-between gap-3 font-mono">
+                <span>Mass: <strong id="tooltip-mass" class="text-slate-700 dark:text-slate-200"></strong></span>
+                <span id="tooltip-category" class="text-chemistry-600 dark:text-chemistry-400 font-sans font-semibold"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400">
+        <p>Reactle &copy; 2026 - Master Chemical Equation Balancing through Practice & Interactive Visuals.</p>
+    </footer>
+
+    <!-- HELP / HOW TO PLAY MODAL -->
+    <div id="help-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full p-6 sm:p-8 rounded-3xl shadow-2xl space-y-5 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold flex items-center gap-2 text-chemistry-600 dark:text-chemistry-400">
+                    <i class="fa-solid fa-graduation-cap"></i> How to Play Reactle
+                </h3>
+                <button onclick="toggleModal('help-modal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p><strong>Goal:</strong> Balance the chemical equation so that the number of atoms of each element is equal on both sides of the arrow.</p>
+                <ul class="list-disc pl-5 space-y-1.5">
+                    <li>Type the lowest whole number coefficients into the input boxes.</li>
+                    <li>Leaving an input <strong>blank defaults to 1</strong>.</li>
+                    <li>Watch the <strong>Real-time Atom Matrix</strong> updates as you type to see if reactants match products!</li>
+                    <li>Need assistance? Click <span class="text-amber-500 font-semibold"><i class="fa-solid fa-lightbulb"></i> Hint</span> to reveal steps or coefficients.</li>
+                </ul>
+            </div>
+
+            <button onclick="toggleModal('help-modal')" class="w-full py-2.5 bg-chemistry-600 hover:bg-chemistry-700 text-white font-semibold rounded-xl transition">
+                Got it, Let's Play!
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        /* ==========================================================================
+           1. DATA STRUCTURES & DATABASE OF CHEMICAL EQUATIONS
+           ========================================================================== */
+         const EQUATION_DATABASE = [
+           // --- SYNTHESIS REACTIONS ---
+           {
+             id: 'water-synthesis',
+             category: 'Synthesis',
+             difficulty: 'Easy',
+             reactants: [{ formula: "H<sub>2</sub>", raw: "H2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
+             products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             explanation: "Hydrogen gas combines explosively with oxygen gas to form liquid water in a classic synthesis reaction."
+           },
+           {
+             id: 'rust-formation',
+             category: 'Synthesis',
+             difficulty: 'Medium',
+             reactants: [{ formula: "Fe", raw: "Fe", coeff: 4 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 3 }],
+             products: [{ formula: "Fe<sub>2</sub>O<sub>3</sub>", raw: "Fe2O3", coeff: 2 }],
+             explanation: "Iron oxidizes in the presence of atmospheric oxygen gas to form iron(III) oxide, commonly known as rust."
+           },
+           {
+             id: 'ammonia-synthesis',
+             category: 'Synthesis',
+             difficulty: 'Medium',
+             reactants: [{ formula: "N<sub>2</sub>", raw: "N2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 3 }],
+             products: [{ formula: "NH<sub>3</sub>", raw: "NH3", coeff: 2 }],
+             explanation: "The Haber process combines nitrogen and hydrogen gas under pressure and high heat to synthesize industrial ammonia."
+           },
+
+           // --- DECOMPOSITION REACTIONS ---
+           {
+             id: 'water-electrolysis',
+             category: 'Decomposition',
+             difficulty: 'Easy',
+             reactants: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             products: [{ formula: "H<sub>2</sub>", raw: "H2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
+             explanation: "Electrical current splits liquid water into diatomic hydrogen and oxygen gases."
+           },
+           {
+             id: 'hydrogen-peroxide-decomposition',
+             category: 'Decomposition',
+             difficulty: 'Easy',
+             reactants: [{ formula: "H<sub>2</sub>O<sub>2</sub>", raw: "H2O2", coeff: 2 }],
+             products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
+             explanation: "Hydrogen peroxide decomposes into water and oxygen gas, accelerated by light or catalysts like manganese dioxide."
+           },
+           {
+             id: 'calcium-carbonate-decomposition',
+             category: 'Decomposition',
+             difficulty: 'Medium',
+             reactants: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }],
+             products: [{ formula: "CaO", raw: "CaO", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
+             explanation: "Thermal decomposition of limestone (calcium carbonate) yields quicklime (calcium oxide) and carbon dioxide gas."
+           },
+           {
+             id: 'potassium-chlorate-decomposition',
+             category: 'Decomposition',
+             difficulty: 'Medium',
+             reactants: [{ formula: "KClO<sub>3</sub>", raw: "KClO3", coeff: 2 }],
+             products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 3 }],
+             explanation: "Heating potassium chlorate produces solid potassium chloride and releases dense streams of oxygen gas."
+           },
+           {
+             id: 'carbonic-acid-decomposition',
+             category: 'Decomposition',
+             difficulty: 'Easy',
+             reactants: [{ formula: "H<sub>2</sub>CO<sub>3</sub>", raw: "H2CO3", coeff: 1 }],
+             products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
+             explanation: "Unstable carbonic acid in carbonated beverages spontaneously breaks down into water and escaping carbon dioxide gas."
+           },
+           {
+             id: 'mercury-oxide-decomposition',
+             category: 'Decomposition',
+             difficulty: 'Hard',
+             reactants: [{ formula: "HgO", raw: "HgO", coeff: 2 }],
+             products: [{ formula: "Hg", raw: "Hg", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
+             explanation: "Historically significant reaction where heating red mercury(II) oxide releases silvery liquid mercury and oxygen gas."
+           },
+
+           // --- COMBUSTION REACTIONS ---
+           {
+             id: 'methane-combustion',
+             category: 'Combustion',
+             difficulty: 'Easy',
+             reactants: [{ formula: "CH<sub>4</sub>", raw: "CH4", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 2 }],
+             products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             explanation: "Complete combustion of natural gas (methane) in oxygen yields carbon dioxide, water vapor, and thermal energy."
+           },
+           {
+             id: 'propane-combustion',
+             category: 'Combustion',
+             difficulty: 'Hard',
+             reactants: [{ formula: "C<sub>3</sub>H<sub>8</sub>", raw: "C3H8", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 5 }],
+             products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 3 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 4 }],
+             explanation: "Propane fuel combusts completely in oxygen, releasing carbon dioxide gas, water vapor, and heat."
+           },
+
+           // --- SINGLE REPLACEMENT REACTIONS ---
+           {
+             id: 'thermite-reaction',
+             category: 'Single Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "Al", raw: "Al", coeff: 2 }, { formula: "Fe<sub>2</sub>O<sub>3</sub>", raw: "Fe2O3", coeff: 1 }],
+             products: [{ formula: "Al<sub>2</sub>O<sub>3</sub>", raw: "Al2O3", coeff: 1 }, { formula: "Fe", raw: "Fe", coeff: 2 }],
+             explanation: "The thermite reaction generates molten iron used to weld railway tracks due to extreme exothermic energy."
+           },
+           {
+             id: 'zinc-hydrochloric-acid',
+             category: 'Single Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "Zn", raw: "Zn", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
+             products: [{ formula: "ZnCl<sub>2</sub>", raw: "ZnCl2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
+             explanation: "Zinc metal reacts with hydrochloric acid, displacing hydrogen gas and forming aqueous zinc chloride."
+           },
+           {
+             id: 'iron-copper-sulfate-displacement',
+             category: 'Single Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "Fe", raw: "Fe", coeff: 1 }, { formula: "CuSO<sub>4</sub>", raw: "CuSO4", coeff: 1 }],
+             products: [{ formula: "FeSO<sub>4</sub>", raw: "FeSO4", coeff: 1 }, { formula: "Cu", raw: "Cu", coeff: 1 }],
+             explanation: "Iron nail immersed in blue copper(II) sulfate solution displaces reddish copper metal onto the iron surface."
+           },
+           {
+             id: 'copper-silver-nitrate-displacement',
+             category: 'Single Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "Cu", raw: "Cu", coeff: 1 }, { formula: "AgNO<sub>3</sub>", raw: "AgNO3", coeff: 2 }],
+             products: [{ formula: "Cu(NO<sub>3</sub>)<sub>2</sub>", raw: "Cu(NO3)2", coeff: 1 }, { formula: "Ag", raw: "Ag", coeff: 2 }],
+             explanation: "Copper wire in silver nitrate solution displaces elemental silver crystals while turning the solution blue."
+           },
+           {
+             id: 'chlorine-potassium-bromide-replacement',
+             category: 'Single Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "Cl<sub>2</sub>", raw: "Cl2", coeff: 1 }, { formula: "KBr", raw: "KBr", coeff: 2 }],
+             products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "Br<sub>2</sub>", raw: "Br2", coeff: 1 }],
+             explanation: "More reactive chlorine gas displaces bromine from potassium bromide solution, liberating orange bromine liquid."
+           },
+           {
+             id: 'magnesium-hydrochloric-acid',
+             category: 'Single Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "Mg", raw: "Mg", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
+             products: [{ formula: "MgCl<sub>2</sub>", raw: "MgCl2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
+             explanation: "Magnesium ribbon reacts vigorously in hydrochloric acid, producing magnesium chloride salt and bubbling hydrogen gas."
+           },
+           {
+             id: 'sodium-water-reaction',
+             category: 'Single Replacement',
+             difficulty: 'Hard',
+             reactants: [{ formula: "Na", raw: "Na", coeff: 2 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             products: [{ formula: "NaOH", raw: "NaOH", coeff: 2 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
+             explanation: "Highly reactive sodium metal displaces hydrogen from water, forming aqueous sodium hydroxide base and flammable hydrogen gas."
+           },
+           {
+             id: 'aluminum-copper-chloride',
+             category: 'Single Replacement',
+             difficulty: 'Hard',
+             reactants: [{ formula: "Al", raw: "Al", coeff: 2 }, { formula: "CuCl<sub>2</sub>", raw: "CuCl2", coeff: 3 }],
+             products: [{ formula: "AlCl<sub>3</sub>", raw: "AlCl3", coeff: 2 }, { formula: "Cu", raw: "Cu", coeff: 3 }],
+             explanation: "Aluminum foil reacts exothermically in copper(II) chloride solution, displacing copper metal while forming aluminum chloride."
+           },
+
+           // --- DOUBLE REPLACEMENT REACTIONS ---
+           {
+             id: 'silver-chloride-precipitation',
+             category: 'Double Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "AgNO<sub>3</sub>", raw: "AgNO3", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 1 }],
+             products: [{ formula: "AgCl", raw: "AgCl", coeff: 1 }, { formula: "NaNO<sub>3</sub>", raw: "NaNO3", coeff: 1 }],
+             explanation: "Silver nitrate and sodium chloride exchange ions to form an insoluble white precipitate of silver chloride."
+           },
+           {
+             id: 'lead-iodide-precipitation',
+             category: 'Double Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "Pb(NO<sub>3</sub>)<sub>2</sub>", raw: "Pb(NO3)2", coeff: 1 }, { formula: "KI", raw: "KI", coeff: 2 }],
+             products: [{ formula: "PbI<sub>2</sub>", raw: "PbI2", coeff: 1 }, { formula: "KNO<sub>3</sub>", raw: "KNO3", coeff: 2 }],
+             explanation: "Mixing clear lead(II) nitrate and potassium iodide solutions produces a vibrant yellow lead(II) iodide precipitate."
+           },
+           {
+             id: 'barium-sulfate-precipitation',
+             category: 'Double Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "BaCl<sub>2</sub>", raw: "BaCl2", coeff: 1 }, { formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }],
+             products: [{ formula: "BaSO<sub>4</sub>", raw: "BaSO4", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 2 }],
+             explanation: "Barium chloride reacts with sodium sulfate to yield a dense white precipitate of barium sulfate."
+           },
+           {
+             id: 'copper-hydroxide-precipitation',
+             category: 'Double Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "CuSO<sub>4</sub>", raw: "CuSO4", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 2 }],
+             products: [{ formula: "Cu(OH)<sub>2</sub>", raw: "Cu(OH)2", coeff: 1 }, { formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }],
+             explanation: "Copper(II) sulfate and sodium hydroxide react in solution to form a gelatinous light blue copper(II) hydroxide precipitate."
+           },
+           {
+             id: 'calcium-carbonate-precipitation',
+             category: 'Double Replacement',
+             difficulty: 'Easy',
+             reactants: [{ formula: "CaCl<sub>2</sub>", raw: "CaCl2", coeff: 1 }, { formula: "Na<sub>2</sub>CO<sub>3</sub>", raw: "Na2CO3", coeff: 1 }],
+             products: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 2 }],
+             explanation: "Calcium chloride and sodium carbonate swap partner ions to yield insoluble calcium carbonate (chalk)."
+           },
+           {
+             id: 'hydrogen-sulfide-gas-evolution',
+             category: 'Double Replacement',
+             difficulty: 'Medium',
+             reactants: [{ formula: "K<sub>2</sub>S", raw: "K2S", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
+             products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "H<sub>2</sub>S", raw: "H2S", coeff: 1 }],
+             explanation: "Potassium sulfide reacts with hydrochloric acid, giving off toxic hydrogen sulfide gas with a distinct rotten egg odor."
+           },
+
+           // --- ACID-BASE REACTIONS ---
+           {
+             id: 'hydrochloric-acid-sodium-hydroxide',
+             category: 'Acid-Base',
+             difficulty: 'Easy',
+             reactants: [{ formula: "HCl", raw: "HCl", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 1 }],
+             products: [{ formula: "NaCl", raw: "NaCl", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }],
+             explanation: "A classic neutralization reaction where a strong acid and a strong base form neutral table salt and water."
+           },
+           {
+             id: 'sulfuric-acid-sodium-hydroxide',
+             category: 'Acid-Base',
+             difficulty: 'Medium',
+             reactants: [{ formula: "H<sub>2</sub>SO<sub>4</sub>", raw: "H2SO4", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 2 }],
+             products: [{ formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             explanation: "Diprotic sulfuric acid requires two sodium hydroxide molecules to completely neutralize and form sodium sulfate and water."
+           },
+           {
+             id: 'nitric-acid-calcium-hydroxide',
+             category: 'Acid-Base',
+             difficulty: 'Medium',
+             reactants: [{ formula: "HNO<sub>3</sub>", raw: "HNO3", coeff: 2 }, { formula: "Ca(OH)<sub>2</sub>", raw: "Ca(OH)2", coeff: 1 }],
+             products: [{ formula: "Ca(NO<sub>3</sub>)<sub>2</sub>", raw: "Ca(NO3)2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
+             explanation: "Two units of nitric acid react with calcium hydroxide to produce calcium nitrate salt and water."
+           },
+           {
+             id: 'baking-soda-acid-neutralization',
+             category: 'Acid-Base',
+             difficulty: 'Hard',
+             reactants: [{ formula: "NaHCO<sub>3</sub>", raw: "NaHCO3", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 1 }],
+             products: [{ formula: "NaCl", raw: "NaCl", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
+             explanation: "Sodium bicarbonate neutralizes hydrochloric acid to produce sodium chloride, water, and carbon dioxide gas bubbles."
+           },
+           {
+             id: 'calcium-carbonate-acid-neutralization',
+             category: 'Acid-Base',
+             difficulty: 'Hard',
+             reactants: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
+             products: [{ formula: "CaCl<sub>2</sub>", raw: "CaCl2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
+             explanation: "Antacid digestion action where hydrochloric acid dissolves calcium carbonate, forming calcium chloride, water, and carbon dioxide gas."
+           },
+           {
+             id: 'acetic-acid-sodium-hydroxide',
+             category: 'Acid-Base',
+             difficulty: 'Easy',
+             reactants: [{ formula: "CH<sub>3</sub>COOH", raw: "CH3COOH", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 1 }],
+             products: [{ formula: "CH<sub>3</sub>COONa", raw: "CH3COONa", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }],
+             explanation: "Weak acetic acid (vinegar) reacts with strong sodium hydroxide base to yield sodium acetate salt and water."
+           },
+
+           // --- BIOLOGICAL REACTIONS ---
+           {
+             id: 'cellular-respiration',
+             category: 'Biological',
+             difficulty: 'Hard',
+             reactants: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 6 }],
+             products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 6 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 6 }],
+             explanation: "Cells metabolize glucose with oxygen to yield energy (ATP), carbon dioxide, and water."
+           },
+           {
+             id: 'photosynthesis',
+             category: 'Biological',
+             difficulty: 'Hard',
+             reactants: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 6 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 6 }],
+             products: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 6 }],
+             explanation: "Plants utilize solar energy to convert atmospheric carbon dioxide and water into glucose sugar and oxygen gas."
+           }
+         ];
+
+        /* ==========================================================================
+           2. APP STATE MANAGEMENT
+           ========================================================================== */
+        let currentMode = 'practice'; // 'practice' | 'daily' | 'solver'
+
+        // Independent state tracking
+        let practiceEquation = null;
+        let dailyEquation = null;
+        let currentEquation = null; // Active pointer
+
+        let inputsArray = [];
+        let scoreCorrect = 0;
+        let scoreAttempts = 0;
+        let streak = 0;
+        let soundEnabled = true;
+        let hintStage = 0;
+        let isMatrixAccordionOpen = false;
+        let isFilterAccordionOpen = false;
+        let isNavMenuOpen = false;
+
+        /* Audio Engine */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtxClass) {
+                    audioCtx = new AudioCtxClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(140, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+            } catch (e) {
+                console.warn('Audio playback not supported:', e);
+            }
+        }
+
+        /* Initial Setup */
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadStats();
+            updateScoreboardDisplay();
+            updateSoundIcon();
+            loadNextEquation();
+
+            // Close nav menu on outside click
+            document.addEventListener('click', (e) => {
+                const navMenuBtn = document.getElementById('nav-menu-btn');
+                const navDropdown = document.getElementById('nav-menu-dropdown');
+                if (isNavMenuOpen && navMenuBtn && navDropdown && !navMenuBtn.contains(e.target) && !navDropdown.contains(e.target)) {
+                    toggleNavMenu(false);
+                }
+            });
+        });
+
+        /* ==========================================================================
+           3. MOLECULE & FORMULA PARSER UTILITIES
+           ========================================================================== */
+        function parseFormula(formulaStr) {
+            const counts = {};
+            const regex = /([A-Z][a-z]*)(\d*)|(\()|(\))(\d*)/g;
+            const stack = [counts];
+
+            let match;
+            while ((match = regex.exec(formulaStr)) !== null) {
+                const elem = match[1];
+                const count = match[2];
+                const openParen = match[3];
+                const closeParen = match[4];
+                const groupCount = match[5];
+
+                if (elem) {
+                    const currentObj = stack[stack.length - 1];
+                    const num = count ? parseInt(count) : 1;
+                    currentObj[elem] = (currentObj[elem] || 0) + num;
+                } else if (openParen) {
+                    const newObj = {};
+                    stack.push(newObj);
+                } else if (closeParen) {
+                    const poppedObj = stack.pop();
+                    const multiplier = groupCount ? parseInt(groupCount) : 1;
+                    const currentObj = stack[stack.length - 1];
+                    for (let el in poppedObj) {
+                        currentObj[el] = (currentObj[el] || 0) + (poppedObj[el] * multiplier);
+                    }
+                }
+            }
+            return counts;
+        }
+
+        /* ==========================================================================
+           4. PERSISTENCE & SCOREBOARD
+           ========================================================================== */
+        function loadStats() {
+            scoreCorrect = parseInt(localStorage.getItem('reactle_correct')) || 0;
+            scoreAttempts = parseInt(localStorage.getItem('reactle_attempts')) || 0;
+            streak = parseInt(localStorage.getItem('reactle_streak')) || 0;
+
+            const savedSound = localStorage.getItem('reactle_sound');
+            if (savedSound !== null) soundEnabled = (savedSound === 'true');
+        }
+
+        function saveStats() {
+            localStorage.setItem('reactle_correct', scoreCorrect);
+            localStorage.setItem('reactle_attempts', scoreAttempts);
+            localStorage.setItem('reactle_streak', streak);
+        }
+
+        function resetScoreboard() {
+            playSound('click');
+            scoreCorrect = 0;
+            scoreAttempts = 0;
+            streak = 0;
+            saveStats();
+            updateScoreboardDisplay();
+        }
+
+        function updateScoreboardDisplay() {
+            document.getElementById('score-correct').innerText = scoreCorrect;
+            document.getElementById('score-attempts').innerText = scoreAttempts;
+            document.getElementById('streak-count').innerText = streak;
+
+            const accuracy = scoreAttempts === 0 ? 0 : Math.round((scoreCorrect / scoreAttempts) * 100);
+            document.getElementById('score-accuracy').innerText = `${accuracy}%`;
+        }
+
+        /* ==========================================================================
+           5. NAVIGATION, UTILITY MENU & ACCORDIONS
+           ========================================================================== */
+        function switchMode(mode) {
+            playSound('click');
+            currentMode = mode;
+
+            const gameView = document.getElementById('game-view');
+            const solverView = document.getElementById('solver-view');
+            const dailyTag = document.getElementById('daily-header-tag');
+
+            // Sync Mobile/Tablet Dropdown
+            const dropdown = document.getElementById('mode-dropdown');
+            if (dropdown) dropdown.value = mode;
+
+            // Update Desktop Active Tab Visual Highlights
+            const tabs = {
+                practice: document.getElementById('nav-practice'),
+                daily: document.getElementById('nav-daily'),
+                solver: document.getElementById('nav-solver')
+            };
+
+            const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-chemistry-700', 'dark:text-chemistry-300', 'shadow-sm'];
+            const inactiveClasses = ['text-slate-600', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
+
+            Object.keys(tabs).forEach(tabKey => {
+                const btn = tabs[tabKey];
+                if (!btn) return;
+
+                if (tabKey === mode) {
+                    btn.classList.remove(...inactiveClasses);
+                    btn.classList.add(...activeClasses);
+                } else {
+                    btn.classList.remove(...activeClasses);
+                    btn.classList.add(...inactiveClasses);
+                }
+            });
+
+            if (mode === 'solver') {
+                gameView.classList.add('hidden');
+                solverView.classList.remove('hidden');
+            } else {
+                gameView.classList.remove('hidden');
+                solverView.classList.add('hidden');
+
+                if (mode === 'daily') {
+                    dailyTag.classList.remove('invisible');
+                    loadDailyEquation();
+                } else if (mode === 'practice') {
+                    dailyTag.classList.add('invisible');
+                    if (!practiceEquation) {
+                        loadNextEquation();
+                    } else {
+                        currentEquation = practiceEquation;
+                        renderEquationCard(practiceEquation);
+                    }
+                }
+            }
+        }
+
+        function toggleNavMenu(forceState) {
+            playSound('click');
+            const dropdown = document.getElementById('nav-menu-dropdown');
+            const chevron = document.getElementById('nav-menu-chevron');
+
+            if (typeof forceState === 'boolean') {
+                isNavMenuOpen = forceState;
+            } else {
+                isNavMenuOpen = !isNavMenuOpen;
+            }
+
+            if (isNavMenuOpen) {
+                dropdown.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                dropdown.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleFilterAccordion(forceState) {
+            playSound('click');
+            const wrapper = document.getElementById('filter-accordion-wrapper');
+            const chevron = document.getElementById('filter-accordion-chevron');
+
+            if (typeof forceState === 'boolean') {
+                isFilterAccordionOpen = forceState;
+            } else {
+                isFilterAccordionOpen = !isFilterAccordionOpen;
+            }
+
+            if (isFilterAccordionOpen) {
+                wrapper.classList.remove('max-h-0', 'opacity-0');
+                wrapper.classList.add('max-h-[300px]', 'opacity-100');
+                chevron.classList.add('rotate-180');
+            } else {
+                wrapper.classList.remove('max-h-[300px]', 'opacity-100');
+                wrapper.classList.add('max-h-0', 'opacity-0');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleAtomMatrixAccordion(forceState) {
+            playSound('click');
+            const wrapper = document.getElementById('atom-matrix-wrapper');
+            const chevron = document.getElementById('atom-matrix-chevron');
+
+            if (typeof forceState === 'boolean') {
+                isMatrixAccordionOpen = forceState;
+            } else {
+                isMatrixAccordionOpen = !isMatrixAccordionOpen;
+            }
+
+            if (isMatrixAccordionOpen) {
+                wrapper.classList.remove('max-h-0', 'opacity-0');
+                wrapper.classList.add('max-h-[500px]', 'opacity-100');
+                chevron.classList.add('rotate-180');
+            } else {
+                wrapper.classList.remove('max-h-[500px]', 'opacity-100');
+                wrapper.classList.add('max-h-0', 'opacity-0');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        /* ==========================================================================
+           6. EQUATION RENDER & GAME LOOP
+           ========================================================================== */
+           function loadDailyEquation() {
+               const todayStr = new Date().toISOString().split('T')[0];
+
+               const hash = hashDateString(todayStr);
+               const index = hash % EQUATION_DATABASE.length;
+
+               dailyEquation = EQUATION_DATABASE[index];
+               currentEquation = dailyEquation;
+
+               renderEquationCard(dailyEquation);
+
+               const history = JSON.parse(localStorage.getItem('reactle_daily_history') || '{}');
+               const todayRecord = history[todayStr];
+               const dailyTag = document.getElementById('daily-header-tag');
+               const checkBtn = document.getElementById('check-btn');
+               const shareBtn = document.getElementById('share-btn');
+
+               if (todayRecord && todayRecord.completed) {
+                   // Today's challenge is already solved: Swap Check for Share button
+                   checkBtn.classList.add('hidden');
+                   if (shareBtn) shareBtn.classList.remove('hidden');
+                   showInsightCard();
+                   startDailyCountdownTimer(dailyTag);
+               } else {
+                   // Active challenge: Show Check button
+                   dailyTag.innerHTML = `<i class="fa-solid fa-calendar text-chemistry-500 mr-1"></i> Today's Daily Reaction`;
+                   checkBtn.classList.remove('hidden');
+                   if (shareBtn) shareBtn.classList.add('hidden');
+               }
+           }
+
+        function loadNextEquation() {
+            const cat = document.getElementById('category-filter-desktop').value;
+            const diff = document.getElementById('difficulty-filter-desktop').value;
+
+            let filtered = EQUATION_DATABASE.filter(eq => {
+                const catMatch = (cat === 'ALL' || eq.category === cat);
+                const diffMatch = (diff === 'ALL' || eq.difficulty === diff);
+                return catMatch && diffMatch;
+            });
+
+            if (filtered.length === 0) filtered = EQUATION_DATABASE;
+
+            let nextEq;
+            do {
+                nextEq = filtered[Math.floor(Math.random() * filtered.length)];
+            } while (nextEq === practiceEquation && filtered.length > 1);
+
+            practiceEquation = nextEq;
+            currentEquation = practiceEquation;
+
+            renderEquationCard(practiceEquation);
+        }
+
+        function startDailyCountdownTimer(containerEl) {
+            function updateTimer() {
+                const now = new Date();
+                const nextReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+                const diffMs = nextReset - now;
+
+                const h = Math.floor(diffMs / (1000 * 60 * 60)).toString().padStart(2, '0');
+                const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                const s = Math.floor((diffMs % (1000 * 60)) / 1000).toString().padStart(2, '0');
+
+                containerEl.innerHTML = `<i class="fa-solid fa-clock text-amber-500 mr-1"></i> Next Daily in ${h}:${m}:${s}`;
+            }
+            updateTimer();
+            if (window.dailyTimerInterval) clearInterval(window.dailyTimerInterval);
+            window.dailyTimerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function onFilterChange(value, type) {
+            const catDesk = document.getElementById('category-filter-desktop');
+            const catMob = document.getElementById('category-filter-mobile');
+            const diffDesk = document.getElementById('difficulty-filter-desktop');
+            const diffMob = document.getElementById('difficulty-filter-mobile');
+
+            // Synchronize mobile and desktop filter controls
+            if (type === 'cat') {
+                catDesk.value = value;
+                catMob.value = value;
+            } else if (type === 'diff') {
+                diffDesk.value = value;
+                diffMob.value = value;
+            }
+
+            // Update tablet summary label
+            const catLabel = catDesk.value === 'ALL' ? 'All Categories' : catDesk.value;
+            const diffLabel = diffDesk.value === 'ALL' ? '' : ` • ${diffDesk.value}`;
+            document.getElementById('filter-active-summary').innerText = `(${catLabel}${diffLabel})`;
+
+            if (currentMode === 'practice') loadNextEquation();
+        }
+
+        function renderEquationCard(eq) {
+            currentEquation = eq;
+            inputsArray = [];
+            hintStage = 0;
+
+            // Reset UI Badges & Feedback
+            document.getElementById('badge-category').innerText = eq.category;
+            document.getElementById('badge-difficulty').innerText = eq.difficulty;
+            document.getElementById('insight-card').classList.add('hidden');
+            document.getElementById('feedback-banner').classList.add('hidden');
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            // Ensure Share button is hidden when loading a fresh card
+            const shareBtn = document.getElementById('share-btn');
+            if (shareBtn) shareBtn.classList.add('hidden');
+
+            document.getElementById('hint-btn-text').innerText = 'Hint';
+
+            toggleAtomMatrixAccordion(false);
+
+            const container = document.getElementById('equation-container');
+            container.innerHTML = '';
+
+            // Reactants
+            const reactantsGroup = document.createElement('div');
+            reactantsGroup.className = 'flex items-center flex-wrap justify-center gap-2 sm:gap-3';
+            eq.reactants.forEach((r, idx) => {
+                reactantsGroup.appendChild(createMoleculeInputGroup(r, idx, 'reactant'));
+                if (idx < eq.reactants.length - 1) {
+                    const plus = document.createElement('span');
+                    plus.className = 'text-slate-400 font-bold mx-1';
+                    plus.textContent = '+';
+                    reactantsGroup.appendChild(plus);
+                }
+            });
+
+            // Arrow
+            const arrow = document.createElement('div');
+            arrow.className = 'text-chemistry-500 dark:text-chemistry-400 font-bold mx-2 text-2xl sm:text-3xl';
+            arrow.innerHTML = '&rarr;';
+
+            // Products
+            const productsGroup = document.createElement('div');
+            productsGroup.className = 'flex items-center flex-wrap justify-center gap-2 sm:gap-3';
+            eq.products.forEach((p, idx) => {
+                productsGroup.appendChild(createMoleculeInputGroup(p, idx, 'product'));
+                if (idx < eq.products.length - 1) {
+                    const plus = document.createElement('span');
+                    plus.className = 'text-slate-400 font-bold mx-1';
+                    plus.textContent = '+';
+                    productsGroup.appendChild(plus);
+                }
+            });
+
+            container.appendChild(reactantsGroup);
+            container.appendChild(arrow);
+            container.appendChild(productsGroup);
+
+            if (inputsArray.length > 0) {
+                setTimeout(() => inputsArray[0].inputEl.focus(), 50);
+            }
+
+            calculateAtomMatrix();
+        }
+
+        function createMoleculeInputGroup(molData, index, type) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 p-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm';
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.max = '99';
+            input.placeholder = '1';
+            input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-chemistry-500 focus:ring-2 focus:ring-chemistry-500/20 outline-none transition-all';
+
+            input.addEventListener('input', () => {
+                playSound('click');
+                calculateAtomMatrix();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                    const idx = inputsArray.findIndex(i => i.inputEl === input);
+                    if (e.key === 'ArrowRight' && idx < inputsArray.length - 1) inputsArray[idx + 1].inputEl.focus();
+                    if (e.key === 'ArrowLeft' && idx > 0) inputsArray[idx - 1].inputEl.focus();
+                }
+            });
+
+            const label = document.createElement('span');
+            label.className = 'font-semibold text-slate-800 dark:text-slate-100 text-lg sm:text-xl font-mono';
+            label.innerHTML = molData.formula;
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(label);
+
+            inputsArray.push({
+                inputEl: input,
+                expectedCoeff: molData.coeff,
+                rawFormula: molData.raw,
+                type: type
+            });
+
+            return wrapper;
+        }
+
+        /* ==========================================================================
+           7. REAL-TIME ATOM MATRIX CALCULATOR & PERIODIC TABLE DATA
+           ========================================================================== */
+            function calculateAtomMatrix() {
+                if (!currentEquation) return;
+
+                const reactantTotals = {};
+                const productTotals = {};
+                const allElements = new Set();
+
+                inputsArray.forEach(item => {
+                    const coeff = parseInt(item.inputEl.value) || 1;
+                    const atomCounts = parseFormula(item.rawFormula);
+
+                    const targetDict = item.type === 'reactant' ? reactantTotals : productTotals;
+                    for (let elem in atomCounts) {
+                        allElements.add(elem);
+                        targetDict[elem] = (targetDict[elem] || 0) + (atomCounts[elem] * coeff);
+                    }
+                });
+
+                const matrixContainer = document.getElementById('atom-count-matrix');
+                matrixContainer.innerHTML = '';
+
+                let isFullyBalanced = true;
+
+                allElements.forEach(elem => {
+                    const rCount = reactantTotals[elem] || 0;
+                    const pCount = productTotals[elem] || 0;
+                    const isMatch = rCount === pCount;
+
+                    if (!isMatch) isFullyBalanced = false;
+
+                    const card = document.createElement('div');
+                    card.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm font-medium transition-all ${
+                        isMatch
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
+                    }`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-1.5 font-bold cursor-help"
+                             onmouseenter="showElementTooltip(event, '${elem}')"
+                             onmouseleave="hideElementTooltip()"
+                             ontouchstart="showElementTooltip(event, '${elem}')"
+                             ontouchend="hideElementTooltip()">
+                            <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700">
+                                ${elem}
+                            </span>
+                            <span>${elem}</span>
+                        </div>
+                        <div class="font-mono font-bold">
+                            ${rCount} <span class="text-slate-400 font-normal">|</span> ${pCount}
+                            <i class="fa-solid ${isMatch ? 'fa-check text-emerald-500' : 'fa-xmark text-rose-500'} ml-1"></i>
+                        </div>
+                    `;
+
+                    matrixContainer.appendChild(card);
+                });
+
+                const statusBadge = document.getElementById('balance-status');
+                if (statusBadge) {
+                    if (isFullyBalanced) {
+                        statusBadge.innerText = 'Balanced!';
+                        statusBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 ${showMatrixBadge ? '' : 'hidden'}`;
+                    } else {
+                        statusBadge.innerText = 'Unbalanced';
+                        statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 ${showMatrixBadge ? '' : 'hidden'}`;
+                    }
+                }
+            }
+
+
+            // Set Balance Badge setting to OFF
+            let showMatrixBadge = false; // Default set to OFF
+
+            /* Load saved setting from localStorage on init */
+            function loadMatrixBadgeSetting() {
+                const saved = localStorage.getItem('reactle_show_matrix_badge');
+                if (saved !== null) {
+                    showMatrixBadge = (saved === 'true');
+                }
+                updateMatrixBadgeUI();
+            }
+            window.addEventListener('DOMContentLoaded', () => {
+                initTheme();
+                loadStats();
+                loadMatrixBadgeSetting(); // Initialize matrix status badge state
+                updateScoreboardDisplay();
+                updateSoundIcon();
+                loadNextEquation();
+                // ...
+            });
+
+            function toggleMatrixBadgeSetting() {
+                playSound('click');
+                showMatrixBadge = !showMatrixBadge;
+                localStorage.setItem('reactle_show_matrix_badge', showMatrixBadge);
+                updateMatrixBadgeUI();
+                calculateAtomMatrix(); // Re-render matrix status
+            }
+
+            function updateMatrixBadgeUI() {
+                const badgeEl = document.getElementById('balance-status');
+                const labelEl = document.getElementById('matrix-badge-status-label');
+                const iconEl = document.getElementById('matrix-badge-icon');
+
+                if (showMatrixBadge) {
+                    if (badgeEl) badgeEl.classList.remove('hidden');
+                    if (labelEl) {
+                        labelEl.innerText = 'ON';
+                        labelEl.className = 'text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400';
+                    }
+                    if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-chemistry-500';
+                } else {
+                    if (badgeEl) badgeEl.classList.add('hidden');
+                    if (labelEl) {
+                        labelEl.innerText = 'OFF';
+                        labelEl.className = 'text-xs font-mono font-bold text-rose-500';
+                    }
+                    if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-slate-400';
+                }
+            }
+
+          /* Periodic Table Data lookup for interactive tooltips */
+          const PERIODIC_TABLE = {
+              H:  { name: 'Hydrogen', number: 1, mass: '1.008', category: 'Nonmetal' },
+              He: { name: 'Helium', number: 2, mass: '4.0026', category: 'Noble Gas' },
+              C:  { name: 'Carbon', number: 6, mass: '12.011', category: 'Nonmetal' },
+              N:  { name: 'Nitrogen', number: 7, mass: '14.007', category: 'Nonmetal' },
+              O:  { name: 'Oxygen', number: 8, mass: '15.999', category: 'Nonmetal' },
+              Na: { name: 'Sodium', number: 11, mass: '22.990', category: 'Alkali Metal' },
+              Mg: { name: 'Magnesium', number: 12, mass: '24.305', category: 'Alkaline Earth' },
+              Al: { name: 'Aluminum', number: 13, mass: '26.982', category: 'Post-Transition Metal' },
+              S:  { name: 'Sulfur', number: 16, mass: '32.06', category: 'Nonmetal' },
+              Cl: { name: 'Chlorine', number: 17, mass: '35.45', category: 'Halogen' },
+              K:  { name: 'Potassium', number: 19, mass: '39.098', category: 'Alkali Metal' },
+              Ca: { name: 'Calcium', number: 20, mass: '40.078', category: 'Alkaline Earth' },
+              Fe: { name: 'Iron', number: 26, mass: '55.845', category: 'Transition Metal' },
+              Cu: { name: 'Copper', number: 29, mass: '63.546', category: 'Transition Metal' },
+              Zn: { name: 'Zinc', number: 30, mass: '65.38', category: 'Transition Metal' },
+              Br: { name: 'Bromine', number: 35, mass: '79.904', category: 'Halogen' },
+              Ag: { name: 'Silver', number: 47, mass: '107.87', category: 'Transition Metal' },
+              I:  { name: 'Iodine', number: 53, mass: '126.90', category: 'Halogen' },
+              Ba: { name: 'Barium', number: 56, mass: '137.33', category: 'Alkaline Earth' },
+              Hg: { name: 'Mercury', number: 80, mass: '200.59', category: 'Transition Metal' },
+              Pb: { name: 'Lead', number: 82, mass: '207.2', category: 'Post-Transition Metal' }
+          };
+
+          function showElementTooltip(e, symbol) {
+              const data = PERIODIC_TABLE[symbol];
+              if (!data) return;
+
+              const tooltip = document.getElementById('element-tooltip');
+              document.getElementById('tooltip-symbol').innerText = symbol;
+              document.getElementById('tooltip-name').innerText = data.name;
+              document.getElementById('tooltip-number').innerText = `#${data.number}`;
+              document.getElementById('tooltip-mass').innerText = data.mass;
+              document.getElementById('tooltip-category').innerText = data.category;
+
+              tooltip.classList.remove('hidden');
+
+              // Position near cursor/touch point
+              const x = e.clientX || (e.touches && e.touches[0].clientX) || 100;
+              const y = e.clientY || (e.touches && e.touches[0].clientY) || 100;
+
+              tooltip.style.left = `${Math.min(x + 12, window.innerWidth - 180)}px`;
+              tooltip.style.top = `${y + 12}px`;
+          }
+
+          function hideElementTooltip() {
+              const tooltip = document.getElementById('element-tooltip');
+              if (tooltip) tooltip.classList.add('hidden');
+          }
+
+        /* ==========================================================================
+           8. ANSWER CHECKING & INSIGHTS
+           ========================================================================== */
+        function checkAnswer() {
+            scoreAttempts++;
+            let isCorrect = true;
+
+            inputsArray.forEach(item => {
+                const userVal = parseInt(item.inputEl.value) || 1;
+                if (userVal !== item.expectedCoeff) {
+                    isCorrect = false;
+                }
+            });
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.classList.remove('hidden');
+
+            if (isCorrect) {
+                    playSound('correct');
+                    scoreCorrect++;
+                    streak++;
+                    saveStats();
+                    updateScoreboardDisplay();
+
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 80,
+                            spread: 60,
+                            origin: { y: 0.7 }
+                        });
+                    }
+
+                    feedback.className = 'mt-6 p-4 rounded-xl text-center font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 animate-bounce';
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Perfect! Equation is correctly balanced!`;
+
+                    document.getElementById('check-btn').classList.add('hidden');
+
+                    if (currentMode === 'daily') {
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        const history = JSON.parse(localStorage.getItem('reactle_daily_history') || '{}');
+
+                        history[todayStr] = { completed: true, timestamp: new Date().toISOString() };
+                        localStorage.setItem('reactle_daily_history', JSON.stringify(history));
+
+                        // Show Share button in Daily Mode (keep Next button hidden)
+                        document.getElementById('next-btn').classList.add('hidden');
+                        const shareBtn = document.getElementById('share-btn');
+                        if (shareBtn) shareBtn.classList.remove('hidden');
+
+                        const dailyTag = document.getElementById('daily-header-tag');
+                        startDailyCountdownTimer(dailyTag);
+                    } else {
+                        // Practice Mode: Show Next Equation button
+                        document.getElementById('next-btn').classList.remove('hidden');
+                        const shareBtn = document.getElementById('share-btn');
+                        if (shareBtn) shareBtn.classList.add('hidden');
+                    }
+
+                    showInsightCard();
+                } else {
+                playSound('wrong');
+                streak = 0;
+                saveStats();
+                updateScoreboardDisplay();
+
+                feedback.className = 'mt-6 p-4 rounded-xl text-center font-semibold text-rose-700 dark:text-rose-300 bg-rose-500/20 border border-rose-500/30';
+                feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Not quite balanced yet. Check atom counts in the matrix table above!`;
+            }
+        }
+
+        function showInsightCard() {
+            const card = document.getElementById('insight-card');
+            const text = document.getElementById('insight-text');
+            const formula = document.getElementById('insight-formula');
+
+            text.innerText = currentEquation.explanation;
+
+            let fullEqStr = currentEquation.reactants.map(r => `${r.coeff > 1 ? r.coeff : ''}${r.raw}`).join(' + ') +
+                            ' → ' +
+                            currentEquation.products.map(p => `${p.coeff > 1 ? p.coeff : ''}${p.raw}`).join(' + ');
+
+            formula.innerText = fullEqStr;
+            card.classList.remove('hidden');
+        }
+
+        /* ==========================================================================
+           9. HINT SYSTEM
+           ========================================================================== */
+        function triggerHint() {
+            playSound('click');
+            hintStage++;
+            const feedback = document.getElementById('feedback-banner');
+            feedback.classList.remove('hidden');
+
+            if (hintStage === 1) {
+                toggleAtomMatrixAccordion(true);
+                feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
+                feedback.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1:</strong> Matrix expanded! Focus on balancing oxygen or hydrogen atoms last!`;
+                document.getElementById('hint-btn-text').innerText = 'Reveal Coefficient';
+            } else if (hintStage >= 2) {
+                const unrevealed = inputsArray.find(item => parseInt(item.inputEl.value) !== item.expectedCoeff);
+                if (unrevealed) {
+                    unrevealed.inputEl.value = unrevealed.expectedCoeff;
+                    unrevealed.inputEl.classList.add('glow-active');
+                    calculateAtomMatrix();
+                }
+                feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
+                feedback.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-2"></i> <strong>Hint 2:</strong> Revealed a missing coefficient in the equation!`;
+            }
+        }
+
+        /* ==========================================================================
+           10. CUSTOM EQUATION SOLVER ALGORITHM
+           ========================================================================== */
+        function setCustomExample(expr) {
+            document.getElementById('custom-input').value = expr;
+            solveCustomEquation();
+        }
+
+        function solveCustomEquation() {
+            playSound('click');
+            const inputVal = document.getElementById('custom-input').value.trim();
+            const resultPanel = document.getElementById('solver-result');
+
+            if (!inputVal) return;
+
+            try {
+                const parts = inputVal.split(/->|=/);
+                if (parts.length !== 2) {
+                    throw new Error("Use '->' or '=' to separate reactants from products.");
+                }
+
+                const reactantsRaw = parts[0].split('+').map(s => s.trim()).filter(Boolean);
+                const productsRaw = parts[1].split('+').map(s => s.trim()).filter(Boolean);
+
+                if (!reactantsRaw.length || !productsRaw.length) throw new Error("Invalid formula components.");
+
+                const solution = computeCoefficients(reactantsRaw, productsRaw);
+
+                if (solution) {
+                    resultPanel.classList.remove('hidden');
+
+                    let balancedStr = solution.reactants.map((r) => `${r.coeff > 1 ? r.coeff : ''}${r.raw}`).join(' + ') +
+                                      ' &rarr; ' +
+                                      solution.products.map((p) => `${p.coeff > 1 ? p.coeff : ''}${p.raw}`).join(' + ');
+
+                    document.getElementById('solver-output-eq').innerHTML = balancedStr;
+                    document.getElementById('solver-coefficients-breakdown').innerHTML =
+                        `<strong>Coefficients:</strong> [${[...solution.reactants, ...solution.products].map(x => x.coeff).join(', ')}]`;
+
+                    window.customQuizData = {
+                        id: 'custom-' + Date.now(),
+                        category: 'Custom Reaction',
+                        difficulty: 'Custom',
+                        reactants: solution.reactants.map(r => ({ formula: r.raw, raw: r.raw, coeff: r.coeff })),
+                        products: solution.products.map(p => ({ formula: p.raw, raw: p.raw, coeff: p.coeff })),
+                        explanation: 'Custom user generated chemical reaction balanced automatically!'
+                    };
+                } else {
+                    alert("Could not automatically compute coefficients for this specific equation. Double check chemical formulas.");
+                }
+
+            } catch(err) {
+                alert("Error parsing reaction: " + err.message);
+            }
+        }
+
+        function computeCoefficients(rArr, pArr) {
+            const allSpecies = [...rArr, ...pArr];
+            const parsedSpecies = allSpecies.map(parseFormula);
+
+            const elements = Array.from(new Set(parsedSpecies.flatMap(Object.keys)));
+            const numSpecies = allSpecies.length;
+
+            function* generateVectors(length, maxVal) {
+                if (length === 0) { yield []; return; }
+                for (let i = 1; i <= maxVal; i++) {
+                    for (let rest of generateVectors(length - 1, maxVal)) {
+                        yield [i, ...rest];
+                    }
+                }
+            }
+
+            for (let coeffs of generateVectors(numSpecies, 10)) {
+                let balanced = true;
+                for (let elem of elements) {
+                    let rSum = 0;
+                    let pSum = 0;
+
+                    for (let i = 0; i < rArr.length; i++) {
+                        rSum += (parsedSpecies[i][elem] || 0) * coeffs[i];
+                    }
+                    for (let j = 0; j < pArr.length; j++) {
+                        pSum += (parsedSpecies[rArr.length + j][elem] || 0) * coeffs[rArr.length + j];
+                    }
+
+                    if (rSum !== pSum) {
+                        balanced = false;
+                        break;
+                    }
+                }
+
+                if (balanced) {
+                    return {
+                        reactants: rArr.map((r, i) => ({ raw: r, coeff: coeffs[i] })),
+                        products: pArr.map((p, j) => ({ raw: p, coeff: coeffs[rArr.length + j] }))
+                    };
+                }
+            }
+            return null;
+        }
+
+        function playCustomAsQuiz() {
+            if (window.customQuizData) {
+                switchMode('practice');
+                renderEquationCard(window.customQuizData);
+            }
+        }
+
+        /* ==========================================================================
+           11. THEME & UTILITIES
+           ========================================================================== */
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            localStorage.setItem('reactle_theme', isDark ? 'dark' : 'light');
+
+            const themeLabel = document.getElementById('theme-status-label');
+            const themeIcon = document.getElementById('theme-icon');
+
+            if (isDark) {
+                themeIcon.className = 'fa-solid fa-sun w-4 text-amber-400';
+                if (themeLabel) themeLabel.innerText = 'DARK';
+            } else {
+                themeIcon.className = 'fa-solid fa-moon w-4 text-chemistry-500';
+                if (themeLabel) themeLabel.innerText = 'LIGHT';
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('reactle_theme');
+            const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            const themeLabel = document.getElementById('theme-status-label');
+            const themeIcon = document.getElementById('theme-icon');
+
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                if (themeIcon) themeIcon.className = 'fa-solid fa-sun w-4 text-amber-400';
+                if (themeLabel) themeLabel.innerText = 'DARK';
+            } else {
+                document.documentElement.classList.remove('dark');
+                if (themeIcon) themeIcon.className = 'fa-solid fa-moon w-4 text-chemistry-500';
+                if (themeLabel) themeLabel.innerText = 'LIGHT';
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('reactle_sound', soundEnabled);
+            updateSoundIcon();
+        }
+
+        function updateSoundIcon() {
+            const soundIcon = document.getElementById('sound-icon');
+            const soundLabel = document.getElementById('sound-status-label');
+
+            if (soundEnabled) {
+                if (soundIcon) soundIcon.className = 'fa-solid fa-volume-high w-4 text-chemistry-500';
+                if (soundLabel) {
+                    soundLabel.innerText = 'ON';
+                    soundLabel.className = 'text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400';
+                }
+            } else {
+                if (soundIcon) soundIcon.className = 'fa-solid fa-volume-xmark w-4 text-rose-500';
+                if (soundLabel) {
+                    soundLabel.innerText = 'OFF';
+                    soundLabel.className = 'text-xs font-mono font-bold text-rose-500';
+                }
+            }
+        }
+
+        function toggleModal(modalId) {
+            playSound('click');
+            document.getElementById(modalId).classList.toggle('hidden');
+        }
+
+        /* Deterministic hash for daily reaction selection */
+        function hashDateString(str, seed = 0x97f29ac1) {
+            let h1 = seed;
+            for (let i = 0; i < str.length; i++) {
+                let k1 = str.charCodeAt(i);
+                k1 = Math.imul(k1, 0xcc9e2d51);
+                k1 = (k1 << 15) | (k1 >>> 17);
+                k1 = Math.imul(k1, 0x1b873593);
+                h1 ^= k1;
+                h1 = (h1 << 13) | (h1 >>> 19);
+                h1 = Math.imul(h1, 5) + 0xe6546b64;
+            }
+            h1 ^= str.length;
+            h1 ^= h1 >>> 16;
+            h1 = Math.imul(h1, 0x85ebca6b);
+            h1 ^= h1 >>> 13;
+            h1 = Math.imul(h1, 0xc2b2ae35);
+            h1 ^= h1 >>> 16;
+            return h1 >>> 0;
+        }
+
+        /* Daily Challenge Results Sharing */
+        function shareDailyResult() {
+              playSound('click');
+              const todayStr = new Date().toISOString().split('T')[0];
+
+              // Calculate daily puzzle number relative to launch date
+              const launchDate = new Date('2026-01-01');
+              const today = new Date();
+              const dayNum = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+
+              const shareText = `Reactle Daily #${dayNum} 🧪\n` +
+                                `Streak: ${streak} 🔥 | Attempts: ${scoreAttempts}\n` +
+                                `Balanced in Daily Challenge Mode!\n` +
+                                `https://shanehennessy.github.io/reactle`;
+
+              if (navigator.share) {
+                  navigator.share({
+                      title: 'Reactle Daily Challenge',
+                      text: shareText
+                  }).catch(() => {});
+              } else if (navigator.clipboard) {
+                  navigator.clipboard.writeText(shareText).then(() => {
+                      const feedback = document.getElementById('feedback-banner');
+                      feedback.classList.remove('hidden');
+                      feedback.className = 'mt-6 p-3 rounded-xl text-center font-bold text-chemistry-700 dark:text-chemistry-300 bg-chemistry-500/20 border border-chemistry-500/30';
+                      feedback.innerHTML = `<i class="fa-solid fa-copy mr-2"></i> Daily result copied to clipboard!`;
+                  });
+              }
+          }
+
+    </script>
+</body>
+</html>
