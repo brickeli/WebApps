@@ -1,4 +1,6 @@
 /* Base Styles */
+@import "googlefonts.css";
+
 body {
     font-family: 'Outfit', sans-serif;
     transition: background-color 0.3s, color 0.3s;
@@ -48,4 +50,12 @@ input[type=number] {
 }
 .glow-active {
     animation: pulseGlow 2s infinite;
+}
+
+/* Manual Adjustments */
+#main-card {
+  margin-top: 0px;
+}
+#filter-controls-panel {
+  margin-bottom: 1.5rem;
 }

@@ -356,4 +356,54 @@ export const EQUATION_DATABASE = [
         products: [{ formula: "C<sub>3</sub>H<sub>6</sub>O<sub>3</sub>", raw: "C3H6O3", coeff: 2 }],
         explanation: "Anaerobic respiration in overworked muscle tissues converts glucose directly into two units of lactic acid."
     }
+
+    /* Nuclear Reactions
+    {
+        id: 'nuc-1',
+        category: 'Nuclear',
+        difficulty: 'Medium',
+        reactants: [{ formula: '<sup>235</sup>U', raw: 'U235', coeff: 1 },{ formula: '<sup>1</sup>n', raw: 'n1', coeff: 1 }],
+        products: [{ formula: '<sup>141</sup>Ba', raw: 'Ba141', coeff: 1 },{ formula: '<sup>92</sup>Kr', raw: 'Kr92', coeff: 1 },{ formula: '<sup>1</sup>n', raw: 'n1', coeff: 3 }],
+        explanation: 'Induced nuclear fission of Uranium-235 triggered by thermal neutron absorption.'
+    },
+    {
+        id: 'nuc-2',
+        category: 'Nuclear',
+        difficulty: 'Easy',
+        reactants: [{ formula: '<sup>2</sup>H', raw: 'H2', coeff: 1 },{ formula: '<sup>3</sup>H', raw: 'H3', coeff: 1 }],
+        products: [{ formula: '<sup>4</sup>He', raw: 'He4', coeff: 1 },{ formula: '<sup>1</sup>n', raw: 'n1', coeff: 1 }],
+        explanation: 'Deuterium-Tritium nuclear fusion producing a helium nucleus and a free neutron.'
+    },
+    {
+        id: 'nuc-3',
+        category: 'Nuclear',
+        difficulty: 'Medium',
+        reactants: [{ formula: '<sup>14</sup>N', raw: 'N14', coeff: 1 },{ formula: '<sup>4</sup>He', raw: 'He4', coeff: 1 }],
+        products: [{ formula: '<sup>17</sup>O', raw: 'O17', coeff: 1 },{ formula: '<sup>1</sup>p', raw: 'p1', coeff: 1 }],
+        explanation: 'Rutherford’s classic artificial transmutation converting Nitrogen-14 into Oxygen-17.'
+    },
+    {
+        id: 'nuc-4',
+        category: 'Nuclear',
+        difficulty: 'Hard',
+        reactants: [{ formula: '<sup>238</sup>U', raw: 'U238', coeff: 1 },{ formula: '<sup>12</sup>C', raw: 'C12', coeff: 1 }],
+        products: [{ formula: '<sup>246</sup>Cf', raw: 'Cf246', coeff: 1 },{ formula: '<sup>1</sup>n', raw: 'n1', coeff: 4 }],
+        explanation: 'Heavy ion bombardment synthesized to produce Californium-246.'
+    },
+    {
+        id: 'nuc-5',
+        category: 'Nuclear',
+        difficulty: 'Easy',
+        reactants: [{ formula: '<sup>226</sup>Ra', raw: 'Ra226', coeff: 1 }],
+        products: [{ formula: '<sup>222</sup>Rn', raw: 'Rn222', coeff: 1 },{ formula: '<sup>4</sup>He', raw: 'He4', coeff: 1 }],
+        explanation: 'Alpha decay of Radium-226 transforming into Radon-222.'
+    },
+    {
+        id: 'nuc-6',
+        category: 'Nuclear',
+        difficulty: 'Medium',
+        reactants: [{ formula: '<sup>9</sup>Be', raw: 'Be9', coeff: 1 },{ formula: '<sup>4</sup>He', raw: 'He4', coeff: 1 }],
+        products: [{ formula: '<sup>12</sup>C', raw: 'C12', coeff: 1 },{ formula: '<sup>1</sup>n', raw: 'n1', coeff: 1 }],
+        explanation: 'Chadwick’s discovery of the neutron via alpha particle bombardment of Beryllium-9.'
+    }*/
 ];

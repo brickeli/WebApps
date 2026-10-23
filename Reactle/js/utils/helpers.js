@@ -18,6 +18,18 @@ export function hashDateString(str, seed = 0x97f29ac1) {
     return h1 >>> 0;
 }
 
+// Returns today's date formatted as 'YYYY-MM-DD'*/
+export function getTodayDateString() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// Calculates the Daily Challenge number relative to a launch date*/
+export function getDailyChallengeNumber(launchDateStr = '2026-01-01') {
+    const launchDate = new Date(launchDateStr);
+    const today = new Date();
+    return Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+}
+
 export function startDailyCountdownTimer(containerEl) {
     function updateTimer() {
         const now = new Date();
@@ -35,4 +47,29 @@ export function startDailyCountdownTimer(containerEl) {
     updateTimer();
     if (window.dailyTimerInterval) clearInterval(window.dailyTimerInterval);
     window.dailyTimerInterval = setInterval(updateTimer, 1000);
+}
+
+// Calculates rounded accuracy percentage from correct and attempt counts
+export function calculateAccuracy(correct, attempts) {
+    if (!attempts || attempts <= 0) return 0;
+    return Math.round((correct / attempts) * 100);
+}
+
+// Create subscripts within Custom Solver
+export function formatSubscripts(formulaStr) {
+    if (!formulaStr) return '';
+    return formulaStr.replace(/([A-Za-z\)])(\d+)/g, '$1<sub>$2</sub>');
+}
+
+// Selects a random item from an array that differs from the current item
+export function getRandomDifferentItem(array, currentItem) {
+    if (!array || array.length === 0) return null;
+    if (array.length === 1) return array[0];
+
+    let nextItem;
+    do {
+        nextItem = array[Math.floor(Math.random() * array.length)];
+    } while (nextItem === currentItem);
+
+    return nextItem;
 }

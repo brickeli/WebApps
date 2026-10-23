@@ -1,7 +1,7 @@
 import { EQUATION_DATABASE } from './data/equations.js';
 import { PERIODIC_TABLE } from './data/periodicTable.js';
 import { Storage } from './utils/storage.js';
-import { hashDateString, startDailyCountdownTimer } from './utils/helpers.js';
+import { hashDateString, startDailyCountdownTimer, formatSubscripts, getTodayDateString, getDailyChallengeNumber, calculateAccuracy, getRandomDifferentItem } from './utils/helpers.js';
 import { playSound, setAudioEnabled } from './engine/audio.js';
 import { parseFormula } from './engine/parser.js';
 import { computeCoefficients } from './engine/solver.js';
@@ -23,6 +23,26 @@ let hintStage = 0;
 let isMatrixAccordionOpen = false;
 let isFilterAccordionOpen = false;
 let isNavMenuOpen = false;
+
+// Tailwind new color scheme
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                chemistry: {
+                    50: '#f0fdfa',
+                    100: '#ccfbf1',
+                    500: '#14b8a6',
+                    600: '#0d9488',
+                    700: '#0f766e',
+                    800: '#115e59',
+                    900: '#134e4a',
+                }
+            }
+        }
+    }
+}
 
 // Expose functions globally for inline HTML event calls
 window.showElementTooltip = showElementTooltip;
@@ -64,7 +84,7 @@ function updateScoreboardDisplay() {
     document.getElementById('score-attempts').innerText = scoreAttempts;
     document.getElementById('streak-count').innerText = streak;
 
-    const accuracy = scoreAttempts === 0 ? 0 : Math.round((scoreCorrect / scoreAttempts) * 100);
+    const accuracy = calculateAccuracy(scoreCorrect, scoreAttempts);
     document.getElementById('score-accuracy').innerText = `${accuracy}%`;
 }
 
@@ -93,6 +113,7 @@ function setupEventListeners() {
     document.getElementById('check-btn')?.addEventListener('click', checkAnswer);
     document.getElementById('next-btn')?.addEventListener('click', loadNextEquation);
     document.getElementById('share-btn')?.addEventListener('click', shareDailyResult);
+    document.getElementById('go-to-practice-btn')?.addEventListener('click', () => switchMode('practice')); // ADDED
     document.getElementById('hint-btn')?.addEventListener('click', triggerHint);
     document.getElementById('reset-score-btn')?.addEventListener('click', resetScoreboard);
 
@@ -133,6 +154,7 @@ function switchMode(mode) {
     const gameView = document.getElementById('game-view');
     const solverView = document.getElementById('solver-view');
     const dailyTag = document.getElementById('daily-header-tag');
+    const filterPanel = document.getElementById('filter-controls-panel');
 
     const dropdown = document.getElementById('mode-dropdown');
     if (dropdown) dropdown.value = mode;
@@ -167,9 +189,12 @@ function switchMode(mode) {
 
         if (mode === 'daily') {
             dailyTag.classList.remove('hidden');
+            if (filterPanel) filterPanel.classList.add('hidden');
             loadDailyEquation();
         } else if (mode === 'practice') {
             dailyTag.classList.add('hidden');
+            if (filterPanel) filterPanel.classList.remove('hidden');
+
             if (!practiceEquation) {
                 loadNextEquation();
             } else {
@@ -192,19 +217,14 @@ function loadNextEquation() {
 
     if (filtered.length === 0) filtered = EQUATION_DATABASE;
 
-    let nextEq;
-    do {
-        nextEq = filtered[Math.floor(Math.random() * filtered.length)];
-    } while (nextEq === practiceEquation && filtered.length > 1);
-
-    practiceEquation = nextEq;
+    practiceEquation = getRandomDifferentItem(filtered, practiceEquation);
     currentEquation = practiceEquation;
 
     renderEquationCard(practiceEquation);
 }
 
 function loadDailyEquation() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayDateString();
     const hash = hashDateString(todayStr);
     const index = hash % EQUATION_DATABASE.length;
 
@@ -218,16 +238,23 @@ function loadDailyEquation() {
     const dailyTag = document.getElementById('daily-header-tag');
     const checkBtn = document.getElementById('check-btn');
     const shareBtn = document.getElementById('share-btn');
+    const goToPracticeBtn = document.getElementById('go-to-practice-btn');
+    const hintBtn = document.getElementById('hint-btn');
 
     if (todayRecord && todayRecord.completed) {
         checkBtn.classList.add('hidden');
+        if (hintBtn) hintBtn.classList.add('hidden');
         if (shareBtn) shareBtn.classList.remove('hidden');
+        if (goToPracticeBtn) goToPracticeBtn.classList.remove('hidden');
+
         showInsightCard();
         startDailyCountdownTimer(dailyTag);
     } else {
         dailyTag.innerHTML = `<i class="fa-solid fa-calendar text-chemistry-500 mr-1"></i> Today's Daily Reaction`;
         checkBtn.classList.remove('hidden');
+        if (hintBtn) hintBtn.classList.remove('hidden');
         if (shareBtn) shareBtn.classList.add('hidden');
+        if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
     }
 }
 
@@ -243,8 +270,13 @@ function renderEquationCard(eq) {
     document.getElementById('check-btn').classList.remove('hidden');
     document.getElementById('next-btn').classList.add('hidden');
 
+    // Button Dynamics
     const shareBtn = document.getElementById('share-btn');
     if (shareBtn) shareBtn.classList.add('hidden');
+    const goToPracticeBtn = document.getElementById('go-to-practice-btn');
+    if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
+    const hintBtn = document.getElementById('hint-btn');
+    if (hintBtn) hintBtn.classList.remove('hidden');
 
     document.getElementById('hint-btn-text').innerText = 'Hint';
     toggleAtomMatrixAccordion(false);
@@ -330,7 +362,8 @@ function createMoleculeInputGroup(molData, index, type) {
     inputsArray.push({
         inputEl: input,
         expectedCoeff: molData.coeff,
-        rawFormula: molData.raw,
+        // Strips <sub> formatting tags so parseFormula receives clean "O2" instead of "O<sub>2</sub>"
+        rawFormula: molData.raw || molData.formula.replace(/<[^>]*>/g, '').trim(),
         type: type
     });
 
@@ -345,8 +378,11 @@ function calculateAtomMatrix() {
     const allElements = new Set();
 
     inputsArray.forEach(item => {
-        const coeff = parseInt(item.inputEl.value) || 1;
-        const atomCounts = parseFormula(item.rawFormula);
+        const userRaw = item.inputEl.value.trim();
+        const coeff = userRaw === '' ? 1 : parseInt(userRaw, 10);
+
+        const cleanFormula = (item.rawFormula || '').replace(/<[^>]*>/g, '').trim();
+        const atomCounts = parseFormula(cleanFormula);
 
         const targetDict = item.type === 'reactant' ? reactantTotals : productTotals;
         for (let elem in atomCounts) {
@@ -356,6 +392,7 @@ function calculateAtomMatrix() {
     });
 
     const matrixContainer = document.getElementById('atom-count-matrix');
+    if (!matrixContainer) return;
     matrixContainer.innerHTML = '';
 
     let isFullyBalanced = true;
@@ -363,7 +400,7 @@ function calculateAtomMatrix() {
     allElements.forEach(elem => {
         const rCount = reactantTotals[elem] || 0;
         const pCount = productTotals[elem] || 0;
-        const isMatch = rCount === pCount;
+        const isMatch = rCount === pCount && rCount > 0;
 
         if (!isMatch) isFullyBalanced = false;
 
@@ -374,23 +411,33 @@ function calculateAtomMatrix() {
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
         }`;
 
-        card.innerHTML = `
-            <div class="flex items-center gap-1.5 font-bold cursor-help"
-                 onmouseenter="showElementTooltip(event, '${elem}')"
-                 onmouseleave="hideElementTooltip()"
-                 ontouchstart="showElementTooltip(event, '${elem}')"
-                 ontouchend="hideElementTooltip()">
-                <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700">
-                    ${elem}
-                </span>
-                <span>${elem}</span>
-            </div>
-            <div class="font-mono font-bold">
-                ${rCount} <span class="text-slate-400 font-normal">|</span> ${pCount}
-                <i class="fa-solid ${isMatch ? 'fa-check text-emerald-500' : 'fa-xmark text-rose-500'} ml-1"></i>
-            </div>
+        // Create element label container
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'flex items-center gap-1.5 font-bold cursor-help';
+
+        // Safe event listeners (avoids string quote escaping issues)
+        labelDiv.addEventListener('mouseenter', (e) => showElementTooltip(e, elem));
+        labelDiv.addEventListener('mouseleave', () => hideElementTooltip());
+        labelDiv.addEventListener('touchstart', (e) => showElementTooltip(e, elem));
+        labelDiv.addEventListener('touchend', () => hideElementTooltip());
+
+        labelDiv.innerHTML = `
+            <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700">
+                ${elem}
+            </span>
+            <span>${elem}</span>
         `;
 
+        // Create count display container
+        const countDiv = document.createElement('div');
+        countDiv.className = 'font-mono font-bold';
+        countDiv.innerHTML = `
+            ${rCount} <span class="text-slate-400 font-normal">|</span> ${pCount}
+            <i class="fa-solid ${isMatch ? 'fa-check text-emerald-500' : 'fa-xmark text-rose-500'} ml-1"></i>
+        `;
+
+        card.appendChild(labelDiv);
+        card.appendChild(countDiv);
         matrixContainer.appendChild(card);
     });
 
@@ -434,22 +481,37 @@ function checkAnswer() {
         document.getElementById('check-btn').classList.add('hidden');
 
         if (currentMode === 'daily') {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getTodayDateString();
             const history = Storage.getDailyHistory();
 
             history[todayStr] = { completed: true, timestamp: new Date().toISOString() };
             Storage.setDailyHistory(history);
 
+            // Hide Next Equation & Hint buttons
             document.getElementById('next-btn').classList.add('hidden');
+            const hintBtn = document.getElementById('hint-btn');
+            if (hintBtn) hintBtn.classList.add('hidden');
+
+            // Show Share & Practice buttons
             const shareBtn = document.getElementById('share-btn');
             if (shareBtn) shareBtn.classList.remove('hidden');
+
+            const goToPracticeBtn = document.getElementById('go-to-practice-btn');
+            if (goToPracticeBtn) goToPracticeBtn.classList.remove('hidden');
 
             const dailyTag = document.getElementById('daily-header-tag');
             startDailyCountdownTimer(dailyTag);
         } else {
             document.getElementById('next-btn').classList.remove('hidden');
+
             const shareBtn = document.getElementById('share-btn');
             if (shareBtn) shareBtn.classList.add('hidden');
+
+            const goToPracticeBtn = document.getElementById('go-to-practice-btn');
+            if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
+
+            const hintBtn = document.getElementById('hint-btn');
+            if (hintBtn) hintBtn.classList.remove('hidden');
         }
         saveStats();
         updateScoreboardDisplay();
@@ -482,13 +544,8 @@ function showInsightCard() {
 function shareDailyResult() {
     playSound('click');
 
-    // Always fetch the verified daily streak from storage
     const currentStreak = Storage.getDailyStreak();
-
-    // Calculate the Daily Challenge number relative to your start date
-    const launchDate = new Date('2026-01-01');
-    const today = new Date();
-    const dayNum = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+    const dayNum = getDailyChallengeNumber('2026-01-01');
 
     const shareText = `Reactle Daily #${dayNum} 🧪\n` +
                       `Streak: ${currentStreak} 🔥 | Solved in Daily Challenge Mode!\n` +
@@ -552,11 +609,17 @@ function solveCustomEquation() {
         if (solution) {
             resultPanel.classList.remove('hidden');
 
-            let balancedStr = solution.reactants.map((r) => `${r.coeff > 1 ? r.coeff : ''}${r.raw}`).join(' + ') +
-                              ' &rarr; ' +
-                              solution.products.map((p) => `${p.coeff > 1 ? p.coeff : ''}${p.raw}`).join(' + ');
+            // Wrap raw formulas with formatSubscripts to render proper HTML <sub> tags
+            let balancedStr = solution.reactants.map((r) =>
+                `${r.coeff > 1 ? r.coeff : ''}${formatSubscripts(r.raw)}`
+            ).join(' + ') +
+            ' &rarr; ' +
+            solution.products.map((p) =>
+                `${p.coeff > 1 ? p.coeff : ''}${formatSubscripts(p.raw)}`
+            ).join(' + ');
 
             document.getElementById('solver-output-eq').innerHTML = balancedStr;
+
             document.getElementById('solver-coefficients-breakdown').innerHTML =
                 `<strong>Coefficients:</strong> [${[...solution.reactants, ...solution.products].map(x => x.coeff).join(', ')}]`;
 
@@ -564,8 +627,9 @@ function solveCustomEquation() {
                 id: 'custom-' + Date.now(),
                 category: 'Custom Reaction',
                 difficulty: 'Custom',
-                reactants: solution.reactants.map(r => ({ formula: r.raw, raw: r.raw, coeff: r.coeff })),
-                products: solution.products.map(p => ({ formula: p.raw, raw: p.raw, coeff: p.coeff })),
+                // Pass formatted formula for input labels and raw formula for calculations
+                reactants: solution.reactants.map(r => ({ formula: formatSubscripts(r.raw), raw: r.raw, coeff: r.coeff })),
+                products: solution.products.map(p => ({ formula: formatSubscripts(p.raw), raw: p.raw, coeff: p.coeff })),
                 explanation: 'Custom user generated chemical reaction balanced automatically!'
             };
         } else {
