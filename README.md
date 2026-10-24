@@ -1,4 +1,15 @@
 # WebApps
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1TFPF9M56R');
+</script>
+</head>
 Collection of my published web applications.
 <ol>
   <li><a href="https://brickeli.github.io/WebApps/Sudoku/sudoku-v6.1.html" target="_blank">Sudoku Master (latest version 6.1)</a></li>
