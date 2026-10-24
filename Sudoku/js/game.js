@@ -221,6 +221,50 @@ function inputNumber(num) {
     // Always re-render the board UI to show the updated note state
     triggerRender();
     checkWinCondition();
+    updateBoardHighlights(boardEl);
+    highlightCellPeers(boardEl, selectedIndex);
+}
+
+function updateBoardHighlights(boardEl) {
+    const cells = Array.from(boardEl.children);
+
+    // 1. Clear existing duplicate styles
+    cells.forEach(cell => cell.classList.remove('duplicate'));
+
+    // 2. Iterate through all 81 cells
+    for (let i = 0; i < 81; i++) {
+        const cell = cells[i];
+        const val = (cell.dataset.value || cell.textContent).trim();
+
+        // Skip empty cells or zero values
+        if (!val || val === '0') continue;
+
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+        const boxRow = Math.floor(row / 3);
+        const boxCol = Math.floor(col / 3);
+
+        // 3. Compare with all other cells in the same row, column, or 3x3 block
+        for (let j = i + 1; j < 81; j++) {
+            const otherCell = cells[j];
+            const otherVal = (otherCell.dataset.value || otherCell.textContent).trim();
+
+            if (otherVal === val) {
+                const r = Math.floor(j / 9);
+                const c = j % 9;
+
+                const isSameRow = r === row;
+                const isSameCol = c === col;
+                const isSameBox = Math.floor(r / 3) === boxRow && Math.floor(c / 3) === boxCol;
+
+                // If they share a row, col, or box, mark both as duplicate
+                if (isSameRow || isSameCol || isSameBox) {
+                    cell.classList.add('duplicate');
+                    otherCell.classList.add('duplicate');
+                }
+            }
+        }
+    }
 }
 
 function provideHint() {

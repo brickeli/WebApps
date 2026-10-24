@@ -14,6 +14,7 @@
     --cell-given-text: #0f172a;
     --cell-user-text: #2563eb;
     --cell-hint-text: #059669;
+    --error: #dc2626;
     --shadow-color: rgba(15, 23, 42, 0.1);
 
     /* Arcade Hint Button Tokens (Light) */
@@ -40,6 +41,7 @@
     --cell-given-text: #f8fafc;
     --cell-user-text: #60a5fa;
     --cell-hint-text: #34d399;
+    --error: #fca5a5;
     --shadow-color: rgba(0, 0, 0, 0.4);
 
     /* Arcade Hint Button Tokens (Dark) */
@@ -215,7 +217,7 @@ button {
 .menu-trigger-btn {
     background-color: var(--white);
     border: 1px solid var(--border-color);
-    padding: 8px 16px;
+    padding: 10px 16px;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -403,6 +405,22 @@ hr {
 .cell.hint-cell { color: var(--cell-hint-text); }
 .cell.selected { background-color: var(--cell-selected) !important; }
 .cell.highlight { background-color: var(--white); }
+
+/* Duplicate number indicator */
+.cell.duplicate {
+  color: var(--error) !important;
+  font-weight: bold;
+}
+.cell.duplicate::after {
+    content: "\21";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 0.7rem;
+    pointer-events: none;
+}
 
 .notes-grid {
     display: grid;
