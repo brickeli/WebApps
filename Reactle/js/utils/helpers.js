@@ -73,3 +73,15 @@ export function getRandomDifferentItem(array, currentItem) {
 
     return nextItem;
 }
+
+export function getParticleName(symbol) {
+    const names = {
+        'n': 'Neutron',
+        'p': 'Proton',
+        'α': 'Alpha Particle (Helium-4 Nucleus)',
+        'β⁻': 'Beta-Minus Particle (Electron)',
+        'β⁺': 'Positron (Antielectron)',
+        'γ': 'Gamma Ray Photon'
+    };
+    return names[symbol] || 'Subatomic Particle';
+}

@@ -1,3 +1,12 @@
+const KEYS = {
+    STATS: 'reactle_stats',
+    DAILY_STREAK: 'reactle_daily_streak',
+    DAILY_HISTORY: 'reactle_daily_history',
+    THEME: 'reactle_theme',
+    SOUND: 'reactle_sound',
+    MATRIX: 'reactle_matrix_badge'
+};
+
 export const Storage = {
   // Theme Settings
   getTheme() {

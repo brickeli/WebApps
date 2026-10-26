@@ -24,26 +24,6 @@ let isMatrixAccordionOpen = false;
 let isFilterAccordionOpen = false;
 let isNavMenuOpen = false;
 
-// Tailwind new color scheme
-tailwind.config = {
-    darkMode: 'class',
-    theme: {
-        extend: {
-            colors: {
-                chemistry: {
-                    50: '#f0fdfa',
-                    100: '#ccfbf1',
-                    500: '#14b8a6',
-                    600: '#0d9488',
-                    700: '#0f766e',
-                    800: '#115e59',
-                    900: '#134e4a',
-                }
-            }
-        }
-    }
-}
-
 // Expose functions globally for inline HTML event calls
 window.showElementTooltip = showElementTooltip;
 window.hideElementTooltip = hideElementTooltip;
@@ -65,14 +45,64 @@ window.addEventListener('DOMContentLoaded', () => {
     switchMode('daily');
 });
 
-function loadStats() {
-    const stats = Storage.getStats();
-    scoreCorrect = stats.correct;
-    scoreAttempts = stats.attempts;
-    // Calculate streak exclusively from Daily Challenge completions
-    streak = Storage.getDailyStreak();
-    soundEnabled = Storage.getSound();
-    setAudioEnabled(soundEnabled);
+
+// Game Mode Switcher
+function initModeDropdown() {
+    const btn = document.getElementById('mode-dropdown-btn');
+    const menu = document.getElementById('mode-dropdown-menu');
+    const chevron = document.getElementById('mode-dropdown-chevron');
+
+    if (!btn || !menu) return;
+
+    function toggleDropdown(show) {
+        const isOpening = show !== undefined ? show : menu.classList.contains('hidden');
+
+        if (isOpening) {
+            menu.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                menu.classList.remove('opacity-0', 'scale-95');
+                menu.classList.add('opacity-100', 'scale-100');
+            });
+            if (chevron) chevron.classList.add('rotate-180');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            menu.classList.remove('opacity-100', 'scale-100');
+            menu.classList.add('opacity-0', 'scale-95');
+            if (chevron) chevron.classList.remove('rotate-180');
+            btn.setAttribute('aria-expanded', 'false');
+            setTimeout(() => {
+                menu.classList.add('hidden');
+            }, 150);
+        }
+    }
+
+    // Toggle on header button click
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && !btn.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
+
+    // Event Delegation: Listens directly on the menu for mode option clicks
+    menu.addEventListener('click', (e) => {
+        const optionBtn = e.target.closest('.mode-option');
+        if (!optionBtn) return;
+
+        const targetMode = optionBtn.getAttribute('data-mode');
+        toggleDropdown(false);
+
+        if (targetMode === 'reactle') {
+            window.location.href = './index.html';
+        } else if (targetMode === 'nuclear') {
+            window.location.href = './nuclear.html';
+        }
+    });
 }
 
 function saveStats() {
@@ -147,17 +177,32 @@ function setupEventListeners() {
 }
 
 /* --- Game View Management --- */
+function updateDropdownIcon(mode) {
+    const iconEl = document.getElementById('mode-dropdown-icon');
+    if (!iconEl) return;
+
+    const iconMap = {
+        daily: 'fa-solid fa-calendar-day',
+        practice: 'fa-solid fa-vial',
+        solver: 'fa-solid fa-calculator'
+    };
+
+    iconEl.className = `${iconMap[mode] || 'fa-solid fa-vial'} text-sm`;
+}
+
 function switchMode(mode) {
     playSound('click');
     currentMode = mode;
+
+    // Sync mobile dropdown selection and icon
+    const dropdown = document.getElementById('mode-dropdown');
+    if (dropdown) dropdown.value = mode;
+    updateDropdownIcon(mode);
 
     const gameView = document.getElementById('game-view');
     const solverView = document.getElementById('solver-view');
     const dailyTag = document.getElementById('daily-header-tag');
     const filterPanel = document.getElementById('filter-controls-panel');
-
-    const dropdown = document.getElementById('mode-dropdown');
-    if (dropdown) dropdown.value = mode;
 
     const tabs = {
         practice: document.getElementById('nav-practice'),
@@ -166,7 +211,7 @@ function switchMode(mode) {
     };
 
     const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-chemistry-700', 'dark:text-chemistry-300', 'shadow-sm'];
-    const inactiveClasses = ['text-slate-600', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
+    const inactiveClasses = ['text-slate-700', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
 
     Object.keys(tabs).forEach(tabKey => {
         const btn = tabs[tabKey];
@@ -291,7 +336,7 @@ function renderEquationCard(eq) {
         reactantsGroup.appendChild(createMoleculeInputGroup(r, idx, 'reactant'));
         if (idx < eq.reactants.length - 1) {
             const plus = document.createElement('span');
-            plus.className = 'text-slate-400 font-bold mx-1';
+            plus.className = 'text-slate-500 font-bold mx-1';
             plus.textContent = '+';
             reactantsGroup.appendChild(plus);
         }
@@ -299,8 +344,8 @@ function renderEquationCard(eq) {
 
     // Arrow
     const arrow = document.createElement('div');
-    arrow.className = 'text-chemistry-500 dark:text-chemistry-400 font-bold mx-2 text-2xl sm:text-3xl';
-    arrow.innerHTML = '&rarr;';
+    arrow.className = 'fa-solid fa-arrow-right text-chemistry-500 dark:text-chemistry-400 font-bold mx-2 text-2xl';
+    arrow.innerHTML = '';
 
     // Products
     const productsGroup = document.createElement('div');
@@ -309,7 +354,7 @@ function renderEquationCard(eq) {
         productsGroup.appendChild(createMoleculeInputGroup(p, idx, 'product'));
         if (idx < eq.products.length - 1) {
             const plus = document.createElement('span');
-            plus.className = 'text-slate-400 font-bold mx-1';
+            plus.className = 'text-slate-500 font-bold mx-1';
             plus.textContent = '+';
             productsGroup.appendChild(plus);
         }
@@ -353,7 +398,7 @@ function createMoleculeInputGroup(molData, index, type) {
     });
 
     const label = document.createElement('span');
-    label.className = 'font-semibold text-slate-800 dark:text-slate-100 text-lg sm:text-xl font-mono';
+    label.className = 'font-semibold text-slate-700 dark:text-slate-100 text-lg sm:text-xl font-mono';
     label.innerHTML = molData.formula;
 
     wrapper.appendChild(input);
@@ -370,7 +415,7 @@ function createMoleculeInputGroup(molData, index, type) {
     return wrapper;
 }
 
-function calculateAtomMatrix() {
+export function calculateAtomMatrix() {
     if (!currentEquation) return;
 
     const reactantTotals = {};
@@ -404,35 +449,35 @@ function calculateAtomMatrix() {
 
         if (!isMatch) isFullyBalanced = false;
 
+        // 1. Create outer Card with cursor-help and hover styling
         const card = document.createElement('div');
-        card.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm font-medium transition-all ${
+        card.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm font-medium transition-all cursor-help select-none ${
             isMatch
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
         }`;
 
-        // Create element label container
+        // 2. Attach tooltip listeners directly to the ENTIRE card
+        card.addEventListener('mouseenter', (e) => showElementTooltip(e, elem));
+        card.addEventListener('mouseleave', () => hideElementTooltip());
+        card.addEventListener('touchstart', (e) => showElementTooltip(e, elem), { passive: true });
+        card.addEventListener('touchend', () => hideElementTooltip());
+
+        // 3. Create element label container
         const labelDiv = document.createElement('div');
-        labelDiv.className = 'flex items-center gap-1.5 font-bold cursor-help';
-
-        // Safe event listeners (avoids string quote escaping issues)
-        labelDiv.addEventListener('mouseenter', (e) => showElementTooltip(e, elem));
-        labelDiv.addEventListener('mouseleave', () => hideElementTooltip());
-        labelDiv.addEventListener('touchstart', (e) => showElementTooltip(e, elem));
-        labelDiv.addEventListener('touchend', () => hideElementTooltip());
-
+        labelDiv.className = 'flex items-center gap-1.5 font-bold';
         labelDiv.innerHTML = `
-            <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700">
+            <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
                 ${elem}
             </span>
             <span>${elem}</span>
         `;
 
-        // Create count display container
+        // 4. Create count display container
         const countDiv = document.createElement('div');
         countDiv.className = 'font-mono font-bold';
         countDiv.innerHTML = `
-            ${rCount} <span class="text-slate-400 font-normal">|</span> ${pCount}
+            ${rCount} <span class="text-slate-500 font-normal">|</span> ${pCount}
             <i class="fa-solid ${isMatch ? 'fa-check text-emerald-500' : 'fa-xmark text-rose-500'} ml-1"></i>
         `;
 
@@ -448,7 +493,7 @@ function calculateAtomMatrix() {
             statusBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 ${showMatrixBadge ? '' : 'hidden'}`;
         } else {
             statusBadge.innerText = 'Unbalanced';
-            statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 ${showMatrixBadge ? '' : 'hidden'}`;
+            statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 ${showMatrixBadge ? '' : 'hidden'}`;
         }
     }
 }
@@ -696,7 +741,7 @@ function updateSoundIcon() {
             soundLabel.className = 'text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400';
         }
     } else {
-        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-xmark w-4 text-slate-400';
+        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-xmark w-4 text-slate-500';
         if (soundLabel) {
             soundLabel.innerText = 'OFF';
             soundLabel.className = 'text-xs font-mono font-bold text-rose-500';
@@ -735,7 +780,7 @@ function updateMatrixBadgeUI() {
             labelEl.innerText = 'OFF';
             labelEl.className = 'text-xs font-mono font-bold text-rose-500';
         }
-        if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-slate-400';
+        if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-slate-500';
     }
 }
 
@@ -825,4 +870,19 @@ function resetScoreboard() {
 function toggleModal(modalId) {
     playSound('click');
     document.getElementById(modalId)?.classList.toggle('hidden');
+}
+
+// Call during initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initModeDropdown();
+});
+
+function loadStats() {
+    const stats = Storage.getStats();
+    scoreCorrect = stats.correct;
+    scoreAttempts = stats.attempts;
+    // Calculate streak exclusively from Daily Challenge completions
+    streak = Storage.getDailyStreak();
+    soundEnabled = Storage.getSound();
+    setAudioEnabled(soundEnabled);
 }

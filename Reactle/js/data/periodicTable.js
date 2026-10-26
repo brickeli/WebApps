@@ -10,9 +10,11 @@ export const PERIODIC_TABLE = {
     Al: { name: 'Aluminum', atomicNumber: 13, atomicMass: '26.982', category: 'Post-Transition Metal', summary: 'Low-density, corrosion-resistant metal widely used in manufacturing.' },
     S:  { name: 'Sulfur', atomicNumber: 16, atomicMass: '32.06', category: 'Nonmetal', summary: 'Abundant nonmetal essential for amino acid biosynthesis and industrial acids.' },
     Cl: { name: 'Chlorine', atomicNumber: 17, atomicMass: '35.45', category: 'Halogen', summary: 'Reactive halogen widely used in water disinfection and synthesis.' },
+    Ar: { name: 'Argon', atomicNumber: 18, atomicMass: '39.948', category: 'Noble Gas', summary: 'Colorless, odorless noble gas used in shield-gas welding, incandescent lighting, and radiometric dating.' },
     K:  { name: 'Potassium', atomicNumber: 19, atomicMass: '39.098', category: 'Alkali Metal', summary: 'Essential mineral and electrolyte required for nerve impulse transmission.' },
     Ca: { name: 'Calcium', atomicNumber: 20, atomicMass: '40.078', category: 'Alkaline Earth', summary: 'Key structural metal for bones, teeth, and cellular signal transduction.' },
     Fe: { name: 'Iron', atomicNumber: 26, atomicMass: '55.845', category: 'Transition Metal', summary: 'Fundamental metal used in steelmaking and oxygen transport in hemoglobin.' },
+    Ni: { name: 'Nickel', atomicNumber: 28, atomicMass: '58.693', category: 'Transition Metal', summary: 'Hard, silvery-white transition metal widely used in stainless steel, corrosion-resistant alloys, and rechargeable batteries.' },
     Cu: { name: 'Copper', atomicNumber: 29, atomicMass: '63.546', category: 'Transition Metal', summary: 'Ductile metal with exceptionally high thermal and electrical conductivity.' },
     Zn: { name: 'Zinc', atomicNumber: 30, atomicMass: '65.38', category: 'Transition Metal', summary: 'Essential trace element used in galvanizing steel and enzyme functions.' },
     Br: { name: 'Bromine', atomicNumber: 35, atomicMass: '79.904', category: 'Halogen', summary: 'Fuming red-liquid halogen used in flame retardants and pharmaceuticals.' },
@@ -26,4 +28,64 @@ export const PERIODIC_TABLE = {
     Ra: { name: 'Radium', atomicNumber: 88, atomicMass: '226', category: 'Alkaline Earth', summary: 'Intensely radioactive metal historically used in luminescent paints.' },
     U:  { name: 'Uranium', atomicNumber: 92, atomicMass: '238.03', category: 'Actinide', summary: 'Heavy radioactive actinide metal essential for nuclear power generation.' },
     Cf: { name: 'Californium', atomicNumber: 98, atomicMass: '251', category: 'Actinide', summary: 'Synthetic transuranic actinide and strong neutron emitter created by heavy ion bombardment.' }
+};
+
+export const NUCLEAR_PARTICLES = {
+    // Standard Elements ...
+
+    // Subatomic Particles & Decay Products
+    'n': {
+        symbol: 'n',
+        name: 'Neutron',
+        number: 0,
+        mass: 1,
+        charge: 0,
+        category: 'Subatomic Particle',
+        summary: 'A neutral nucleon with mass number 1 and zero electric charge. Triggers nuclear fission and is emitted in chain reactions.'
+    },
+    'p': {
+        symbol: 'p',
+        name: 'Proton (Protium Nucleus)',
+        number: 1,
+        mass: 1,
+        charge: 1,
+        category: 'Subatomic Particle',
+        summary: 'A positively charged nucleon with mass number 1 and charge +1. Identical to a Hydrogen-1 nucleus.'
+    },
+    'α': {
+        symbol: 'α',
+        name: 'Alpha Particle',
+        number: 2,
+        mass: 4,
+        charge: 2,
+        category: 'Radiation / Light Nucleus',
+        summary: 'A helium-4 nucleus consisting of two protons and two neutrons emitted during alpha decay.'
+    },
+    'β⁻': {
+        symbol: 'β⁻',
+        name: 'Beta-minus Particle',
+        number: -1,
+        mass: 0,
+        charge: -1,
+        category: 'Lepton / Decay Product',
+        summary: 'A high-speed electron emitted from the nucleus when a neutron transforms into a proton.'
+    },
+    'β⁺': {
+        symbol: 'β⁺',
+        name: 'Positron (Beta-plus)',
+        number: 1,
+        mass: 0,
+        charge: 1,
+        category: 'Antimatter / Decay Product',
+        summary: 'The antiparticle of the electron, emitted during positron emission when a proton transforms into a neutron.'
+    },
+    'γ': {
+        symbol: 'γ',
+        name: 'Gamma Ray Photon',
+        number: 0,
+        mass: 0,
+        charge: 0,
+        category: 'Electromagnetic Radiation',
+        summary: 'High-energy electromagnetic radiation emitted to release excess nuclear energy without altering mass or charge.'
+    }
 };

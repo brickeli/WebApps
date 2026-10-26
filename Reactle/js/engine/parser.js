@@ -10,44 +10,56 @@
  * @param {string} formulaStr - The raw chemical formula to parse.
  * @return {Object.<string, number>} Object with element symbols as keys and counts as values.
  */
-export function parseFormula(formulaStr) {
-    if (!formulaStr) return {};
+ export function parseFormula(formulaStr) {
+     if (!formulaStr) return {};
 
-    const counts = {};
-    const stack = [counts];
-    // Tokenize: Matches element+subscript (e.g., 'Al2'), '(' or ')'+subscript (e.g., ')3')
-    const tokenRegex = /([A-Z][a-z]*)(\d*)|(\()|(\))(\d*)/g;
+     const counts = {};
+     const stack = [counts];
 
-    let match;
-    while ((match = tokenRegex.exec(formulaStr)) !== null) {
-        // Prevent zero-width match infinite loop
-        if (match.index === tokenRegex.lastIndex) {
-            tokenRegex.lastIndex++;
-        }
+     // Updated Regex: Matches element+subscript, '('/'[', or ')'/']'+subscript
+     const tokenRegex = /([A-Z][a-z]*)(\d*)|([\(\[])|([\)\]])(\d*)/g;
 
-        const elem = match[1];
-        const count = match[2];
-        const openParen = match[3];
-        const closeParen = match[4];
-        const groupCount = match[5];
+     let match;
+     while ((match = tokenRegex.exec(formulaStr)) !== null) {
+         // Prevent zero-width match infinite loop
+         if (match.index === tokenRegex.lastIndex) {
+             tokenRegex.lastIndex++;
+         }
 
-        if (elem) {
-            const currentObj = stack[stack.length - 1];
-            const num = count ? parseInt(count, 10) : 1;
-            currentObj[elem] = (currentObj[elem] || 0) + num;
-        } else if (openParen) {
-            stack.push({});
-        } else if (closeParen) {
-            const poppedObj = stack.pop();
-            const multiplier = groupCount ? parseInt(groupCount, 10) : 1;
-            const currentObj = stack[stack.length - 1];
-            if (poppedObj && currentObj) {
-                for (let el in poppedObj) {
-                    currentObj[el] = (currentObj[el] || 0) + (poppedObj[el] * multiplier);
-                }
-            }
-        }
-    }
+         const elem = match[1];
+         const count = match[2];
+         const openBracket = match[3];  // Matches '(' or '['
+         const closeBracket = match[4]; // Matches ')' or ']'
+         const groupCount = match[5];
 
-    return counts;
-}
+         if (elem) {
+             const currentObj = stack[stack.length - 1];
+             const num = count ? parseInt(count, 10) : 1;
+             currentObj[elem] = (currentObj[elem] || 0) + num;
+         } else if (openBracket) {
+             stack.push({});
+         } else if (closeBracket) {
+             // Validation: Extra closing bracket/parenthesis
+             if (stack.length === 1) {
+                 throw new Error("Mismatched brackets/parentheses: unexpected closing symbol.");
+             }
+
+             const poppedObj = stack.pop();
+             const multiplier = groupCount ? parseInt(groupCount, 10) : 1;
+             const currentObj = stack[stack.length - 1];
+
+             if (poppedObj && currentObj) {
+                 for (let el in poppedObj) {
+                     currentObj[el] = (currentObj[el] || 0) + (poppedObj[el] * multiplier);
+                 }
+             }
+         }
+     }
+
+     // Validation: Unclosed bracket/parenthesis
+     if (stack.length > 1) {
+         throw new Error("Mismatched brackets/parentheses: unclosed open symbol.");
+     }
+
+     return counts;
+ }

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-y-scroll">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Reactle - Nuclear Equation Balancer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="css/tailwindv3.4.17.html"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { chemistry: { 50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4', 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a', 950: '#042f2e' } } } } };</script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Custom CSS Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-100 min-h-full flex flex-col selection:bg-amber-500 selection:text-slate-950">
+    <!-- Shared Navigation Header -->
+    <header class="glass-panel sticky top-0 z-30 shadow-sm transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <!-- Interactive Logo & Title Dropdown Container (Nuclear Reactle Active) -->
+            <div class="relative inline-block text-left">
+                <!-- Trigger Button -->
+                <button id="mode-dropdown-btn"
+                        type="button"
+                        class="flex items-center gap-3 p-1.5 -ml-1.5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                        aria-expanded="false"
+                        aria-haspopup="true">
+
+                    <!-- Active Icon (Nuclear Amber Gradient) -->
+                    <div id="active-mode-icon-box" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                        <i id="active-mode-icon" class="fa-solid fa-radiation text-xl"></i>
+                    </div>
+
+                    <!-- Active Title & Subtitle -->
+                    <div class="text-left">
+                        <div class="flex items-center gap-1.5">
+                            <h1 id="active-mode-title" class="text-base/5 sm:text-xl font-bold tracking-tight bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-transparent dark:from-amber-400 dark:to-yellow-300">
+                                Nuclear Reactle
+                            </h1>
+                            <i id="mode-dropdown-chevron" class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform duration-200"></i>
+                        </div>
+                        <p id="active-mode-subtitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden min-[340px]:block">
+                            Decay & Transmutation
+                        </p>
+                    </div>
+                </button>
+                <!-- Dropdown Menu -->
+                <div id="mode-dropdown-menu"
+                     class="hidden absolute left-0 mt-2 w-64 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 shadow-xl backdrop-blur-xl z-50 overflow-hidden transition-all duration-150 transform opacity-0 scale-95"
+                     role="menu">
+                    <div class="p-1.5 space-y-1">
+                        <!-- Option 1: Reactle (Inactive on Nuclear page) -->
+                        <button id="opt-reactle"
+                                class="mode-option w-full flex items-center gap-3 p-2 rounded-xl text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                                role="menuitem"
+                                data-mode="reactle">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-chemistry-600 to-teal-400 flex items-center justify-center text-white text-sm shadow-sm shrink-0">
+                                <i class="fa-solid fa-vial-circle-check"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-slate-700 dark:text-slate-100">Reactle</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400">Chemical Equation Balancer</div>
+                            </div>
+                        </button>
+                        <!-- Option 2: Nuclear Reactle (Active on Nuclear page) -->
+                        <button id="opt-nuclear"
+                                class="mode-option w-full flex items-center gap-3 p-2 rounded-xl text-left transition-colors bg-amber-500/10 dark:bg-amber-500/15"
+                                role="menuitem"
+                                data-mode="nuclear">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 text-sm shadow-sm shrink-0">
+                                <i class="fa-solid fa-radiation"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-amber-700 dark:text-amber-300">Nuclear Reactle</div>
+                                <div class="text-xs text-amber-600/80 dark:text-amber-400/80">Decay & Transmutation</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Utility Controls & Settings Menu -->
+            <div class="flex items-center gap-2">
+                <!-- Streak Badge -->
+                <div id="streak-badge" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold text-xs sm:text-sm">
+                    <i class="fa-solid fa-fire text-amber-500"></i>
+                    <span id="streak-count">0</span>
+                </div>
+
+                <!-- Utilities Dropdown Menu Container (Nuclear Reactle) -->
+                <div class="relative">
+                    <button id="nav-menu-btn" class="p-2.5 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-400 transition flex items-center gap-1.5" title="App Settings & Info">
+                        <i class="fa-solid fa-sliders text-base"></i>
+                        <i id="nav-menu-chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                    </button>
+
+                    <!-- Dropdown Panel -->
+                    <div id="nav-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 glass-panel rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in">
+
+                        <!-- Theme Toggle -->
+                        <button id="toggle-theme-btn" class="w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-900/90 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="theme-icon" class="fa-solid fa-moon w-4 text-amber-500"></i> Theme Mode
+                            </span>
+                            <span id="theme-status-label" class="text-xs font-mono font-bold text-slate-500">DARK</span>
+                        </button>
+
+                        <!-- Sound FX Toggle -->
+                        <button id="toggle-sound-btn" class="w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-900/90 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="sound-icon" class="fa-solid fa-volume-high w-4 text-amber-500"></i> Sound FX
+                            </span>
+                            <span id="sound-status-label" class="text-xs font-mono font-bold text-emerald-500">ON</span>
+                        </button>
+
+                        <!-- Balance / Conservation Check Toggle -->
+                        <button id="toggle-matrix-badge-btn" class="w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-900/90 flex items-center justify-between transition">
+                            <span class="flex items-center gap-2.5">
+                                <i id="matrix-badge-icon" class="fa-solid fa-atom w-4 text-slate-500"></i> Conservation Check
+                            </span>
+                            <span id="matrix-badge-status-label" class="text-xs font-mono font-bold text-rose-500">OFF</span>
+                        </button>
+
+                        <div class="my-1 border-t border-slate-200 dark:border-slate-800"></div>
+
+                        <!-- How to Play Modal Trigger -->
+                        <button id="open-help-modal-btn" class="w-full px-4 py-2.5 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-900/90 flex items-center gap-2.5 transition">
+                            <i class="fa-solid fa-circle-question w-4 text-amber-500"></i> How to Play
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-6 flex flex-col gap-4">
+      <!-- Desktop Mode Selector Tabs (Nuclear Reactle) -->
+      <nav class="hidden md:flex items-center w-full mx-auto bg-slate-200/60 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-slate-300/40 dark:border-slate-700/50 shadow-inner text-sm">
+          <button id="nav-practice" class="flex-1 py-2.5 px-6 rounded-xl transition-all text-amber-700 dark:text-amber-300 bg-white dark:bg-slate-700 shadow-sm font-medium flex items-center justify-center gap-2">
+              <i class="fa-solid fa-atom"></i><span>Practice</span>
+          </button>
+          <button id="nav-daily" class="flex-1 py-2.5 px-6 rounded-xl transition-all text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-2">
+              <i class="fa-solid fa-calendar-day"></i><span>Daily Challenge</span>
+          </button>
+          <button id="nav-solver" class="flex-1 py-2.5 px-6 rounded-xl transition-all text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-2">
+              <i class="fa-solid fa-calculator"></i><span>Custom Solver</span>
+          </button>
+      </nav>
+
+      <!-- Tablet & Mobile Mode Selector Dropdown -->
+      <div class="md:hidden">
+          <label for="mode-dropdown" class="sr-only">Select Mode</label>
+          <div class="relative group">
+              <!-- Floating Left Icon -->
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-amber-500">
+                  <i id="mode-dropdown-icon" class="fa-solid fa-atom text-sm"></i>
+              </div>
+
+              <select id="mode-dropdown" class="w-full bg-white/80 dark:bg-slate-900/60 border border-amber-500/30 hover:border-amber-500/60 font-bold text-xs sm:text-sm rounded-xl py-3 pl-9 pr-8 focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 outline-none appearance-none cursor-pointer shadow-sm transition-all duration-200">
+                  <option value="practice" class="bg-white dark:bg-slate-800 font-semibold py-1">Practice Mode</option>
+                  <option value="daily" class="bg-white dark:bg-slate-800 font-semibold py-1">Daily Challenge</option>
+                  <option value="solver" class="bg-white dark:bg-slate-800 font-semibold py-1">Custom Solver</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-amber-500 group-hover:scale-110 transition-transform duration-200">
+                  <i class="fa-solid fa-chevron-down text-xs"></i>
+              </div>
+          </div>
+      </div>
+      <!-- Practice & Daily Game View -->
+        <div id="game-view">
+          <!-- Controls & Filters Bar -->
+          <div id="filter-controls-panel" class="glass-panel p-4 mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm w-full">
+              <!-- TABLET / MOBILE ACCORDION FILTER CONTAINER -->
+              <div class="md:hidden w-full">
+                  <button id="filter-accordion-toggle" class="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-filter text-amber-500"></i>
+                          <span>Filter Nuclear Reactions</span>
+                          <span id="filter-active-summary" class="text-[10px] font-normal text-slate-500 ml-1">(All Categories)</span>
+                      </div>
+                      <i id="filter-accordion-chevron" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300"></i>
+                  </button>
+
+                  <div id="filter-accordion-wrapper" class="max-h-0 overflow-hidden transition-all duration-300 opacity-0">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                          <div>
+                              <label for="category-filter-mobile" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">DECAY / REACTION TYPE</label>
+                              <select id="category-filter-mobile" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                                  <option value="ALL">All Categories</option>
+                                  <option value="Fission">Heavy Fission</option>
+                                  <option value="Fusion">Stellar Fusion</option>
+                                  <option value="Decay">Radioactive Decay</option>
+                                  <option value="Transmutation">Transmutation Alchemy</option>
+                                  <option value="Bombardment">Particle Collisions</option>
+                              </select>
+                          </div>
+
+                          <div>
+                              <label for="difficulty-filter-mobile" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">DIFFICULTY</label>
+                              <select id="difficulty-filter-mobile" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                                  <option value="ALL">All Difficulties</option>
+                                  <option value="Easy">Easy (Low Energy)</option>
+                                  <option value="Medium">Medium (Moderate Flux)</option>
+                                  <option value="Hard">Hard (High Energy)</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- DESKTOP INLINE FILTERS -->
+              <div class="hidden md:grid grid-cols-2 gap-3 w-auto">
+                  <div>
+                      <label for="category-filter-desktop" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">DECAY / REACTION TYPE</label>
+                      <select id="category-filter-desktop" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                          <option value="ALL">All Categories</option>
+                          <option value="Fission">Heavy Fission</option>
+                          <option value="Fusion">Stellar Fusion</option>
+                          <option value="Decay">Radioactive Decay</option>
+                          <option value="Transmutation">Transmutation Alchemy</option>
+                          <option value="Bombardment">Particle Collisions</option>
+                      </select>
+                  </div>
+
+                  <div>
+                      <label for="difficulty-filter-desktop" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">DIFFICULTY</label>
+                      <select id="difficulty-filter-desktop" class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-amber-500 outline-none">
+                          <option value="ALL">All Difficulties</option>
+                          <option value="Easy">Easy (Low Energy)</option>
+                          <option value="Medium">Medium (Moderate Flux)</option>
+                          <option value="Hard">Hard (High Energy)</option>
+                      </select>
+                  </div>
+              </div>
+
+              <!-- Scorecard / Stats -->
+              <div class="flex items-center justify-around md:justify-end gap-3 sm:gap-4 bg-slate-100 dark:bg-slate-900/60 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/50 w-full md:w-auto">
+                  <div class="text-center">
+                      <span class="block text-xs text-slate-500 dark:text-slate-400 font-semibold">SOLVED</span>
+                      <span id="score-correct" class="text-lg font-bold text-amber-500">0</span>
+                  </div>
+                  <div class="w-px h-8 bg-slate-300 dark:bg-slate-700"></div>
+                  <div class="text-center">
+                      <span class="block text-xs text-slate-500 dark:text-slate-400 font-semibold">ATTEMPTS</span>
+                      <span id="score-attempts" class="text-lg font-bold">0</span>
+                  </div>
+                  <div class="w-px h-8 bg-slate-300 dark:bg-slate-700"></div>
+                  <div class="text-center">
+                      <span class="block text-xs text-slate-500 dark:text-slate-400 font-semibold">ACCURACY</span>
+                      <span id="score-accuracy" class="text-lg font-bold text-amber-500">0%</span>
+                  </div>
+                  <button id="reset-score-btn" class="ml-2 text-slate-500 hover:text-rose-500 transition p-1" title="Reset Score Stats">
+                      <i class="fa-solid fa-rotate-right"></i>
+                  </button>
+              </div>
+          </div>
+          <!-- Primary Equation Card -->
+          <div id="main-card" class="glass-panel mb-6 p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300">
+
+              <!-- Category & Difficulty Badges -->
+              <div class="flex flex-col sm:flex-row items-center sm:justify-between gap-2 sm:gap-0 text-center sm:text-left">
+                  <div class="flex items-center justify-center gap-2 mb-2">
+                      <span id="badge-category" class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          Alpha Decay
+                      </span>
+                      <span id="badge-difficulty" class="px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border border-neutral-500/20">
+                          Medium
+                      </span>
+                  </div>
+                  <span id="daily-header-tag" class="hidden text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      <i class="fa-solid fa-atom text-amber-500 mr-1"></i> Balance Mass (A) & Charge (Z)
+                  </span>
+              </div>
+
+              <!-- Equation Area -->
+              <div id="nuclear-equation-container" class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 my-6 min-h-[100px]">
+                  <!-- Populated dynamically by nuclearMain.js -->
+              </div>
+
+              <!-- Live Mass & Charge Balance Accordion (A / Z) -->
+              <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                  <button id="nuclear-matrix-toggle" class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-900/90 border border-slate-200 dark:border-slate-800 transition-all duration-200 cursor-pointer text-left group">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center font-bold text-sm">
+                          <i class="fa-solid fa-scale-balanced text-amber-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2"> Mass (A) & Atomic Charge (Z) Matrix </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-normal">Check for balanced equations</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-3">
+                          <span id="balance-status" class="hidden text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                              Unbalanced
+                          </span>
+                          <i id="nuclear-matrix-chevron" class="fa-solid fa-chevron-up text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform duration-300"></i>
+                      </div>
+                  </button>
+                  <div id="nuclear-matrix-wrapper" class="max-h-96 opacity-100 mt-4 overflow-hidden transition-all duration-300 ease-in-out">
+                      <div id="nuclear-matrix-container">
+                        <div class="space-y-4 mt-2">
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm font-mono">
+
+                            <!-- Mass Number (A) Card -->
+                            <div id="mass-card" class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 border-slate-200 dark:border-slate-800">
+                              <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] uppercase tracking-wider font-sans font-bold text-slate-500 dark:text-slate-400">
+                                  Total Mass Number <span class="text-amber-600 dark:text-amber-400">(A)</span>
+                                </span>
+                                <i id="mass-icon" class="fa-solid fa-triangle-exclamation text-rose-500 text-xs"></i>
+                              </div>
+                              <div class="flex items-baseline justify-between mt-1 px-1">
+                                <div class="flex flex-col">
+                                  <span class="text-[10px] font-sans text-slate-400 uppercase">Reactants</span>
+                                  <span id="mass-reactants" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">0</span>
+                                </div>
+                                <span class="text-xs font-sans font-semibold text-slate-400 px-2">vs</span>
+                                <div class="flex flex-col items-end">
+                                  <span class="text-[10px] font-sans text-slate-400 uppercase">Products</span>
+                                  <span id="mass-products" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">0</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Charge (Z) Card -->
+                            <div id="charge-card" class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 border-slate-200 dark:border-slate-800">
+                              <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] uppercase tracking-wider font-sans font-bold text-slate-500 dark:text-slate-400">
+                                  Atomic Charge <span class="text-amber-600 dark:text-amber-400">(Z)</span>
+                                </span>
+                                <i id="charge-icon" class="fa-solid fa-triangle-exclamation text-rose-500 text-xs"></i>
+                              </div>
+                              <div class="flex items-baseline justify-between mt-1 px-1">
+                                <div class="flex flex-col">
+                                  <span class="text-[10px] font-sans text-slate-400 uppercase">Reactants</span>
+                                  <span id="charge-reactants" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">0</span>
+                                </div>
+                                <span class="text-xs font-sans font-semibold text-slate-400 px-2">vs</span>
+                                <div class="flex flex-col items-end">
+                                  <span class="text-[10px] font-sans text-slate-400 uppercase">Products</span>
+                                  <span id="charge-products" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">0</span>
+                                </div>
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <!-- Reaction Species Header & Grid -->
+                          <div>
+                            <div class="text-[11px] font-sans font-bold text-slate-400 uppercase tracking-wider mb-2">
+                              Reaction Species & Particles
+                            </div>
+                            <div id="species-cards-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+                          </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <!-- Feedback Banner -->
+              <div id="feedback-banner" class="hidden"></div>
+              <!-- Interactive Action Controls -->
+              <div class="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+                  <button id="check-btn" class="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                      <i class="fa-solid fa-check"></i> Check Nuclear Balance
+                  </button>
+                  <button id="share-btn" class="hidden w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                      <i class="fa-solid fa-share-nodes"></i> Share Score
+                  </button>
+                  <button id="next-btn" class="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                      Next Decay Reaction <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                  <button id="go-to-practice-btn" class="hidden w-full sm:w-auto px-8 py-3.5 shadow-[inset_0_0_0_2px_rgba(245,158,11,0.8)] hover:shadow-[inset_0_0_0_2px_rgba(245,158,11,1)] bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold rounded-xl transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                      <i class="fa-solid fa-atom"></i> Try Practice Mode
+                  </button>
+                  <button id="hint-btn" class="w-full sm:w-auto px-6 py-3.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                      <i class="fa-solid fa-lightbulb text-amber-500"></i> <span id="hint-btn-text">Hint</span>
+                  </button>
+              </div>
+          </div>
+          <!-- Insight Card -->
+          <div id="insight-card" class="hidden glass-panel p-6 rounded-2xl border-l-4 border-amber-500 shadow-md space-y-3 animate-fade-in">
+              <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-lg">
+                  <i class="fa-solid fa-atom"></i>
+                  <span>Nuclear Reaction Insight</span>
+              </div>
+              <div id="insight-formula" class="font-mono text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mb-2"></div>
+              <p id="insight-text" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+          </div>
+        </div>
+        <!-- NUCLEAR CUSTOM SOLVER VIEW -->
+        <div id="solver-view" class="hidden space-y-6">
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-3">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Automatic Nuclear Equation Balancer
+                    </h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                        Type any nuclear decay or transmutation reaction (e.g., <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-xs">U235 + n -> Ba141 + Kr92 + 3n</code>).
+                    </p>
+                </div>
+
+                <!-- Input Box -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input id="custom-input" type="text" placeholder="e.g., U235 + n1 -> Ba141 + Kr92 + n1" class="flex-grow px-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-base focus:ring-2 focus:ring-amber-500 outline-none">
+                    <button id="solve-custom-btn" class="w-full sm:w-auto px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/25 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Balance Reaction
+                    </button>
+                </div>
+
+                <!-- Example Pills -->
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-slate-500 dark:text-slate-400 font-semibold">Try examples:</span>
+                    <button class="custom-example-btn px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 rounded-lg transition font-mono" data-expr="Ra226 -> Rn222 + He4">Ra226 -> Rn222 + He4</button>
+                    <button class="custom-example-btn px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 rounded-lg transition font-mono" data-expr="N14 + He4 -> O17 + p1">N14 + He4 -> O17 + p1</button>
+                </div>
+
+                <!-- Output Results Panel -->
+                <div id="solver-result" class="hidden p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-4">
+                    <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Balanced Result</h3>
+                    <div id="solver-output-eq" class="text-xl sm:text-2xl font-bold font-mono text-slate-600 dark:text-slate-400"></div>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-500">
+        <p>Nuclear Reactle &copy; 2026 - Master Chemical Equation Balancing through Practice & Interactive Visuals.</p>
+    </footer>
+
+    <!-- INTERACTIVE ELEMENT TOOLTIP CARD (Placed at top-level body root) -->
+    <div id="element-tooltip" class="hidden fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full glass-panel px-3.5 py-2.5 rounded-xl shadow-xl border border-amber-500/30 text-xs transition-opacity duration-150">
+        <!-- Header -->
+        <div class="flex items-center gap-2 font-bold">
+            <span id="tooltip-symbol" class="w-6 h-6 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-xs flex items-center justify-center border border-amber-500/30"></span>
+            <span id="tooltip-name" class="text-sm"></span>
+            <span id="tooltip-number" class="text-[10px] text-slate-500 font-mono ml-auto"></span>
+        </div>
+
+        <!-- Subheader -->
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex justify-between gap-3 font-mono border-b border-slate-200 dark:border-slate-700/60 pb-1.5">
+            <span>Mass: <strong id="tooltip-mass" class="text-slate-700 dark:text-slate-200"></strong></span>
+            <span id="tooltip-category" class="text-amber-600 dark:text-amber-400 font-sans font-semibold"></span>
+        </div>
+
+        <!-- Summary Description -->
+        <p id="tooltip-summary" class="text-[11px] text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed font-sans"></p>
+    </div>
+    <!-- Subatomic Particle Selector Modal -->
+    <div id="particle-picker-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-sm w-full shadow-2xl transform transition-all">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-atom text-amber-500"></i> Select Particle
+                </h3>
+                <button id="close-particle-modal-btn" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Choose the subatomic particle or light nuclide required to balance the nuclear reaction:
+            </p>
+
+            <!-- Particle Grid Keypad -->
+            <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="n" data-mass="1" data-charge="0">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>1</sup><sub>0</sub></span>n
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Neutron</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:1 | Z:0</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="p" data-mass="1" data-charge="1">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>1</sup><sub>1</sub></span>p
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Proton</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:1 | Z:+1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="α" data-mass="4" data-charge="2">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>4</sup><sub>2</sub></span>α
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Alpha (He)</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:4 | Z:+2</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="β⁻" data-mass="0" data-charge="-1">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>0</sup><sub>-1</sub></span>e
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Beta-minus</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:0 | Z:-1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="β⁺" data-mass="0" data-charge="1">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>0</sup><sub>+1</sub></span>e
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Positron</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:0 | Z:+1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:bg-amber-500/10 hover:border-amber-500/40 dark:hover:bg-amber-500/20 transition-all text-left flex items-center gap-3 group" data-symbol="γ" data-mass="0" data-charge="0">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold flex items-center justify-center text-sm border border-amber-500/20 group-hover:scale-105 transition-transform">
+                        <span class="text-[10px] leading-none text-right mr-0.5"><sup>0</sup><sub>0</sub></span>γ
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Gamma Ray</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">A:0 | Z:0</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- App Entry Point Module -->
+    <script type="module" src="./js/nuclearMain.js"></script>
+</body>
+</html>

@@ -1,14 +1,16 @@
-/* Base Styles */
+/* Base Fonts & Transitions */
 @import "googlefonts.css";
 
 body {
     font-family: 'Outfit', sans-serif;
     transition: background-color 0.3s, color 0.3s;
 }
+
 .font-mono {
     font-family: 'JetBrains Mono', monospace;
 }
-/* Custom scrollbar */
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -23,39 +25,33 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(107, 114, 128, 0.8);
 }
-/* Glassmorphism effects */
+
+/* Glassmorphism Surface Base */
 .glass-panel {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(229, 231, 235, 0.8);
 }
 .dark .glass-panel {
     background: rgba(30, 41, 59, 0.85);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(51, 65, 85, 0.8);
 }
-/* Hide number input spinners */
+
+/* Hide Number Input Spinners Cross-Browser */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 input[type=number] {
+    appearance: textfield;
     -moz-appearance: textfield;
 }
-/* Pulse glow animation */
+
+/* Hint & Active Reveal Glow Animation */
 @keyframes pulseGlow {
     0%, 100% { box-shadow: 0 0 15px rgba(20, 184, 166, 0.4); }
     50% { box-shadow: 0 0 25px rgba(20, 184, 166, 0.8); }
 }
 .glow-active {
     animation: pulseGlow 2s infinite;
-}
-
-/* Manual Adjustments */
-#main-card {
-  margin-top: 0px;
-}
-#filter-controls-panel {
-  margin-bottom: 1.5rem;
 }
