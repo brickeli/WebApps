@@ -277,7 +277,7 @@ export const NUCLEAR_EQUATIONS = [
         difficulty: 'Hard',
         reactants: [
             { symbol: 'K', mass: 40, charge: 19, netCharge: 0, raw: 'K40', coeff: 1 },
-            { symbol: 'e', mass: 0, charge: -1, netCharge: -1, raw: 'e0', coeff: 1 }
+            { symbol: 'β⁻', mass: 0, charge: -1, netCharge: -1, raw: 'e0', coeff: 1 }
         ],
         products: [
             { symbol: 'Ar', mass: 40, charge: 18, netCharge: 0, raw: 'Ar40', coeff: 1 },
@@ -344,41 +344,108 @@ export const NUCLEAR_EQUATIONS = [
             }
         ],
         explanation: 'Fluorine-18 medical radiotracer positron emission decaying into Oxygen-18 during PET imaging.'
-      },
-      {
-          id: 'nuc-20',
-          category: 'Decay',
-          difficulty: 'Easy',
-          reactants: [
-              { symbol: 'Po', mass: 210, charge: 84, netCharge: 0, raw: 'Po210', coeff: 1 }
-          ],
-          products: [
-              { symbol: 'Pb', mass: 206, charge: 82, netCharge: 0, raw: 'Pb206', coeff: 1 },
-              {
-                  isSelectable: true,
-                  expectedParticle: { symbol: 'α', mass: 4, charge: 2 },
-                  selectedParticle: null,
-                  coeff: 1
-              }
-          ],
-          explanation: 'Alpha decay of Polonium-210 decaying into stable Lead-206.'
-      },
-      {
-          id: 'nuc-21',
-          category: 'Fusion',
-          difficulty: 'Hard',
-          reactants: [
-              { symbol: 'C', mass: 12, charge: 6, netCharge: 0, raw: 'C12', coeff: 2 }
-          ],
-          products: [
-              { symbol: 'Ne', mass: 20, charge: 10, netCharge: 0, raw: 'Ne20', coeff: 1 },
-              {
-                  isSelectable: true,
-                  expectedParticle: { symbol: 'α', mass: 4, charge: 2 },
-                  selectedParticle: null,
-                  coeff: 1
-              }
-          ],
-          explanation: 'Stellar carbon burning fusing two Carbon-12 nuclei into Neon-20 and an alpha particle.'
-      }
+    },
+    {
+        id: 'nuc-20',
+        category: 'Decay',
+        difficulty: 'Easy',
+        reactants: [
+            { symbol: 'Po', mass: 210, charge: 84, netCharge: 0, raw: 'Po210', coeff: 1 }
+        ],
+        products: [
+            { symbol: 'Pb', mass: 206, charge: 82, netCharge: 0, raw: 'Pb206', coeff: 1 },
+            {
+                isSelectable: true,
+                expectedParticle: { symbol: 'α', mass: 4, charge: 2 },
+                selectedParticle: null,
+                coeff: 1
+            }
+        ],
+        explanation: 'Alpha decay of Polonium-210 decaying into stable Lead-206.'
+    },
+    {
+        id: 'nuc-21',
+        category: 'Fusion',
+        difficulty: 'Hard',
+        reactants: [
+            { symbol: 'C', mass: 12, charge: 6, netCharge: 0, raw: 'C12', coeff: 2 }
+        ],
+        products: [
+            { symbol: 'Ne', mass: 20, charge: 10, netCharge: 0, raw: 'Ne20', coeff: 1 },
+            {
+                isSelectable: true,
+                expectedParticle: { symbol: 'α', mass: 4, charge: 2 },
+                selectedParticle: null,
+                coeff: 1
+            }
+        ],
+        explanation: 'Stellar carbon burning fusing two Carbon-12 nuclei into Neon-20 and an alpha particle.'
+    },
+    {
+      id: 'nuc-22',
+      category: 'Decay',
+      difficulty: 'Medium',
+      reactants: [
+          { symbol: 'Mo', mass: 99, charge: 42, netCharge: 0, raw: 'Mo99', coeff: 1 }
+      ],
+      products: [
+          { symbol: 'Tc', mass: 99, charge: 43, netCharge: 0, raw: 'Tc99', coeff: 1 },
+          {
+              isSelectable: true,
+              expectedParticle: { symbol: 'β⁻', mass: 0, charge: -1 },
+              selectedParticle: null,
+              coeff: 1
+          }
+      ],
+      explanation: 'Molybdenum-99 beta-minus decay producing Technetium-99m, the primary generator isotope in medical imaging.'
+    },
+    {
+        id: 'nuc-23',
+        category: 'Decay',
+        difficulty: 'Hard',
+        reactants: [
+            { symbol: 'Pu', mass: 241, charge: 94, netCharge: 0, raw: 'Pu241', coeff: 1 }
+        ],
+        products: [
+            { symbol: 'Am', mass: 241, charge: 95, netCharge: 0, raw: 'Am241', coeff: 1 },
+            {
+                isSelectable: true,
+                expectedParticle: { symbol: 'β⁻', mass: 0, charge: -1 },
+                selectedParticle: null,
+                coeff: 1
+            }
+        ],
+        explanation: 'Plutonium-241 undergoing beta-minus decay to yield Americium-241.'
+    },
+    {
+        id: 'nuc-24',
+        category: 'Decay',
+        difficulty: 'Medium',
+        reactants: [
+            { symbol: 'Bi', mass: 210, charge: 83, netCharge: 0, raw: 'Bi210', coeff: 1 }
+        ],
+        products: [
+            { symbol: 'Po', mass: 210, charge: 84, netCharge: 0, raw: 'Po210', coeff: 1 },
+            {
+                isSelectable: true,
+                expectedParticle: { symbol: 'β⁻', mass: 0, charge: -1 },
+                selectedParticle: null,
+                coeff: 1
+            }
+        ],
+        explanation: 'Bismuth-210 beta decay in the historical decay chain transforming into Polonium-210.'
+    },
+    {
+        id: 'nuc-25',
+        category: 'Transmutation',
+        difficulty: 'Easy',
+        reactants: [
+            { symbol: 'Co', mass: 59, charge: 27, netCharge: 0, raw: 'Co59', coeff: 1 },
+            { symbol: 'n', mass: 1, charge: 0, netCharge: 0, raw: 'n1', coeff: 1 }
+        ],
+        products: [
+            { symbol: 'Co', mass: 60, charge: 27, netCharge: 0, raw: 'Co60', coeff: 1 }
+        ],
+        explanation: 'Thermal neutron capture by Cobalt-59 producing radioactive Cobalt-60.'
+    }
 ];

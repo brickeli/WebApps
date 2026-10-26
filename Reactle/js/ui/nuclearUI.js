@@ -124,10 +124,10 @@ function createSpeciesCard(symbol) {
      const statusBadge = document.getElementById('balance-status');
      if (statusBadge) {
          statusBadge.innerText = isFullyBalanced ? 'Balanced!' : 'Unbalanced';
-         statusBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${
+         statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full ${
              isFullyBalanced
                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/40'
+                 : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
          } ${showMatrixBadge ? '' : 'hidden'}`;
      }
  }

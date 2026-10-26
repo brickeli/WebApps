@@ -5,9 +5,13 @@ function cleanSymbol(symbol) {
     return symbol.replace(/<[^>]*>/g, '').replace(/[0-9]/g, '').trim();
 }
 
+// Case-sensitive subatomic particle lookup (No forced .toLowerCase())
 function getSubatomicParticleData(symbol) {
-    const clean = cleanSymbol(symbol).toLowerCase();
-    if (clean === 'n') {
+    const raw = cleanSymbol(symbol);
+    const lower = raw.toLowerCase();
+
+    // 1. Strict Case-Sensitive Single-Letter Particles
+    if (raw === 'n') {
         return {
             name: "Neutron",
             atomicNumber: 0,
@@ -16,7 +20,7 @@ function getSubatomicParticleData(symbol) {
             summary: "A neutral nucleon with mass number 1 and zero electric charge, essential for initiating and sustaining fission chain reactions."
         };
     }
-    if (clean === 'p') {
+    if (raw === 'p') {
         return {
             name: "Proton",
             atomicNumber: 1,
@@ -25,16 +29,18 @@ function getSubatomicParticleData(symbol) {
             summary: "Positively charged nucleon representing a Hydrogen-1 nucleus."
         };
     }
-    if (clean === 'e' || clean === 'beta' || clean === 'β⁻') {
+    if (raw === 'β⁻' || raw === 'e-' || raw === 'β-' || raw === 'e' || lower === 'beta') {
         return {
-            name: "Beta-Minus Particle",
+            name: "Beta-Minus Particle (Electron)",
             atomicNumber: -1,
             category: "Subatomic Particle",
             atomicMass: 0.0005,
-            summary: "High-energy electron emitted during nuclear beta-minus decay."
+            summary: "High-energy electron emitted from a nucleus during nuclear beta-minus decay, converting a neutron into a proton."
         };
     }
-    if (clean === 'β⁺' || clean === 'positron') {
+
+    // 2. Multi-Character & Greek Notation Aliases
+    if (lower === 'β⁺' || lower === 'positron') {
         return {
             name: "Positron (Beta-Plus)",
             atomicNumber: 1,
@@ -43,7 +49,7 @@ function getSubatomicParticleData(symbol) {
             summary: "Positively charged antielectron emitted during positron emission."
         };
     }
-    if (clean === 'α' || clean === 'alpha') {
+    if (raw === 'α' || lower === 'alpha') {
         return {
             name: "Alpha Particle",
             atomicNumber: 2,
@@ -52,7 +58,7 @@ function getSubatomicParticleData(symbol) {
             summary: "Helium-4 nucleus consisting of two protons and two neutrons emitted during alpha decay."
         };
     }
-    if (clean === 'γ' || clean === 'gamma') {
+    if (raw === 'γ' || lower === 'gamma') {
         return {
             name: "Gamma Ray Photon",
             atomicNumber: 0,
@@ -64,9 +70,31 @@ function getSubatomicParticleData(symbol) {
     return null;
 }
 
-export function showElementTooltip(event, rawSymbol) {
+// Primary resolver: Case-sensitive particle check -> Case-sensitive element check -> Title-case element fallback
+function resolveTooltipData(rawSymbol) {
     const symbol = cleanSymbol(rawSymbol);
-    const elemData = PERIODIC_TABLE[symbol] || getSubatomicParticleData(symbol);
+    if (!symbol) return { symbol: '', data: null };
+
+    // 1. Check Subatomic Particles (Case-Sensitive: 'p' = Proton)
+    const particle = getSubatomicParticleData(symbol);
+    if (particle) return { symbol, data: particle };
+
+    // 2. Check Periodic Table Exact Case (Case-Sensitive: 'P' = Phosphorus, 'Pu' = Plutonium)
+    if (PERIODIC_TABLE[symbol]) {
+        return { symbol, data: PERIODIC_TABLE[symbol] };
+    }
+
+    // 3. Secondary Fallback: Format title-case for user inputs ('pu' or 'PU' -> 'Pu')
+    const formattedSymbol = symbol.charAt(0).toUpperCase() + symbol.slice(1).toLowerCase();
+    if (PERIODIC_TABLE[formattedSymbol]) {
+        return { symbol: formattedSymbol, data: PERIODIC_TABLE[formattedSymbol] };
+    }
+
+    return { symbol, data: null };
+}
+
+export function showElementTooltip(event, rawSymbol) {
+    const { symbol, data: elemData } = resolveTooltipData(rawSymbol);
 
     if (!elemData) return;
 
@@ -125,12 +153,10 @@ export function showElementTooltip(event, rawSymbol) {
 
         // If rendering above the card causes top clipping, clamp to top margin
         if (topY - tooltipHeight < topPadding) {
-            // Option A: If enough space below the tile, show below it
             if (rect.bottom + tooltipHeight + topPadding <= viewportHeight) {
                 tooltip.style.transform = 'translate(-50%, 0)';
                 topY = rect.bottom + 8;
             } else {
-                // Option B: Otherwise clamp top coordinate safely inside screen
                 tooltip.style.transform = 'translate(-50%, 0)';
                 topY = topPadding;
             }

@@ -177,7 +177,7 @@ function loadSharedSettings() {
         matrixLabel.className = state.showMatrixBadge ? 'text-xs font-mono font-bold text-amber-600 dark:text-amber-400' : 'text-xs font-mono font-bold text-rose-600';
     }
     if (matrixIcon) {
-        matrixIcon.className = state.showMatrixBadge ? 'fa-solid fa-atom w-4 text-amber-500' : 'fa-solid fa-atom w-4 text-slate-500';
+        matrixIcon.className = state.showMatrixBadge ? 'fa-solid fa-scale-balanced w-4 text-amber-500' : 'fa-solid fa-scale-balanced w-4 text-slate-500';
     }
     if (statusBadge) {
         statusBadge.classList.toggle('hidden', !state.showMatrixBadge);
@@ -332,7 +332,7 @@ function switchMode(mode) {
         solver: document.getElementById('nav-solver')
     };
 
-    const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-amber-700', 'dark:text-amber-300', 'shadow-sm'];
+    const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-amber-600', 'dark:text-amber-300', 'shadow-sm'];
     const inactiveClasses = ['text-slate-700', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
 
     Object.keys(tabs).forEach(tabKey => {
@@ -627,7 +627,7 @@ function createNuclearTermHTML(term, index, type) {
         slotBtn.type = 'button';
 
         if (term.selectedParticle) {
-            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
+            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
 
             slotBtn.innerHTML = `
                 <span class="text-xs flex flex-col items-end leading-none font-sans font-normal opacity-80">
@@ -640,7 +640,7 @@ function createNuclearTermHTML(term, index, type) {
             slotBtn.addEventListener('mouseenter', (e) => showElementTooltip(e, term.selectedParticle.symbol));
             slotBtn.addEventListener('mouseleave', hideElementTooltip);
         } else {
-            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
+            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
             slotBtn.innerHTML = `<i class="fa-solid fa-circle-question text-amber-500 mr-1"></i> Choose`;
         }
 
@@ -861,7 +861,7 @@ function shareDailyResult() {
     const currentStreak = Storage.getDailyStreak();
     const dayNum = getDailyChallengeNumber('2026-01-01');
 
-    const shareText = `Nuclear Reactle Daily #${dayNum} ⚛️\n` +
+    const shareText = `Nuclear Reactle Daily #${dayNum} ☢️\n` +
                       `Streak: ${currentStreak} 🔥 | Solved in Daily Challenge Mode!\n` +
                       `https://brickeli.github.io/WebApps/Reactle/nuclear.html`;
 
@@ -996,8 +996,9 @@ function handleCustomNuclearBalance(inputStr) {
       const Z_LOOKUP = {
         H: 1, He: 2, Li: 3, Be: 4, B: 5, C: 6, N: 7, O: 8, F: 9, Ne: 10,
         Na: 11, Mg: 12, Al: 13, Si: 14, P: 15, S: 16, Cl: 17, Ar: 18, K: 19, Ca: 20,
-        Fe: 26, Ni: 28, Cu: 29, Zn: 30, Br: 35, Kr: 36, Ag: 47, I: 53, Ba: 56,
-        Hg: 80, Pb: 82, Rn: 86, Ra: 88, U: 92, Cf: 98
+        Fe: 26, Co: 27, Ni: 28, Cu: 29, Zn: 30, Br: 35, Kr: 36, Mo: 42, Tc: 43, Ag: 47,
+        I: 53, Ba: 56, Hg: 80, Pb: 82, Bi: 83, Po: 84, Rn: 86, Ra: 88, Th: 90, U: 92,
+        Pu: 94, Am: 95, Cf: 98
       };
 
       if (typeof PERIODIC_TABLE !== 'undefined' && PERIODIC_TABLE[formattedSymbol]) {
