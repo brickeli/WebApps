@@ -243,7 +243,7 @@ export const NUCLEAR_EQUATIONS = [
     {
         id: 'nuc-14',
         category: 'Fusion',
-        difficulty: 'Hard',
+        difficulty: 'Medium',
         reactants: [
             { symbol: 'He', mass: 4, charge: 2, netCharge: 0, raw: 'He4', coeff: 3 }
         ],
@@ -441,7 +441,12 @@ export const NUCLEAR_EQUATIONS = [
         difficulty: 'Easy',
         reactants: [
             { symbol: 'Co', mass: 59, charge: 27, netCharge: 0, raw: 'Co59', coeff: 1 },
-            { symbol: 'n', mass: 1, charge: 0, netCharge: 0, raw: 'n1', coeff: 1 }
+            {
+                isSelectable: true,
+                expectedParticle: { symbol: 'n', mass: 1, charge: 0 },
+                selectedParticle: null,
+                coeff: 1
+            }
         ],
         products: [
             { symbol: 'Co', mass: 60, charge: 27, netCharge: 0, raw: 'Co60', coeff: 1 }
