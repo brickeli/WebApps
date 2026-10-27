@@ -2,7 +2,7 @@ export const EQUATION_DATABASE = [
     // --- SYNTHESIS REACTIONS ---
     {
         id: 'water-synthesis',
-        category: 'Synthesis',
+        category: ['Synthesis'],
         difficulty: 'Easy',
         reactants: [{ formula: "H<sub>2</sub>", raw: "H2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
         products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -10,15 +10,15 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'rust-formation',
-        category: 'Synthesis',
+        category: ['Synthesis', 'Oxidation'],
         difficulty: 'Medium',
         reactants: [{ formula: "Fe", raw: "Fe", coeff: 4 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 3 }],
         products: [{ formula: "Fe<sub>2</sub>O<sub>3</sub>", raw: "Fe2O3", coeff: 2 }],
-        explanation: "Iron oxidizes in the presence of atmospheric oxygen gas to form iron(III) oxide, commonly known as rust."
+        explanation: "Iron metal oxidizes in the presence of atmospheric oxygen gas to form iron(III) oxide, commonly known as rust."
     },
     {
         id: 'ammonia-synthesis',
-        category: 'Synthesis',
+        category: ['Synthesis'],
         difficulty: 'Medium',
         reactants: [{ formula: "N<sub>2</sub>", raw: "N2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 3 }],
         products: [{ formula: "NH<sub>3</sub>", raw: "NH3", coeff: 2 }],
@@ -26,25 +26,33 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'magnesium-oxide-synthesis',
-        category: 'Synthesis',
+        category: ['Synthesis', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "Mg", raw: "Mg", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
         products: [{ formula: "MgO", raw: "MgO", coeff: 2 }],
-        explanation: "Magnesium ribbon ignites with a blinding white light in oxygen gas to form solid magnesium oxide powder."
+        explanation: "Magnesium ribbon burns vigorously in oxygen with an intense white flash to produce magnesium oxide powder."
     },
     {
         id: 'sulfur-trioxide-synthesis',
-        category: 'Synthesis',
+        category: ['Synthesis'],
         difficulty: 'Medium',
         reactants: [{ formula: "SO<sub>2</sub>", raw: "SO2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
         products: [{ formula: "SO<sub>3</sub>", raw: "SO3", coeff: 2 }],
         explanation: "Sulfur dioxide combines with oxygen gas during the industrial contact process to synthesize sulfur trioxide."
     },
+    {
+        id: 'sodium-chlorine-synthesis',
+        category: ['Synthesis', 'Oxidation'],
+        difficulty: 'Easy',
+        reactants: [{ formula: "Na", raw: "Na", coeff: 2 }, { formula: "Cl<sub>2</sub>", raw: "Cl2", coeff: 1 }],
+        products: [{ formula: "NaCl", raw: "NaCl", coeff: 2 }],
+        explanation: "Sodium metal transfers valence electrons to chlorine gas in a highly energetic reaction to form ionic sodium chloride salt."
+    },
 
     // --- DECOMPOSITION REACTIONS ---
     {
         id: 'water-electrolysis',
-        category: 'Decomposition',
+        category: ['Decomposition'],
         difficulty: 'Easy',
         reactants: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
         products: [{ formula: "H<sub>2</sub>", raw: "H2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
@@ -52,7 +60,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'hydrogen-peroxide-decomposition',
-        category: 'Decomposition',
+        category: ['Decomposition', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "H<sub>2</sub>O<sub>2</sub>", raw: "H2O2", coeff: 2 }],
         products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
@@ -60,7 +68,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'calcium-carbonate-decomposition',
-        category: 'Decomposition',
+        category: ['Decomposition'],
         difficulty: 'Medium',
         reactants: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }],
         products: [{ formula: "CaO", raw: "CaO", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
@@ -68,7 +76,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'potassium-chlorate-decomposition',
-        category: 'Decomposition',
+        category: ['Decomposition'],
         difficulty: 'Medium',
         reactants: [{ formula: "KClO<sub>3</sub>", raw: "KClO3", coeff: 2 }],
         products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 3 }],
@@ -76,7 +84,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'carbonic-acid-decomposition',
-        category: 'Decomposition',
+        category: ['Decomposition'],
         difficulty: 'Easy',
         reactants: [{ formula: "H<sub>2</sub>CO<sub>3</sub>", raw: "H2CO3", coeff: 1 }],
         products: [{ formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
@@ -84,7 +92,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'mercury-oxide-decomposition',
-        category: 'Decomposition',
+        category: ['Decomposition'],
         difficulty: 'Hard',
         reactants: [{ formula: "HgO", raw: "HgO", coeff: 2 }],
         products: [{ formula: "Hg", raw: "Hg", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 1 }],
@@ -94,7 +102,7 @@ export const EQUATION_DATABASE = [
     // --- COMBUSTION REACTIONS ---
     {
         id: 'methane-combustion',
-        category: 'Combustion',
+        category: ['Combustion', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "CH<sub>4</sub>", raw: "CH4", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 2 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -102,7 +110,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'propane-combustion',
-        category: 'Combustion',
+        category: ['Combustion', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "C<sub>3</sub>H<sub>8</sub>", raw: "C3H8", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 5 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 3 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 4 }],
@@ -110,7 +118,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'ethane-combustion',
-        category: 'Combustion',
+        category: ['Combustion', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "C<sub>2</sub>H<sub>6</sub>", raw: "C2H6", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 7 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 4 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 6 }],
@@ -118,7 +126,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'ethanol-combustion',
-        category: 'Combustion',
+        category: ['Combustion', 'Oxidation'],
         difficulty: 'Medium',
         reactants: [{ formula: "C<sub>2</sub>H<sub>5</sub>OH", raw: "C2H5OH", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 3 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 2 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 3 }],
@@ -126,7 +134,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'acetylene-combustion',
-        category: 'Combustion',
+        category: ['Combustion', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "C<sub>2</sub>H<sub>2</sub>", raw: "C2H2", coeff: 2 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 5 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 4 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -136,7 +144,7 @@ export const EQUATION_DATABASE = [
     // --- SINGLE REPLACEMENT REACTIONS ---
     {
         id: 'thermite-reaction',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Medium',
         reactants: [{ formula: "Al", raw: "Al", coeff: 2 }, { formula: "Fe<sub>2</sub>O<sub>3</sub>", raw: "Fe2O3", coeff: 1 }],
         products: [{ formula: "Al<sub>2</sub>O<sub>3</sub>", raw: "Al2O3", coeff: 1 }, { formula: "Fe", raw: "Fe", coeff: 2 }],
@@ -144,7 +152,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'zinc-hydrochloric-acid',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "Zn", raw: "Zn", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
         products: [{ formula: "ZnCl<sub>2</sub>", raw: "ZnCl2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
@@ -152,7 +160,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'iron-copper-sulfate-displacement',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "Fe", raw: "Fe", coeff: 1 }, { formula: "CuSO<sub>4</sub>", raw: "CuSO4", coeff: 1 }],
         products: [{ formula: "FeSO<sub>4</sub>", raw: "FeSO4", coeff: 1 }, { formula: "Cu", raw: "Cu", coeff: 1 }],
@@ -160,7 +168,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'copper-silver-nitrate-displacement',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Medium',
         reactants: [{ formula: "Cu", raw: "Cu", coeff: 1 }, { formula: "AgNO<sub>3</sub>", raw: "AgNO3", coeff: 2 }],
         products: [{ formula: "Cu(NO<sub>3</sub>)<sub>2</sub>", raw: "Cu(NO3)2", coeff: 1 }, { formula: "Ag", raw: "Ag", coeff: 2 }],
@@ -168,7 +176,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'chlorine-potassium-bromide-replacement',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Medium',
         reactants: [{ formula: "Cl<sub>2</sub>", raw: "Cl2", coeff: 1 }, { formula: "KBr", raw: "KBr", coeff: 2 }],
         products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "Br<sub>2</sub>", raw: "Br2", coeff: 1 }],
@@ -176,7 +184,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'magnesium-hydrochloric-acid',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Easy',
         reactants: [{ formula: "Mg", raw: "Mg", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
         products: [{ formula: "MgCl<sub>2</sub>", raw: "MgCl2", coeff: 1 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
@@ -184,7 +192,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'sodium-water-reaction',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "Na", raw: "Na", coeff: 2 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
         products: [{ formula: "NaOH", raw: "NaOH", coeff: 2 }, { formula: "H<sub>2</sub>", raw: "H2", coeff: 1 }],
@@ -192,17 +200,33 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'aluminum-copper-chloride',
-        category: 'Single Replacement',
+        category: ['Single Replacement', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "Al", raw: "Al", coeff: 2 }, { formula: "CuCl<sub>2</sub>", raw: "CuCl2", coeff: 3 }],
         products: [{ formula: "AlCl<sub>3</sub>", raw: "AlCl3", coeff: 2 }, { formula: "Cu", raw: "Cu", coeff: 3 }],
         explanation: "Aluminum foil reacts exothermically in copper(II) chloride solution, displacing copper metal while forming aluminum chloride."
     },
+    {
+        id: 'blast-furnace-iron',
+        category: ['Oxidation', 'Single Replacement'],
+        difficulty: 'Medium',
+        reactants: [{ formula: "Fe<sub>2</sub>O<sub>3</sub>", raw: "Fe2O3", coeff: 1 }, { formula: "CO", raw: "CO", coeff: 3 }],
+        products: [{ formula: "Fe", raw: "Fe", coeff: 2 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 3 }],
+        explanation: "Carbon monoxide reduces iron(III) oxide inside industrial blast furnaces to produce elemental liquid iron metal."
+    },
+    {
+        id: 'copper-oxide-reduction',
+        category: ['Oxidation', 'Single Replacement'],
+        difficulty: 'Easy',
+        reactants: [{ formula: "CuO", raw: "CuO", coeff: 2 }, { formula: "C", raw: "C", coeff: 1 }],
+        products: [{ formula: "Cu", raw: "Cu", coeff: 2 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
+        explanation: "Carbon reduces black copper(II) oxide powder under high temperatures to liberate elemental copper metal and carbon dioxide."
+    },
 
     // --- DOUBLE REPLACEMENT REACTIONS ---
     {
         id: 'silver-chloride-precipitation',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Easy',
         reactants: [{ formula: "AgNO<sub>3</sub>", raw: "AgNO3", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 1 }],
         products: [{ formula: "AgCl", raw: "AgCl", coeff: 1 }, { formula: "NaNO<sub>3</sub>", raw: "NaNO3", coeff: 1 }],
@@ -210,7 +234,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'lead-iodide-precipitation',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Medium',
         reactants: [{ formula: "Pb(NO<sub>3</sub>)<sub>2</sub>", raw: "Pb(NO3)2", coeff: 1 }, { formula: "KI", raw: "KI", coeff: 2 }],
         products: [{ formula: "PbI<sub>2</sub>", raw: "PbI2", coeff: 1 }, { formula: "KNO<sub>3</sub>", raw: "KNO3", coeff: 2 }],
@@ -218,7 +242,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'barium-sulfate-precipitation',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Easy',
         reactants: [{ formula: "BaCl<sub>2</sub>", raw: "BaCl2", coeff: 1 }, { formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }],
         products: [{ formula: "BaSO<sub>4</sub>", raw: "BaSO4", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 2 }],
@@ -226,7 +250,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'copper-hydroxide-precipitation',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Medium',
         reactants: [{ formula: "CuSO<sub>4</sub>", raw: "CuSO4", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 2 }],
         products: [{ formula: "Cu(OH)<sub>2</sub>", raw: "Cu(OH)2", coeff: 1 }, { formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }],
@@ -234,7 +258,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'calcium-carbonate-precipitation',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Easy',
         reactants: [{ formula: "CaCl<sub>2</sub>", raw: "CaCl2", coeff: 1 }, { formula: "Na<sub>2</sub>CO<sub>3</sub>", raw: "Na2CO3", coeff: 1 }],
         products: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }, { formula: "NaCl", raw: "NaCl", coeff: 2 }],
@@ -242,7 +266,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'hydrogen-sulfide-gas-evolution',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Medium',
         reactants: [{ formula: "K<sub>2</sub>S", raw: "K2S", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
         products: [{ formula: "KCl", raw: "KCl", coeff: 2 }, { formula: "H<sub>2</sub>S", raw: "H2S", coeff: 1 }],
@@ -250,7 +274,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'potassium-sulfate-barium-nitrate',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Easy',
         reactants: [{ formula: "K<sub>2</sub>SO<sub>4</sub>", raw: "K2SO4", coeff: 1 }, { formula: "Ba(NO<sub>3</sub>)<sub>2</sub>", raw: "Ba(NO3)2", coeff: 1 }],
         products: [{ formula: "BaSO<sub>4</sub>", raw: "BaSO4", coeff: 1 }, { formula: "KNO<sub>3</sub>", raw: "KNO3", coeff: 2 }],
@@ -258,7 +282,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'ammonium-chloride-sodium-hydroxide',
-        category: 'Double Replacement',
+        category: ['Double Replacement'],
         difficulty: 'Medium',
         reactants: [{ formula: "NH<sub>4</sub>Cl", raw: "NH4Cl", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 1 }],
         products: [{ formula: "NaCl", raw: "NaCl", coeff: 1 }, { formula: "NH<sub>3</sub>", raw: "NH3", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }],
@@ -268,7 +292,7 @@ export const EQUATION_DATABASE = [
     // --- ACID-BASE REACTIONS ---
     {
         id: 'hydrochloric-acid-sodium-hydroxide',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Easy',
         reactants: [{ formula: "HCl", raw: "HCl", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 1 }],
         products: [{ formula: "NaCl", raw: "NaCl", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }],
@@ -276,7 +300,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'sulfuric-acid-sodium-hydroxide',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Medium',
         reactants: [{ formula: "H<sub>2</sub>SO<sub>4</sub>", raw: "H2SO4", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 2 }],
         products: [{ formula: "Na<sub>2</sub>SO<sub>4</sub>", raw: "Na2SO4", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -284,7 +308,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'nitric-acid-calcium-hydroxide',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Medium',
         reactants: [{ formula: "HNO<sub>3</sub>", raw: "HNO3", coeff: 2 }, { formula: "Ca(OH)<sub>2</sub>", raw: "Ca(OH)2", coeff: 1 }],
         products: [{ formula: "Ca(NO<sub>3</sub>)<sub>2</sub>", raw: "Ca(NO3)2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -292,7 +316,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'baking-soda-acid-neutralization',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Hard',
         reactants: [{ formula: "NaHCO<sub>3</sub>", raw: "NaHCO3", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 1 }],
         products: [{ formula: "NaCl", raw: "NaCl", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
@@ -300,7 +324,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'calcium-carbonate-acid-neutralization',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Hard',
         reactants: [{ formula: "CaCO<sub>3</sub>", raw: "CaCO3", coeff: 1 }, { formula: "HCl", raw: "HCl", coeff: 2 }],
         products: [{ formula: "CaCl<sub>2</sub>", raw: "CaCl2", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 1 }],
@@ -308,7 +332,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'acetic-acid-sodium-hydroxide',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Easy',
         reactants: [{ formula: "CH<sub>3</sub>COOH", raw: "CH3COOH", coeff: 1 }, { formula: "NaOH", raw: "NaOH", coeff: 1 }],
         products: [{ formula: "CH<sub>3</sub>COONa", raw: "CH3COONa", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 1 }],
@@ -316,7 +340,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'sulfuric-acid-potassium-hydroxide',
-        category: 'Acid-Base',
+        category: ['Acid-Base'],
         difficulty: 'Medium',
         reactants: [{ formula: "H<sub>2</sub>SO<sub>4</sub>", raw: "H2SO4", coeff: 1 }, { formula: "KOH", raw: "KOH", coeff: 2 }],
         products: [{ formula: "K<sub>2</sub>SO<sub>4</sub>", raw: "K2SO4", coeff: 1 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 2 }],
@@ -326,7 +350,7 @@ export const EQUATION_DATABASE = [
     // --- BIOLOGICAL REACTIONS ---
     {
         id: 'cellular-respiration',
-        category: 'Biological',
+        category: ['Biological', 'Oxidation'],
         difficulty: 'Hard',
         reactants: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 6 }],
         products: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 6 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 6 }],
@@ -334,7 +358,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'photosynthesis',
-        category: 'Biological',
+        category: ['Biological'],
         difficulty: 'Hard',
         reactants: [{ formula: "CO<sub>2</sub>", raw: "CO2", coeff: 6 }, { formula: "H<sub>2</sub>O", raw: "H2O", coeff: 6 }],
         products: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }, { formula: "O<sub>2</sub>", raw: "O2", coeff: 6 }],
@@ -342,7 +366,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'alcoholic-fermentation',
-        category: 'Biological',
+        category: ['Biological'],
         difficulty: 'Hard',
         reactants: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }],
         products: [{ formula: "C<sub>2</sub>H<sub>5</sub>OH", raw: "C2H5OH", coeff: 2 }, { formula: "CO<sub>2</sub>", raw: "CO2", coeff: 2 }],
@@ -350,7 +374,7 @@ export const EQUATION_DATABASE = [
     },
     {
         id: 'lactic-acid-fermentation',
-        category: 'Biological',
+        category: ['Biological'],
         difficulty: 'Easy',
         reactants: [{ formula: "C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", raw: "C6H12O6", coeff: 1 }],
         products: [{ formula: "C<sub>3</sub>H<sub>6</sub>O<sub>3</sub>", raw: "C3H6O3", coeff: 2 }],

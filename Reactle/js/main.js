@@ -5,7 +5,18 @@ import { hashDateString, startDailyCountdownTimer, formatSubscripts, getTodayDat
 import { playSound, setAudioEnabled } from './engine/audio.js';
 import { parseFormula } from './engine/parser.js';
 import { computeCoefficients } from './engine/solver.js';
-import { showElementTooltip, hideElementTooltip } from './ui/tooltips.js';
+import { populateFilterDropdowns } from './ui/filters.js';
+import { initTheme, toggleTheme, updateThemeUI } from './ui/theme.js';
+import {
+    showElementTooltip,
+    hideElementTooltip,
+    toggleModal,
+    toggleNavMenu,
+    toggleFilterAccordion,
+    toggleMatrixAccordion,
+    initModeDropdown,
+    isNavOpen
+} from './ui/components.js';
 
 // Application State
 let currentMode = 'daily';
@@ -19,10 +30,6 @@ let streak = 0;
 let soundEnabled = true;
 let showMatrixBadge = false;
 let hintStage = 0;
-
-let isMatrixAccordionOpen = false;
-let isFilterAccordionOpen = false;
-let isNavMenuOpen = false;
 
 // Expose functions globally for inline HTML event calls
 window.showElementTooltip = showElementTooltip;
@@ -39,71 +46,12 @@ window.addEventListener('DOMContentLoaded', () => {
     loadMatrixBadgeSetting();
     updateScoreboardDisplay();
     updateSoundIcon();
+    populateFilterDropdowns(EQUATION_DATABASE);
     setupEventListeners();
+    initModeDropdown();
 
-    // Set view tabs to match daily mode
     switchMode('daily');
 });
-
-
-// Game Mode Switcher
-function initModeDropdown() {
-    const btn = document.getElementById('mode-dropdown-btn');
-    const menu = document.getElementById('mode-dropdown-menu');
-    const chevron = document.getElementById('mode-dropdown-chevron');
-
-    if (!btn || !menu) return;
-
-    function toggleDropdown(show) {
-        const isOpening = show !== undefined ? show : menu.classList.contains('hidden');
-
-        if (isOpening) {
-            menu.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                menu.classList.remove('opacity-0', 'scale-95');
-                menu.classList.add('opacity-100', 'scale-100');
-            });
-            if (chevron) chevron.classList.add('rotate-180');
-            btn.setAttribute('aria-expanded', 'true');
-        } else {
-            menu.classList.remove('opacity-100', 'scale-100');
-            menu.classList.add('opacity-0', 'scale-95');
-            if (chevron) chevron.classList.remove('rotate-180');
-            btn.setAttribute('aria-expanded', 'false');
-            setTimeout(() => {
-                menu.classList.add('hidden');
-            }, 150);
-        }
-    }
-
-    // Toggle on header button click
-    btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleDropdown();
-    });
-
-    // Close when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!menu.contains(e.target) && !btn.contains(e.target)) {
-            toggleDropdown(false);
-        }
-    });
-
-    // Event Delegation: Listens directly on the menu for mode option clicks
-    menu.addEventListener('click', (e) => {
-        const optionBtn = e.target.closest('.mode-option');
-        if (!optionBtn) return;
-
-        const targetMode = optionBtn.getAttribute('data-mode');
-        toggleDropdown(false);
-
-        if (targetMode === 'reactle') {
-            window.location.href = './index.html';
-        } else if (targetMode === 'nuclear') {
-            window.location.href = './nuclear.html';
-        }
-    });
-}
 
 function saveStats() {
     Storage.saveStats(scoreCorrect, scoreAttempts, streak);
@@ -135,15 +83,24 @@ function setupEventListeners() {
         toggleNavMenu(false);
     });
 
+    // Close Nav Menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navMenuBtn = document.getElementById('nav-menu-btn');
+        const navDropdown = document.getElementById('nav-menu-dropdown');
+        if (isNavOpen() && navMenuBtn && navDropdown && !navMenuBtn.contains(e.target) && !navDropdown.contains(e.target)) {
+            toggleNavMenu(false);
+        }
+    });
+
     // Accordions
     document.getElementById('filter-accordion-toggle')?.addEventListener('click', () => toggleFilterAccordion());
-    document.getElementById('atom-matrix-toggle')?.addEventListener('click', () => toggleAtomMatrixAccordion());
+    document.getElementById('atom-matrix-toggle')?.addEventListener('click', () => toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron'));
 
     // Game Action Buttons
     document.getElementById('check-btn')?.addEventListener('click', checkAnswer);
     document.getElementById('next-btn')?.addEventListener('click', loadNextEquation);
     document.getElementById('share-btn')?.addEventListener('click', shareDailyResult);
-    document.getElementById('go-to-practice-btn')?.addEventListener('click', () => switchMode('practice')); // ADDED
+    document.getElementById('go-to-practice-btn')?.addEventListener('click', () => switchMode('practice'));
     document.getElementById('hint-btn')?.addEventListener('click', triggerHint);
     document.getElementById('reset-score-btn')?.addEventListener('click', resetScoreboard);
 
@@ -157,17 +114,9 @@ function setupEventListeners() {
         });
     });
 
-    // Modals & Outside Clicks
+    // Modals
     document.getElementById('close-help-modal-btn')?.addEventListener('click', () => toggleModal('help-modal'));
     document.getElementById('modal-confirm-btn')?.addEventListener('click', () => toggleModal('help-modal'));
-
-    document.addEventListener('click', (e) => {
-        const navMenuBtn = document.getElementById('nav-menu-btn');
-        const navDropdown = document.getElementById('nav-menu-dropdown');
-        if (isNavMenuOpen && navMenuBtn && navDropdown && !navMenuBtn.contains(e.target) && !navDropdown.contains(e.target)) {
-            toggleNavMenu(false);
-        }
-    });
 
     // Reaction Filters
     document.getElementById('category-filter-desktop')?.addEventListener('change', (e) => onFilterChange(e.target.value, 'cat'));
@@ -251,11 +200,15 @@ function switchMode(mode) {
 }
 
 function loadNextEquation() {
-    const cat = document.getElementById('category-filter-desktop').value;
-    const diff = document.getElementById('difficulty-filter-desktop').value;
+    const cat = document.getElementById('category-filter-desktop')?.value || 'ALL';
+    const diff = document.getElementById('difficulty-filter-desktop')?.value || 'ALL';
 
     let filtered = EQUATION_DATABASE.filter(eq => {
-        const catMatch = (cat === 'ALL' || eq.category === cat);
+        const catMatch = (cat === 'ALL') || (
+            Array.isArray(eq.category)
+                ? eq.category.includes(cat)
+                : eq.category === cat
+        );
         const diffMatch = (diff === 'ALL' || eq.difficulty === diff);
         return catMatch && diffMatch;
     });
@@ -308,8 +261,11 @@ function renderEquationCard(eq) {
     inputsArray = [];
     hintStage = 0;
 
-    document.getElementById('badge-category').innerText = eq.category;
+    // Clean display format for array or string category
+    const displayCategory = Array.isArray(eq.category) ? eq.category.join(' / ') : eq.category;
+    document.getElementById('badge-category').innerText = displayCategory;
     document.getElementById('badge-difficulty').innerText = eq.difficulty;
+
     document.getElementById('insight-card').classList.add('hidden');
     document.getElementById('feedback-banner').classList.add('hidden');
     document.getElementById('check-btn').classList.remove('hidden');
@@ -324,7 +280,7 @@ function renderEquationCard(eq) {
     if (hintBtn) hintBtn.classList.remove('hidden');
 
     document.getElementById('hint-btn-text').innerText = 'Hint';
-    toggleAtomMatrixAccordion(false);
+    toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron', false);
 
     const container = document.getElementById('equation-container');
     container.innerHTML = '';
@@ -407,7 +363,6 @@ function createMoleculeInputGroup(molData, index, type) {
     inputsArray.push({
         inputEl: input,
         expectedCoeff: molData.coeff,
-        // Strips <sub> formatting tags so parseFormula receives clean "O2" instead of "O<sub>2</sub>"
         rawFormula: molData.raw || molData.formula.replace(/<[^>]*>/g, '').trim(),
         type: type
     });
@@ -449,7 +404,6 @@ export function calculateAtomMatrix() {
 
         if (!isMatch) isFullyBalanced = false;
 
-        // 1. Create outer Card with cursor-help and hover styling
         const card = document.createElement('div');
         card.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm font-medium transition-all cursor-help select-none ${
             isMatch
@@ -457,13 +411,11 @@ export function calculateAtomMatrix() {
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
         }`;
 
-        // 2. Attach tooltip listeners directly to the ENTIRE card
         card.addEventListener('mouseenter', (e) => showElementTooltip(e, elem));
         card.addEventListener('mouseleave', () => hideElementTooltip());
         card.addEventListener('touchstart', (e) => showElementTooltip(e, elem), { passive: true });
         card.addEventListener('touchend', () => hideElementTooltip());
 
-        // 3. Create element label container
         const labelDiv = document.createElement('div');
         labelDiv.className = 'flex items-center gap-1.5 font-bold';
         labelDiv.innerHTML = `
@@ -473,7 +425,6 @@ export function calculateAtomMatrix() {
             <span>${elem}</span>
         `;
 
-        // 4. Create count display container
         const countDiv = document.createElement('div');
         countDiv.className = 'font-mono font-bold';
         countDiv.innerHTML = `
@@ -532,12 +483,10 @@ function checkAnswer() {
             history[todayStr] = { completed: true, timestamp: new Date().toISOString() };
             Storage.setDailyHistory(history);
 
-            // Hide Next Equation & Hint buttons
             document.getElementById('next-btn').classList.add('hidden');
             const hintBtn = document.getElementById('hint-btn');
             if (hintBtn) hintBtn.classList.add('hidden');
 
-            // Show Share & Practice buttons
             const shareBtn = document.getElementById('share-btn');
             if (shareBtn) shareBtn.classList.remove('hidden');
 
@@ -617,7 +566,7 @@ function triggerHint() {
     feedback.classList.remove('hidden');
 
     if (hintStage === 1) {
-        toggleAtomMatrixAccordion(true);
+        toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron', true);
         feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
         feedback.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1:</strong> Matrix expanded! Focus on balancing oxygen or hydrogen atoms last!`;
         document.getElementById('hint-btn-text').innerText = 'Reveal Coefficient';
@@ -654,7 +603,6 @@ function solveCustomEquation() {
         if (solution) {
             resultPanel.classList.remove('hidden');
 
-            // Wrap raw formulas with formatSubscripts to render proper HTML <sub> tags
             let balancedStr = solution.reactants.map((r) =>
                 `${r.coeff > 1 ? r.coeff : ''}${formatSubscripts(r.raw)}`
             ).join(' + ') +
@@ -672,7 +620,6 @@ function solveCustomEquation() {
                 id: 'custom-' + Date.now(),
                 category: 'Custom Reaction',
                 difficulty: 'Custom',
-                // Pass formatted formula for input labels and raw formula for calculations
                 reactants: solution.reactants.map(r => ({ formula: formatSubscripts(r.raw), raw: r.raw, coeff: r.coeff })),
                 products: solution.products.map(p => ({ formula: formatSubscripts(p.raw), raw: p.raw, coeff: p.coeff })),
                 explanation: 'Custom user generated chemical reaction balanced automatically!'
@@ -689,37 +636,6 @@ function playCustomAsQuiz() {
     if (window.customQuizData) {
         switchMode('practice');
         renderEquationCard(window.customQuizData);
-    }
-}
-
-/* --- Settings & UI Helpers --- */
-function toggleTheme() {
-    const html = document.documentElement;
-    const isDark = html.classList.toggle('dark');
-    Storage.setTheme(isDark ? 'dark' : 'light');
-    updateThemeUI(isDark);
-}
-
-function initTheme() {
-    const savedTheme = Storage.getTheme();
-    const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-    updateThemeUI(isDark);
-}
-
-function updateThemeUI(isDark) {
-    const themeLabel = document.getElementById('theme-status-label');
-    const themeIcon = document.getElementById('theme-icon');
-    if (isDark) {
-        if (themeIcon) themeIcon.className = 'fa-solid fa-sun w-4 text-amber-400';
-        if (themeLabel) themeLabel.innerText = 'DARK';
-    } else {
-        if (themeIcon) themeIcon.className = 'fa-solid fa-moon w-4 text-chemistry-500';
-        if (themeLabel) themeLabel.innerText = 'LIGHT';
     }
 }
 
@@ -784,58 +700,6 @@ function updateMatrixBadgeUI() {
     }
 }
 
-function toggleNavMenu(forceState) {
-    playSound('click');
-    const dropdown = document.getElementById('nav-menu-dropdown');
-    const chevron = document.getElementById('nav-menu-chevron');
-
-    isNavMenuOpen = typeof forceState === 'boolean' ? forceState : !isNavMenuOpen;
-
-    if (isNavMenuOpen) {
-        dropdown?.classList.remove('hidden');
-        chevron?.classList.add('rotate-180');
-    } else {
-        dropdown?.classList.add('hidden');
-        chevron?.classList.remove('rotate-180');
-    }
-}
-
-function toggleFilterAccordion(forceState) {
-    playSound('click');
-    const wrapper = document.getElementById('filter-accordion-wrapper');
-    const chevron = document.getElementById('filter-accordion-chevron');
-
-    isFilterAccordionOpen = typeof forceState === 'boolean' ? forceState : !isFilterAccordionOpen;
-
-    if (isFilterAccordionOpen) {
-        wrapper?.classList.remove('max-h-0', 'opacity-0');
-        wrapper?.classList.add('max-h-[300px]', 'opacity-100');
-        chevron?.classList.add('rotate-180');
-    } else {
-        wrapper?.classList.remove('max-h-[300px]', 'opacity-100');
-        wrapper?.classList.add('max-h-0', 'opacity-0');
-        chevron?.classList.remove('rotate-180');
-    }
-}
-
-function toggleAtomMatrixAccordion(forceState) {
-    playSound('click');
-    const wrapper = document.getElementById('atom-matrix-wrapper');
-    const chevron = document.getElementById('atom-matrix-chevron');
-
-    isMatrixAccordionOpen = typeof forceState === 'boolean' ? forceState : !isMatrixAccordionOpen;
-
-    if (isMatrixAccordionOpen) {
-        wrapper?.classList.remove('max-h-0', 'opacity-0');
-        wrapper?.classList.add('max-h-[500px]', 'opacity-100');
-        chevron?.classList.add('rotate-180');
-    } else {
-        wrapper?.classList.remove('max-h-[500px]', 'opacity-100');
-        wrapper?.classList.add('max-h-0', 'opacity-0');
-        chevron?.classList.remove('rotate-180');
-    }
-}
-
 function onFilterChange(value, type) {
     const catDesk = document.getElementById('category-filter-desktop');
     const catMob = document.getElementById('category-filter-mobile');
@@ -867,21 +731,10 @@ function resetScoreboard() {
     updateScoreboardDisplay();
 }
 
-function toggleModal(modalId) {
-    playSound('click');
-    document.getElementById(modalId)?.classList.toggle('hidden');
-}
-
-// Call during initialization
-document.addEventListener('DOMContentLoaded', () => {
-    initModeDropdown();
-});
-
 function loadStats() {
     const stats = Storage.getStats();
     scoreCorrect = stats.correct;
     scoreAttempts = stats.attempts;
-    // Calculate streak exclusively from Daily Challenge completions
     streak = Storage.getDailyStreak();
     soundEnabled = Storage.getSound();
     setAudioEnabled(soundEnabled);

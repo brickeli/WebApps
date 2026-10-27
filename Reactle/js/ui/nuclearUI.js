@@ -1,5 +1,5 @@
 // --- Nuclear UI Helpers ---
-import { showElementTooltip, hideElementTooltip } from './tooltips.js';
+import { showElementTooltip, hideElementTooltip } from './components.js';
 
 /**
  * Creates an interactive species card for particles and isotopes in the reaction matrix.
@@ -31,106 +31,147 @@ function createSpeciesCard(symbol) {
 }
 
 /**
+ * Safely evaluates Mass (A) and Charge (Z) for fixed terms or user-selected particle slots
+ * @param {Object} term - Reaction term
+ * @param {number} userCoeff - User entered coefficient
+ * @returns {{massVal: number, chargeVal: number}}
+ */
+function getTermValues(term, userCoeff) {
+    const coeff = typeof userCoeff === 'number' && userCoeff > 0 ? userCoeff : 1;
+    let mass = 0;
+    let charge = 0;
+
+    if (term.isSelectable) {
+        if (term.selectedParticle) {
+            mass = term.selectedParticle.mass || 0;
+            charge = term.selectedParticle.charge !== undefined ? term.selectedParticle.charge : 0;
+        }
+    } else {
+        mass = term.mass || 0;
+        charge = term.charge !== undefined ? term.charge : 0;
+    }
+
+    return {
+        massVal: mass * coeff,
+        chargeVal: charge * coeff
+    };
+}
+
+/**
  * Renders the nuclear conservation matrix displaying total mass numbers (A) and atomic charges (Z)
  * @param {string} containerId - DOM ID of the container element
  * @param {Object} parsedEquation - Parsed equation object containing reactants and products arrays
  * @param {Array<number>} userCoefficients - Array of active user-entered coefficients
  * @param {boolean} showMatrixBadge - Toggle state for the balance badge in header
  */
- export function renderNuclearMatrix(containerId, parsedEquation, userCoefficients, showMatrixBadge) {
-     if (!parsedEquation) return;
+export function renderNuclearMatrix(containerId, parsedEquation, userCoefficients = [], showMatrixBadge = false) {
+    if (!parsedEquation) return;
 
-     const offset = parsedEquation.reactants.length;
-     const allSpecies = new Set();
-     let reactA = 0, reactZ = 0, prodA = 0, prodZ = 0;
+    const offset = parsedEquation.reactants ? parsedEquation.reactants.length : 0;
+    const allSpecies = new Set();
+    let reactA = 0, reactZ = 0, prodA = 0, prodZ = 0;
 
-     // 1. Calculate Mass (A) and Charge (Z) totals
-     parsedEquation.reactants.forEach((term, idx) => {
-         const coeff = userCoefficients[idx] || 1;
-         reactA += (term.mass || 0) * coeff;
-         reactZ += (term.charge !== undefined ? term.charge : 0) * coeff;
-         if (term.symbol) allSpecies.add(term.symbol);
-     });
+    // 1. Calculate Mass (A) and Charge (Z) totals safely
+    if (parsedEquation.reactants) {
+        parsedEquation.reactants.forEach((term, idx) => {
+            const { massVal, chargeVal } = getTermValues(term, userCoefficients[idx]);
+            reactA += massVal;
+            reactZ += chargeVal;
 
-     parsedEquation.products.forEach((term, idx) => {
-         const coeff = userCoefficients[offset + idx] || 1;
-         prodA += (term.mass || 0) * coeff;
-         prodZ += (term.charge !== undefined ? term.charge : 0) * coeff;
-         if (term.symbol) allSpecies.add(term.symbol);
-     });
+            if (term.isSelectable && term.selectedParticle?.symbol) {
+                allSpecies.add(term.selectedParticle.symbol);
+            } else if (term.symbol) {
+                allSpecies.add(term.symbol);
+            }
+        });
+    }
 
-     const isMassBalanced = reactA === prodA;
-     const isChargeBalanced = reactZ === prodZ;
-     const isFullyBalanced = isMassBalanced && isChargeBalanced;
+    if (parsedEquation.products) {
+        parsedEquation.products.forEach((term, idx) => {
+            const { massVal, chargeVal } = getTermValues(term, userCoefficients[offset + idx]);
+            prodA += massVal;
+            prodZ += chargeVal;
 
-     // 2. Update Mass (A) Card DOM
-     const massCard = document.getElementById('mass-card');
-     const massIcon = document.getElementById('mass-icon');
-     const massReactants = document.getElementById('mass-reactants');
-     const massProducts = document.getElementById('mass-products');
+            if (term.isSelectable && term.selectedParticle?.symbol) {
+                allSpecies.add(term.selectedParticle.symbol);
+            } else if (term.symbol) {
+                allSpecies.add(term.symbol);
+            }
+        });
+    }
 
-     if (massCard) {
-         massCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
-             isMassBalanced
-                 ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
-                 : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
-         }`;
-     }
-     if (massIcon) {
-         massIcon.className = `fa-solid ${isMassBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
-     }
-     if (massReactants) {
-         massReactants.textContent = reactA;
-         massReactants.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-     }
-     if (massProducts) {
-         massProducts.textContent = prodA;
-         massProducts.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-     }
+    const isMassBalanced = (reactA === prodA) && (reactA > 0);
+    const isChargeBalanced = reactZ === prodZ;
+    const isFullyBalanced = isMassBalanced && isChargeBalanced;
 
-     // 3. Update Atomic Charge (Z) Card DOM
-     const chargeCard = document.getElementById('charge-card');
-     const chargeIcon = document.getElementById('charge-icon');
-     const chargeReactants = document.getElementById('charge-reactants');
-     const chargeProducts = document.getElementById('charge-products');
+    // 2. Update Mass (A) Card DOM
+    const massCard = document.getElementById('mass-card');
+    const massIcon = document.getElementById('mass-icon');
+    const massReactants = document.getElementById('mass-reactants');
+    const massProducts = document.getElementById('mass-products');
 
-     if (chargeCard) {
-         chargeCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
-             isChargeBalanced
-                 ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
-                 : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
-         }`;
-     }
-     if (chargeIcon) {
-         chargeIcon.className = `fa-solid ${isChargeBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
-     }
-     if (chargeReactants) {
-         chargeReactants.textContent = reactZ;
-         chargeReactants.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-     }
-     if (chargeProducts) {
-         chargeProducts.textContent = prodZ;
-         chargeProducts.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-     }
+    if (massCard) {
+        massCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
+            isMassBalanced
+                ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
+                : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
+        }`;
+    }
+    if (massIcon) {
+        massIcon.className = `fa-solid ${isMassBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
+    }
+    if (massReactants) {
+        massReactants.textContent = reactA;
+        massReactants.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+    if (massProducts) {
+        massProducts.textContent = prodA;
+        massProducts.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
 
-     // 4. Update Species Grid
-     const speciesGrid = document.getElementById('species-cards-grid');
-     if (speciesGrid) {
-         speciesGrid.innerHTML = '';
-         allSpecies.forEach(symbol => speciesGrid.appendChild(createSpeciesCard(symbol)));
-     }
+    // 3. Update Atomic Charge (Z) Card DOM
+    const chargeCard = document.getElementById('charge-card');
+    const chargeIcon = document.getElementById('charge-icon');
+    const chargeReactants = document.getElementById('charge-reactants');
+    const chargeProducts = document.getElementById('charge-products');
 
-     // 5. Update Status Badge in Header
-     const statusBadge = document.getElementById('balance-status');
-     if (statusBadge) {
-         statusBadge.innerText = isFullyBalanced ? 'Balanced!' : 'Unbalanced';
-         statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full ${
-             isFullyBalanced
-                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                 : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-         } ${showMatrixBadge ? '' : 'hidden'}`;
-     }
- }
+    if (chargeCard) {
+        chargeCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
+            isChargeBalanced
+                ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
+                : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
+        }`;
+    }
+    if (chargeIcon) {
+        chargeIcon.className = `fa-solid ${isChargeBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
+    }
+    if (chargeReactants) {
+        chargeReactants.textContent = reactZ >= 0 ? `+${reactZ}` : reactZ;
+        chargeReactants.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+    if (chargeProducts) {
+        chargeProducts.textContent = prodZ >= 0 ? `+${prodZ}` : prodZ;
+        chargeProducts.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+
+    // 4. Update Species Grid
+    const speciesGrid = document.getElementById('species-cards-grid');
+    if (speciesGrid) {
+        speciesGrid.innerHTML = '';
+        allSpecies.forEach(symbol => speciesGrid.appendChild(createSpeciesCard(symbol)));
+    }
+
+    // 5. Update Status Badge in Header
+    const statusBadge = document.getElementById('balance-status');
+    if (statusBadge) {
+        statusBadge.innerText = isFullyBalanced ? 'Balanced!' : 'Unbalanced';
+        statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+            isFullyBalanced
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+        } ${showMatrixBadge ? '' : 'hidden'}`;
+    }
+}
 
 /**
  * Formats isotope notation with stacked mass (A) and charge (Z), plus optional net ionic charge badge.
@@ -143,9 +184,10 @@ function createSpeciesCard(symbol) {
 export function formatIsotopeHTML(symbol, mass, charge, netCharge = null) {
     let netChargeHTML = '';
 
-    if (netCharge !== null && netCharge !== 0) {
-        const sign = netCharge > 0 ? '+' : '-';
-        const absVal = Math.abs(netCharge);
+    // Only attach an ionic superscript if term.netCharge is explicitly defined and distinct from Z
+    if (term.netCharge !== null && term.netCharge !== undefined && term.netCharge !== 0 && term.netCharge !== term.charge) {
+        const sign = term.netCharge > 0 ? '+' : '-';
+        const absVal = Math.abs(term.netCharge);
         const displayVal = absVal === 1 ? sign : `${absVal}${sign}`;
         netChargeHTML = `<sup class="text-[10px] sm:text-xs font-bold text-amber-500 ml-0.5">${displayVal}</sup>`;
     }
