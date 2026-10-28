@@ -1,3 +1,5 @@
+import { PERIODIC_TABLE, NUCLEAR_PARTICLES } from '../data/periodicTable.js';
+
 export function hashDateString(str, seed = 0x97f29ac1) {
     let h1 = seed;
     for (let i = 0; i < str.length; i++) {
@@ -18,12 +20,12 @@ export function hashDateString(str, seed = 0x97f29ac1) {
     return h1 >>> 0;
 }
 
-// Returns today's date formatted as 'YYYY-MM-DD'*/
+// Returns today's date formatted as 'YYYY-MM-DD'
 export function getTodayDateString() {
     return new Date().toISOString().split('T')[0];
 }
 
-// Calculates the Daily Challenge number relative to a launch date*/
+// Calculates the Daily Challenge number relative to a launch date
 export function getDailyChallengeNumber(launchDateStr = '2026-01-01') {
     const launchDate = new Date(launchDateStr);
     const today = new Date();
@@ -85,3 +87,38 @@ export function getParticleName(symbol) {
     };
     return names[symbol] || 'Subatomic Particle';
 }
+
+/**
+ * Normalizes nuclear equation terms and isotope strings to match PERIODIC_TABLE or NUCLEAR_PARTICLES keys
+ * @param {Object} term - Nuclear reaction term object
+ * @returns {string|null} Normalized symbol key
+ */
+ export function extractSymbol(term) {
+     if (!term) return null;
+
+     // 1. For selectable particle slots, return chosen particle symbol or '?' if unselected
+     let rawSym = term.isSelectable
+         ? (term.selectedParticle?.symbol || '?')
+         : (term.symbol || term.element || term.rawStr);
+
+     if (!rawSym) return null;
+
+     // 2. Direct match for subatomic particles, elements, and mystery placeholder '?'
+     if (rawSym === '?' || NUCLEAR_PARTICLES[rawSym] || PERIODIC_TABLE[rawSym]) {
+         return rawSym;
+     }
+
+     // 3. Strip mass numbers, digits, and hyphens (e.g., "U235" -> "U", "Ba-141" -> "Ba")
+     const cleaned = rawSym.replace(/[^a-zA-Z]/g, '');
+     if (!cleaned) return null;
+
+     const formatted = cleaned.length === 1
+         ? cleaned.toUpperCase()
+         : cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+
+     if (PERIODIC_TABLE[formatted] || NUCLEAR_PARTICLES[formatted]) {
+         return formatted;
+     }
+
+     return formatted;
+ }

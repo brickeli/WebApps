@@ -94,7 +94,7 @@ function setupEventListeners() {
 
     // Accordions
     document.getElementById('filter-accordion-toggle')?.addEventListener('click', () => toggleFilterAccordion());
-    document.getElementById('atom-matrix-toggle')?.addEventListener('click', () => toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron'));
+    document.getElementById('matrix-toggle')?.addEventListener('click', () => toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron'));
 
     // Game Action Buttons
     document.getElementById('check-btn')?.addEventListener('click', checkAnswer);
@@ -280,7 +280,7 @@ function renderEquationCard(eq) {
     if (hintBtn) hintBtn.classList.remove('hidden');
 
     document.getElementById('hint-btn-text').innerText = 'Hint';
-    toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron', false);
+    toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
 
     const container = document.getElementById('equation-container');
     container.innerHTML = '';
@@ -336,7 +336,7 @@ function createMoleculeInputGroup(molData, index, type) {
     input.min = '1';
     input.max = '99';
     input.placeholder = '1';
-    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-chemistry-500 focus:ring-2 focus:ring-chemistry-500/20 outline-none transition-all';
+    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-chemistry-500 dark:focus:border-chemistry-400 focus:ring-2 focus:ring-chemistry-500/40 dark:focus:ring-chemistry-400/40 outline-none transition-all';
 
     input.addEventListener('input', () => {
         playSound('click');
@@ -354,7 +354,7 @@ function createMoleculeInputGroup(molData, index, type) {
     });
 
     const label = document.createElement('span');
-    label.className = 'font-semibold text-slate-700 dark:text-slate-100 text-lg sm:text-xl font-mono';
+    label.className = 'text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100';
     label.innerHTML = molData.formula;
 
     wrapper.appendChild(input);
@@ -404,8 +404,10 @@ export function calculateAtomMatrix() {
 
         if (!isMatch) isFullyBalanced = false;
 
+        const elementName = PERIODIC_TABLE[elem]?.name || elem;
+
         const card = document.createElement('div');
-        card.className = `p-2.5 rounded-xl border flex items-center justify-between text-xs sm:text-sm font-medium transition-all cursor-help select-none ${
+        card.className = `p-2.5 rounded-xl border flex items-center justify-between gap-2 min-w-0 transition-all ${
             isMatch
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
@@ -416,24 +418,30 @@ export function calculateAtomMatrix() {
         card.addEventListener('touchstart', (e) => showElementTooltip(e, elem), { passive: true });
         card.addEventListener('touchend', () => hideElementTooltip());
 
-        const labelDiv = document.createElement('div');
-        labelDiv.className = 'flex items-center gap-1.5 font-bold';
-        labelDiv.innerHTML = `
-            <span class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
-                ${elem}
-            </span>
-            <span>${elem}</span>
+        const countMarkup = isMatch
+            ? `<div class="font-mono text-xs sm:text-sm font-bold flex items-center gap-1 shrink-0 whitespace-nowrap text-emerald-600 dark:text-emerald-400">
+                <span>${rCount}</span>
+                <span class="text-slate-400 dark:text-slate-500 font-normal">|</span>
+                <span>${pCount}</span>
+                <i class="fa-solid fa-check text-emerald-500 text-xs"></i>
+               </div>`
+            : `<div class="font-mono text-xs sm:text-sm font-bold flex items-center gap-1 shrink-0 whitespace-nowrap">
+                <span class="text-rose-500">${rCount}</span>
+                <span class="text-slate-400 dark:text-slate-500 font-normal">|</span>
+                <span class="text-rose-500">${pCount}</span>
+                <i class="fa-solid fa-xmark text-rose-500 text-xs"></i>
+               </div>`;
+
+        card.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="w-6 h-6 shrink-0 rounded-md bg-white dark:bg-slate-800 shadow-sm flex font-bold items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+                    ${elem}
+                </span>
+                <span class="text-xs font-medium truncate">${elementName}</span>
+            </div>
+            ${countMarkup}
         `;
 
-        const countDiv = document.createElement('div');
-        countDiv.className = 'font-mono font-bold';
-        countDiv.innerHTML = `
-            ${rCount} <span class="text-slate-500 font-normal">|</span> ${pCount}
-            <i class="fa-solid ${isMatch ? 'fa-check text-emerald-500' : 'fa-xmark text-rose-500'} ml-1"></i>
-        `;
-
-        card.appendChild(labelDiv);
-        card.appendChild(countDiv);
         matrixContainer.appendChild(card);
     });
 
@@ -566,7 +574,7 @@ function triggerHint() {
     feedback.classList.remove('hidden');
 
     if (hintStage === 1) {
-        toggleMatrixAccordion('atom-matrix-wrapper', 'atom-matrix-chevron', true);
+        toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
         feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
         feedback.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1:</strong> Matrix expanded! Focus on balancing oxygen or hydrogen atoms last!`;
         document.getElementById('hint-btn-text').innerText = 'Reveal Coefficient';

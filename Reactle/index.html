@@ -58,7 +58,7 @@
                 <div id="mode-dropdown-menu" class="hidden absolute left-0 mt-2 w-64 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 shadow-xl backdrop-blur-xl z-50 overflow-hidden transition-all duration-150 transform opacity-0 scale-95" role="menu">
                     <div class="p-1.5 space-y-1">
                         <!-- Option 1: Reactle (Active on Reactle page) -->
-                        <button id="opt-reactle" class="mode-option w-full flex items-center gap-3 p-2 rounded-xl text-left transition-colors bg-chemistry-50 dark:bg-chemistry-950/40" role="menuitem" data-mode="reactle">
+                        <button id="opt-reactle" class="mode-option w-full flex items-center gap-3 p-2 rounded-xl text-left transition-colors bg-chemistry-500/10 dark:bg-chemistry-500/15" role="menuitem" data-mode="reactle">
                             <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-chemistry-600 to-teal-400 flex items-center justify-center text-white text-sm shadow-sm shrink-0">
                                 <i class="fa-solid fa-flask"></i>
                             </div>
@@ -264,7 +264,7 @@
 
                 <!-- Real-time Atom Balance Table Visualizer -->
                 <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
-                    <button id="atom-matrix-toggle" class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-900/90 border border-slate-200 dark:border-slate-800 transition-all duration-200 cursor-pointer text-left group">
+                    <button id="matrix-toggle" class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-900/90 border border-slate-200 dark:border-slate-800 transition-all duration-200 cursor-pointer text-left group">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-lg bg-chemistry-500/10 text-chemistry-600 dark:text-chemistry-400 flex items-center justify-center font-bold text-sm">
                                 <i class="fa-solid fa-scale-balanced"></i>
@@ -273,7 +273,7 @@
                                 <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                                     Real-time Atom Count Matrix
                                 </h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-normal">Click to toggle atom balancing helper</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-normal">Check for balanced equations</p>
                             </div>
                         </div>
 
@@ -281,11 +281,11 @@
                             <span id="balance-status" class="hidden text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                                 Unbalanced
                             </span>
-                            <i id="atom-matrix-chevron" class="fa-solid fa-chevron-down text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform duration-300"></i>
+                            <i id="matrix-chevron" class="fa-solid fa-chevron-up text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-transform duration-300"></i>
                         </div>
                     </button>
 
-                    <div id="atom-matrix-wrapper" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0">
+                    <div id="matrix-wrapper" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out opacity-0">
                         <div class="pt-4">
                             <div id="atom-count-matrix" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                 <!-- Atom count cards dynamically injected here -->

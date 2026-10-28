@@ -56,26 +56,25 @@ export function toggleFilterAccordion(forceState) {
 /**
  * Generic Matrix Accordion Toggle (supports both atom-matrix and nuclear-matrix)
  */
-export function toggleMatrixAccordion(wrapperId = 'nuclear-matrix-wrapper', chevronId = 'nuclear-matrix-chevron', forceState) {
-    playSound('click');
-    const wrapper = document.getElementById(wrapperId);
-    const chevron = document.getElementById(chevronId);
-    if (!wrapper) return;
+ export function toggleMatrixAccordion(wrapperId = 'matrix-wrapper', chevronId = 'matrix-chevron', forceState) {
+     playSound('click');
+     const wrapper = document.getElementById(wrapperId);
+     const chevron = document.getElementById(chevronId);
+     if (!wrapper) return;
 
-    const isCurrentlyClosed = wrapper.classList.contains('max-h-0') || wrapper.classList.contains('hidden');
-    const shouldOpen = typeof forceState === 'boolean' ? forceState : isCurrentlyClosed;
+     const isCurrentlyClosed = wrapper.classList.contains('max-h-0') || wrapper.classList.contains('hidden');
+     const shouldOpen = typeof forceState === 'boolean' ? forceState : isCurrentlyClosed;
 
-    if (shouldOpen) {
-        wrapper.classList.remove('hidden', 'max-h-0', 'opacity-0');
-        wrapper.classList.add('max-h-[600px]', 'opacity-100');
-        chevron?.classList.add('rotate-180');
-    } else {
-        wrapper.classList.remove('max-h-[600px]', 'opacity-100');
-        wrapper.classList.add('max-h-0', 'opacity-0');
-        chevron?.classList.remove('rotate-180');
-    }
-}
-
+     if (shouldOpen) {
+         wrapper.classList.remove('hidden', 'max-h-0', 'opacity-0');
+         wrapper.classList.add('max-h-[600px]', 'opacity-100');
+         chevron?.classList.add('rotate-180');
+     } else {
+         wrapper.classList.remove('max-h-[600px]', 'opacity-100');
+         wrapper.classList.add('hidden', 'max-h-0', 'opacity-0');
+         chevron?.classList.remove('rotate-180');
+     }
+ }
 // --- HEADER APP DROPDOWN (IDEMPOTENT INITIALIZATION) ---
 let modeDropdownInitialized = false;
 

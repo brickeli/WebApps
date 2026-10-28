@@ -39,9 +39,9 @@ const DOM = {
     dropdownChevron: document.getElementById('mode-dropdown-chevron'),
     equationContainer: document.getElementById('nuclear-equation-container'),
     matrixContainer: document.getElementById('nuclear-matrix-container'),
-    matrixToggleBtn: document.getElementById('nuclear-matrix-toggle'),
-    matrixWrapper: document.getElementById('nuclear-matrix-wrapper'),
-    matrixChevron: document.getElementById('nuclear-matrix-chevron'),
+    matrixToggleBtn: document.getElementById('matrix-toggle'),
+    matrixWrapper: document.getElementById('matrix-wrapper'),
+    matrixChevron: document.getElementById('matrix-chevron'),
     checkBtn: document.getElementById('check-btn'),
     nextBtn: document.getElementById('next-btn'),
     shareBtn: document.getElementById('share-btn'),
@@ -63,6 +63,7 @@ window.hideElementTooltip = hideElementTooltip;
 window.switchMode = switchMode;
 window.toggleNavMenu = toggleNavMenu;
 window.toggleModal = toggleModal;
+window.calculateNuclearMatrix = calculateNuclearMatrix;
 
 /* --- Bootstrap Application --- */
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     populateFilterDropdowns(NUCLEAR_EQUATIONS);
     setupEventListeners();
 
-    toggleMatrixAccordion('nuclear-matrix-wrapper', 'nuclear-matrix-chevron', true);
+    toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
     switchMode('daily');
 });
 
@@ -143,7 +144,7 @@ function setupEventListeners() {
     document.getElementById('modal-confirm-btn')?.addEventListener('click', () => { toggleModal('help-modal'); });
 
     // --- 2. Accordions & UI Controls ---
-    DOM.matrixToggleBtn?.addEventListener('click', () => toggleMatrixAccordion('nuclear-matrix-wrapper', 'nuclear-matrix-chevron'));
+    DOM.matrixToggleBtn?.addEventListener('click', () => toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron'));
     DOM.filterAccordionToggle?.addEventListener('click', () => toggleFilterAccordion());
     document.getElementById('reset-score-btn')?.addEventListener('click', resetScoreboard);
 
@@ -402,16 +403,16 @@ function loadDailyEquation() {
 }
 
 function calculateNuclearMatrix() {
-    const container = DOM.matrixContainer || document.getElementById('nuclear-matrix-container');
-    if (!container || !state.currentEquation) return;
+    if (!state.currentEquation) return;
 
     const parsed = parseNuclearEquation(state.currentEquation);
+    const showBadge = Storage.getMatrixBadge() ?? true;
 
+    // ✅ FIXED: Pass parsed equation directly
     renderNuclearMatrix(
-        'nuclear-matrix-container',
         parsed,
         state.userCoefficients,
-        Storage.getMatrixBadge()
+        showBadge
     );
 }
 
@@ -503,7 +504,7 @@ function createNuclearTermHTML(term, index, type) {
     input.max = '99';
     input.placeholder = '1';
     input.value = (coeff && coeff > 1) ? coeff : '';
-    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all';
+    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/40 dark:focus:ring-amber-400/40 outline-none transition-all';
 
     input.addEventListener('input', (e) => {
         playSound('click');
@@ -533,7 +534,7 @@ function createNuclearTermHTML(term, index, type) {
             slotBtn.addEventListener('mouseenter', (e) => showElementTooltip(e, term.selectedParticle.symbol));
             slotBtn.addEventListener('mouseleave', hideElementTooltip);
         } else {
-            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
+            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
             slotBtn.innerHTML = `<i class="fa-solid fa-circle-question text-amber-500 mr-1"></i> Choose`;
         }
 
@@ -560,11 +561,11 @@ function createNuclearTermHTML(term, index, type) {
             const sign = netCharge > 0 ? '+' : '-';
             const absVal = Math.abs(netCharge);
             const displayVal = absVal === 1 ? sign : `${absVal}${sign}`;
-            netChargeHTML = `<sup class="text-[10px] sm:text-xs font-bold text-amber-500 ml-0.5">${displayVal}</sup>`;
+            // netChargeHTML = `<sup class="text-[10px] sm:text-xs font-bold text-amber-500 ml-0.5">${displayVal}</sup>`;
         }
 
         label.innerHTML = `
-            <span class="inline-flex flex-col text-[10px] sm:text-xs text-right mr-1 leading-tight text-slate-500 dark:text-slate-400 font-bold">
+            <span class="inline-flex flex-col text-[10px] sm:text-xs text-right mr-1 leading-tight text-slate-500 dark:text-slate-300 font-bold">
                 <span>${mass}</span>
                 <span>${charge >= 0 && charge !== '' ? '+' + charge : charge}</span>
             </span>
@@ -704,7 +705,7 @@ export function provideNuclearHint() {
     let hintMessage = '';
 
     if (state.hintStep === 1) {
-        toggleMatrixAccordion('nuclear-matrix-wrapper', 'nuclear-matrix-chevron', true);
+        toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
         if (reactA !== prodA) {
             const diff = Math.abs(reactA - prodA);
             hintMessage = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1 (Mass Number A):</strong> Total Mass on the left is <strong>${reactA}</strong> and on the right is <strong>${prodA}</strong>. Adjust coefficients to balance a difference of <strong>${diff}</strong>.`;
@@ -1001,7 +1002,7 @@ function renderCustomSolution(res) {
         const chargeStr = t.charge >= 0 ? `+${t.charge}` : `${t.charge}`;
 
         return `
-            <span class="inline-flex items-center gap-0.5">
+            <span class="inline-flex items-center gap-0.5 dark:text-slate-300">
                 ${coeffStr}
                 <span class="inline-flex flex-col text-[0.65em] leading-none text-right font-sans font-normal opacity-80 select-none mr-0.5">
                     <span>${t.mass}</span>
