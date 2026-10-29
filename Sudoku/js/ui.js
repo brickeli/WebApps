@@ -57,6 +57,8 @@ export function renderBoard(boardEl, board, solution, givens, hints, notes, sele
 
         if (val !== 0) {
             cellEl.textContent = val;
+            cellEl.dataset.value = val; // <-- Add this to sync dataset value for highlight scanner
+
             if (givens[i]) {
                 cellEl.classList.add('given');
             } else if (hints[i]) {
@@ -65,6 +67,8 @@ export function renderBoard(boardEl, board, solution, givens, hints, notes, sele
                 cellEl.classList.add('user-input');
             }
         } else {
+            cellEl.dataset.value = ''; // <-- Clear dataset value for empty/notes cells
+
             const notesGrid = document.createElement('div');
             notesGrid.className = 'notes-grid';
             for (let n = 1; n <= 9; n++) {
@@ -86,7 +90,6 @@ export function renderBoard(boardEl, board, solution, givens, hints, notes, sele
 }
 
 //Grays out keypad digits that are fully completed (placed correctly 9 times).
-
 export function updateCompletedKeypadNumbers(board, solution) {
     let counts = Array(10).fill(0);
     for (let i = 0; i < 81; i++) {

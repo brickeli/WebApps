@@ -1,21 +1,30 @@
-
-//Validates Sudoku placement against row, column, and 3x3 box rules.
+// Validates Sudoku placement against row, column, and 3x3 box rules.
 export function isValid(arr, index, num) {
     let row = Math.floor(index / 9);
     let col = index % 9;
 
+    // 1. Check Row and Column
     for (let i = 0; i < 9; i++) {
-        if (arr[row * 9 + i] === num) return false;
-        if (arr[i * 9 + col] === num) return false;
+        let rowIdx = row * 9 + i;
+        let colIdx = i * 9 + col;
+
+        // Skip checking the target cell itself
+        if (rowIdx !== index && arr[rowIdx] === num) return false;
+        if (colIdx !== index && arr[colIdx] === num) return false;
     }
 
+    // 2. Check 3x3 Box
     let startRow = Math.floor(row / 3) * 3;
     let startCol = Math.floor(col / 3) * 3;
     for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 3; c++) {
-            if (arr[(startRow + r) * 9 + (startCol + c)] === num) return false;
+            let boxIdx = (startRow + r) * 9 + (startCol + c);
+
+            // Skip checking the target cell itself
+            if (boxIdx !== index && arr[boxIdx] === num) return false;
         }
     }
+
     return true;
 }
 

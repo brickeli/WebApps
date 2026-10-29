@@ -23,6 +23,9 @@ let timerInterval = null;
 let isGameWon = false;
 let isAutoNotesEnabled = false;
 
+// Undo History Stack
+const undoStack = [];
+
 // DOM Elements
 const boardEl = document.getElementById('board');
 const timerBtnEl = document.getElementById('timer-btn');
@@ -63,9 +66,36 @@ window.toggleNotesMode = toggleNotesMode;
 window.togglePause = togglePause;
 window.inputNumber = inputNumber;
 window.provideHint = provideHint;
+window.undo = undo;
 window.toggleStatsModal = toggleStatsModal;
 window.closeWinModal = () => winModalEl.style.display = 'none';
 window.sortStats = (col) => sortStats(col, statsBodyEl, formatTime);
+
+// Record State Before User Actions
+function recordMove() {
+    undoStack.push({
+        board: [...board],
+        notes: notes.map(cellNotes => [...cellNotes]),
+        hints: [...hints],
+        selectedCell: selectedCell
+    });
+}
+
+function undo() {
+    if (undoStack.length === 0 || isGameWon || isPaused) return;
+
+    const previousState = undoStack.pop();
+    board = previousState.board;
+    notes = previousState.notes;
+    hints = previousState.hints;
+    selectedCell = previousState.selectedCell;
+
+    triggerRender();
+    updateBoardHighlights(boardEl, board);
+    if (selectedCell !== null) {
+        highlightCellPeers(boardEl, selectedCell);
+    }
+}
 
 function selectCell(index) {
     if (isPaused) return;
@@ -193,6 +223,9 @@ function autoFillNotes() {
 function inputNumber(num) {
     if (selectedCell === null || givens[selectedCell] || isGameWon || isPaused) return;
 
+    // Snapshot state for undo prior to mutation
+    recordMove();
+
     if (num === 0) {
         // Clear value, hints, and notes for the selected cell
         board[selectedCell] = 0;
@@ -213,7 +246,7 @@ function inputNumber(num) {
         hints[selectedCell] = false;
         notes[selectedCell].fill(false); // Clear notes on primary entry
 
-        if (board[selectedCell] === solution[selectedCell]) {
+        if (board[selectedCell] !== 0) {
             clearPeerNotes(selectedCell, num);
         }
     }
@@ -221,33 +254,30 @@ function inputNumber(num) {
     // Always re-render the board UI to show the updated note state
     triggerRender();
     checkWinCondition();
-    updateBoardHighlights(boardEl);
-    highlightCellPeers(boardEl, selectedIndex);
+    updateBoardHighlights(boardEl, board);
+    highlightCellPeers(boardEl, selectedCell);
 }
 
-function updateBoardHighlights(boardEl) {
+function updateBoardHighlights(boardEl, boardState) {
     const cells = Array.from(boardEl.children);
 
     // 1. Clear existing duplicate styles
     cells.forEach(cell => cell.classList.remove('duplicate'));
 
-    // 2. Iterate through all 81 cells
+    // 2. Compare entries directly from the numerical state array
     for (let i = 0; i < 81; i++) {
-        const cell = cells[i];
-        const val = (cell.dataset.value || cell.textContent).trim();
+        const val = boardState[i];
 
-        // Skip empty cells or zero values
-        if (!val || val === '0') continue;
+        // Skip empty/unplaced cells
+        if (!val || val === 0) continue;
 
         const row = Math.floor(i / 9);
         const col = i % 9;
         const boxRow = Math.floor(row / 3);
         const boxCol = Math.floor(col / 3);
 
-        // 3. Compare with all other cells in the same row, column, or 3x3 block
         for (let j = i + 1; j < 81; j++) {
-            const otherCell = cells[j];
-            const otherVal = (otherCell.dataset.value || otherCell.textContent).trim();
+            const otherVal = boardState[j];
 
             if (otherVal === val) {
                 const r = Math.floor(j / 9);
@@ -257,10 +287,9 @@ function updateBoardHighlights(boardEl) {
                 const isSameCol = c === col;
                 const isSameBox = Math.floor(r / 3) === boxRow && Math.floor(c / 3) === boxCol;
 
-                // If they share a row, col, or box, mark both as duplicate
                 if (isSameRow || isSameCol || isSameBox) {
-                    cell.classList.add('duplicate');
-                    otherCell.classList.add('duplicate');
+                    cells[i].classList.add('duplicate');
+                    cells[j].classList.add('duplicate');
                 }
             }
         }
@@ -269,6 +298,8 @@ function updateBoardHighlights(boardEl) {
 
 function provideHint() {
     if (isGameWon || isPaused) return;
+
+    recordMove();
 
     let targetIdx = selectedCell;
     if (targetIdx === null || givens[targetIdx] || board[targetIdx] === solution[targetIdx]) {
@@ -299,6 +330,8 @@ function provideHint() {
 
 function resetPuzzle() {
     if (isGameWon || isPaused) return;
+    undoStack.length = 0; // Clear undo stack on reset
+
     for (let i = 0; i < 81; i++) {
         if (!givens[i]) {
             board[i] = 0;
@@ -345,6 +378,8 @@ function triggerRender() {
 function newGame() {
     isGameWon = false;
     hintCount = 0;
+    undoStack.length = 0; // Reset undo history for new game
+
     solution = Array(81).fill(0);
     solveSudoku(solution);
 
@@ -377,6 +412,13 @@ function newGame() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && sidePanelEl.classList.contains('open')) {
         toggleSidePanel(sidePanelEl, menuOverlayEl, menuBtnEl);
+        return;
+    }
+
+    // Ctrl+Z or Cmd+Z Undo Shortcut
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undo();
         return;
     }
 

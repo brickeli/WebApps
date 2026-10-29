@@ -25,6 +25,16 @@
     --hint-hover-bg: #4f46e5;   /* Solid primary on hover */
     --hint-hover-text: #ffffff;
     --hint-shadow: rgba(79, 70, 229, 0.25);
+
+    /* Arcade Undo Button Tokens */
+
+  --undo-bg-start: #fef3c7;    /* Soft amber tint */
+    --undo-bg-end: #fde68a;      /* Gradient depth */
+    --undo-text: #b45309;        /* Deep warm amber for WCAG high contrast */
+    --undo-border: #f59e0b;      /* Warm amber accent border */
+    --undo-hover-bg: #d97706;   /* Solid amber on hover */
+    --undo-hover-text: #ffffff;  /* High contrast white text on hover */
+    --undo-shadow: rgba(217, 119, 6, 0.25);
 }
 
 /* Dark Theme Tokens */
@@ -52,6 +62,15 @@
     --hint-hover-bg: #6366f1;   /* Vibrant primary hover */
     --hint-hover-text: #ffffff;
     --hint-shadow: rgba(99, 102, 241, 0.35);
+
+    /* Arcade Undo Button Tokens */
+    --undo-bg-start: rgba(245, 158, 11, 0.15);
+    --undo-bg-end: rgba(217, 119, 6, 0.25);
+    --undo-text: #fbbf24;        /* Radiant amber for dark mode contrast */
+    --undo-border: #f59e0b;
+    --undo-hover-bg: #f59e0b;
+    --undo-hover-text: #0f172a;
+    --undo-shadow: rgba(245, 158, 11, 0.35);
 }
 
 *, *::before, *::after {
@@ -481,29 +500,38 @@ hr {
 }
 
 /* Primary-Themed Arcade Hint Button */
-.action-btn.hint {
-    flex:1;
-    position: relative;
-    background: linear-gradient(135deg, var(--hint-bg-start) 0%, var(--hint-bg-end) 100%);
-    color: var(--hint-text);
-    border: 1px solid var(--hint-border);
+.action-btn {
     border-radius: 30px;
     padding: 10px 16px;
     font-weight: 700;
     font-size: 0.95rem;
+    border: 1px solid;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+}
+/* Ensure child text/icons sit cleanly above the background layer */
+.action-btn > * {
+    position: relative;
+    z-index: 2;
+}
+
+.action-btn.hint {
+    flex:2;
+    gap: 8px;
+    position: relative;
+    background: linear-gradient(135deg, var(--hint-bg-start) 0%, var(--hint-bg-end) 100%);
+    color: var(--hint-text);
+    border-color: var(--hint-border);
     box-shadow: 0 3px 6px var(--hint-shadow);
     /* Multi-property cubic-bezier easing for fluid feedback */
     transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                 border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                 box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    overflow: hidden;
-    z-index: 1;
 }
 
 /* Layered Pseudo-Element for Pure Opacity Cross-Fade */
@@ -517,13 +545,7 @@ hr {
     z-index: -1;
 }
 
-/* Ensure child text/icons sit cleanly above the background layer */
-.action-btn.hint > * {
-    position: relative;
-    z-index: 2;
-}
-
-.action-btn.hint:hover::before {
+.action-btn:hover::before {
     opacity: 1;
 }
 
@@ -538,6 +560,27 @@ hr {
     transform: translateY(1px);
     box-shadow: 0 2px 4px var(--hint-shadow);
 }
+
+/*Undo Button Styles*/
+.undo-input {
+    flex:1;
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: var(--text-color);
+    align-items: center;
+}
+
+.undo-input:hover {
+    background-color: var(--cell-highlight);
+    color: var(--primary);
+}
+
+
 .modal {
     display: none;
     position: fixed;
