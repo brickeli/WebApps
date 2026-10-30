@@ -33,7 +33,7 @@ const statsModalEl = document.getElementById('stats-modal');
 const winModalEl = document.getElementById('win-modal');
 const winMessageEl = document.getElementById('win-message');
 const statsBodyEl = document.getElementById('stats-body');
-const modeToggleEl = document.getElementById('mode-toggle');
+const notesBtn = document.getElementById('mode-toggle');
 const pauseOverlayEl = document.getElementById('pause-overlay');
 const menuBtnEl = document.getElementById('menu-btn');
 const sidePanelEl = document.getElementById('side-panel');
@@ -106,13 +106,22 @@ function selectCell(index) {
 function toggleNotesMode() {
     if (isPaused) return;
     isNotesMode = !isNotesMode;
+    const keypad = document.querySelector('.keypad');
+
     if (isNotesMode) {
-        modeToggleEl.classList.add('notes-active');
-        modeToggleEl.innerHTML = '<i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status on">ON</span>';
+        notesBtn.classList.add('notes-active');
+        notesBtn.innerHTML = '<i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status on">ON</span>';
     } else {
-        modeToggleEl.classList.remove('notes-active');
-        modeToggleEl.innerHTML = '<i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status off">OFF</span>';
+        notesBtn.classList.remove('notes-active');
+        notesBtn.innerHTML = '<i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status off">OFF</span>';
     }
+    // Toggle visual state on the number pad wrapper to scale buttons
+  if (keypad) {
+    keypad.classList.toggle('notes-active', isNotesMode);
+  }
+
+  // Optional: Update board selection highlights or cursor styling if applicable
+  updateUI();
 }
 
 function toggleTheme() {

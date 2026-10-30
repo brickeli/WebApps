@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+      <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Sudoku Master</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://kit.fontawesome.com/1668e93279.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="status-bar">
+        <h1>SUDOKU MASTER</h1>
+        <button id="timer-btn" class="timer-btn" onclick="togglePause()">
+          <span class="timer-dot"></span>
+          <span id="timer-text">00:00</span>
+      </button>
+    </div>
+
+    <div class="difficulty-container">
+        <button class="diff-btn active" onclick="setDifficulty('easy', 38, 'Easy', event)">Easy</button>
+        <button class="diff-btn" onclick="setDifficulty('medium', 32, 'Medium', event)">Medium</button>
+        <button class="diff-btn" onclick="setDifficulty('hard', 27, 'Hard', event)">Hard</button>
+        <button class="diff-btn" onclick="setDifficulty('expert', 23, 'Expert', event)">Expert</button>
+        <button class="diff-btn" onclick="setDifficulty('master', 19, 'Master', event)">Master</button>
+    </div>
+
+    <div class="controls-row">
+        <button id="mode-toggle" class="mode-btn" onclick="toggleNotesMode()"><i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status off">OFF</span></button>
+        <button id="menu-btn" class="menu-trigger-btn" onclick="toggleSidePanel()" aria-haspopup="true" aria-expanded="false" aria-controls="side-panel"><i class="fa-solid fa-gear"></i> Menu</button>
+    </div>
+
+    <div id="menu-overlay" class="menu-overlay" onclick="toggleSidePanel()"></div>
+
+    <aside id="side-panel" class="side-panel" aria-label="Game Menu">
+        <div class="side-panel-header">
+            <h2>GAME OPTIONS</h2>
+            <button class="close-menu-btn" onclick="toggleSidePanel()" aria-label="Close menu"><i class="fa-regular fa-circle-xmark"></i></button>
+        </div>
+        <button id="auto-notes-menu-btn" class="menu-item-btn" onclick="executeMenuAction('toggleAutoNotes')">
+            <i class="fa-solid fa-file-pen"></i> Auto-Fill Notes <span class="toggle-status off">OFF</span>
+        </button>
+        <button id="theme-menu-btn" class="menu-item-btn" onclick="executeMenuAction('toggleTheme')">
+            <i class="fa-solid fa-sun"></i> Theme <span class="toggle-status light-pill">LIGHT</span>
+        </button>
+        <hr>
+        <button class="menu-item-btn" onclick="executeMenuAction('resetPuzzle')"><i class="fa-solid fa-arrow-rotate-left"></i> Reset Puzzle</button>
+        <button class="menu-item-btn" onclick="executeMenuAction('newGame')"><i class="fa-solid fa-gamepad"></i> New Game</button>
+        <button class="menu-item-btn" onclick="executeMenuAction('showStats')"><i class="fa-solid fa-trophy"></i> High Scores & Stats</button>
+    </aside>
+
+    <div class="board-wrapper">
+        <div class="game-board" id="board"></div>
+        <div id="pause-overlay" class="pause-overlay" onclick="togglePause()" style="display: none;">
+            <span class="pause-text"><i class="fa-solid fa-play"></i></br>Game Paused</br><small>Tap to Resume</small></span>
+        </div>
+    </div>
+
+    <div class="keypad">
+        <button class="key-btn" id="key-1" onclick="inputNumber(1)"><span class="key-num">1</span></button>
+        <button class="key-btn" id="key-2" onclick="inputNumber(2)"><span class="key-num">2</span></button>
+        <button class="key-btn" id="key-3" onclick="inputNumber(3)"><span class="key-num">3</span></button>
+        <button class="key-btn" id="key-4" onclick="inputNumber(4)"><span class="key-num">4</span></button>
+        <button class="key-btn" id="key-5" onclick="inputNumber(5)"><span class="key-num">5</span></button>
+        <button class="key-btn" id="key-6" onclick="inputNumber(6)"><span class="key-num">6</span></button>
+        <button class="key-btn" id="key-7" onclick="inputNumber(7)"><span class="key-num">7</span></button>
+        <button class="key-btn" id="key-8" onclick="inputNumber(8)"><span class="key-num">8</span></button>
+        <button class="key-btn" id="key-9" onclick="inputNumber(9)"><span class="key-num">9</span></button>
+        <button class="key-btn clear" onclick="inputNumber(0)"><span class="key-num">Clear</span></button>
+    </div>
+
+    <div class="action-container">
+        <button class="action-btn hint" onclick="provideHint()"><i class="fa-regular fa-lightbulb"></i> Hint</button>
+        <button class="action-btn undo-input" onclick="undo()"><i class="fa-solid fa-rotate-left"></i> Undo</button>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <h2>COMPLETED PUZZLE STATS</h2>
+            <div class="stats-table-container">
+                <table id="stats-table">
+                    <thead>
+                        <tr>
+                          <th onclick="sortStats('date')">Date <i class="fa-solid fa-sort"></i></th>
+                          <th onclick="sortStats('difficulty')">Diff <i class="fa-solid fa-sort"></i></th>
+                          <th onclick="sortStats('hints')">Hints <i class="fa-solid fa-sort"></i></th>
+                          <th onclick="sortStats('time')">Time <i class="fa-solid fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body"></tbody>
+                </table>
+            </div>
+            <button class="action-btn hint" onclick="toggleStatsModal()"><i class="fa-regular fa-circle-xmark"></i>Close</button>
+        </div>
+    </div>
+    <!-- Custom Win Modal -->
+    <div id="win-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h2><i class="fa-solid fa-hands-clapping"></i> Puzzle Solved!</h2>
+            <p id="win-message" style="margin: 15px 0; color: #475569; font-size: 1rem;"></p>
+            <button class="action-btn hint" onclick="closeWinModal()">Awesome!</button>
+        </div>
+    </div>
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>

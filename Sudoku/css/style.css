@@ -476,10 +476,14 @@ hr {
     background-color: var(--white);
     border: 1px solid var(--border-color);
     color: var(--text-color);
-    padding: 12px 0;
+    height: 45px;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease-in-out;
     box-shadow: 0 2px 4px var(--shadow-color);
 }
 
@@ -491,6 +495,41 @@ hr {
     cursor: not-allowed;
     opacity: 0.4;
 }
+
+/* Inner Text Target with Smooth GPU Transition */
+.key-btn .key-num {
+  display: inline-block;
+  transform: translate(0, 0) scale(1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.25s ease;
+}
+
+/* Base Notes Mode Styles for Keypad */
+.keypad.notes-active .key-btn {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.keypad.notes-active .key-btn:not(.clear) .key-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* 3x3 Coordinate Offsets via Transform */
+.keypad.notes-active #key-1 .key-num { transform: translate(-12px, -5px); }
+.keypad.notes-active #key-2 .key-num { transform: translate(0, -5px); }
+.keypad.notes-active #key-3 .key-num { transform: translate(12px, -5px); }
+.keypad.notes-active #key-4 .key-num { transform: translate(-12px, 0); }
+.keypad.notes-active #key-5 .key-num { transform: translate(0, 0); }
+.keypad.notes-active #key-6 .key-num { transform: translate(12px, 0); }
+.keypad.notes-active #key-7 .key-num { transform: translate(-12px, 5px); }
+.keypad.notes-active #key-8 .key-num { transform: translate(0, 5px); }
+.keypad.notes-active #key-9 .key-num { transform: translate(12px, 5px); }
+
+/* Keep Clear Button Text Centered */
+.keypad.notes-active .key-btn.clear .key-num {
+  transform: translate(0, 0) scale(0.9);
+}
+
 
 .action-container {
     display: flex;
@@ -685,7 +724,8 @@ hr {
 
 @media (max-width: 450px) {
     .cell { font-size: 1.2rem; }
-    .key-btn { padding: 10px 0; font-size: 1.1rem; }
+    .key-btn { font-size: 1.1rem; }
+    .key-btn.clear { font-size: 0.9rem; }
     .diff-btn { font-size: 0.72rem; padding: 6px 1px; }
     .side-panel { width: 275px; }
 }
