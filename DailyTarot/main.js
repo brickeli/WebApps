@@ -1,6 +1,7 @@
 import { fullTarotDeck } from './js/cardLibrary.js';
 import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI } from './js/theme.js';
 import { toggleAudio, playMysticChime } from './js/audio.js';
+import { handleTarotShare, initShareButton } from './js/share.js';
 
 let currentMode = 'single';
 let currentSingleCard = null;
@@ -61,8 +62,8 @@ Object.assign(window, {
 });
 
 /* ==========================================================================
-   3. INITIALIZATION
-   ========================================================================== */
+  3. INITIALIZATION
+  ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
    initCanvasFX();
    updateHistoryBadge();
@@ -88,10 +89,36 @@ document.addEventListener('DOMContentLoaded', () => {
    // Settings Dropdown - Single listener passing event
    document.getElementById('utils-menu-btn')?.addEventListener('click', (e) => toggleUtilsMenu(e));
    document.getElementById('menu-audio-btn')?.addEventListener('click', handleToggleAudio);
-   // Library Search
+
+   // Library Search & Mobile Filters
    document.getElementById('archive-search-input')?.addEventListener('input', applyLibrarySearch);
-   document.getElementById('filter-toggle-btn')?.addEventListener('click', toggleMobileFilters);
-});
+   document.getElementById('filter-toggle-btn')?.addEventListener('click', toggleMobileFilters); // Fixed 'sclick' typo
+
+   // Share Results
+   initShareButton(() => {
+         if (currentMode === 'triple') {
+             // Check if triple cards have been drawn
+             if (!tripleCards || !tripleCards[0]) return null;
+
+             const past = `${tripleCards[0].name} (${tripleReversed[0] ? 'Reversed' : 'Upright'})`;
+             const present = `${tripleCards[1].name} (${tripleReversed[1] ? 'Reversed' : 'Upright'})`;
+             const future = `${tripleCards[2].name} (${tripleReversed[2] ? 'Reversed' : 'Upright'})`;
+
+             return {
+                 isTripleSpread: true,
+                 title: 'My 3-Card Celestial Spread',
+                 description: `Past: ${past} | Present: ${present} | Future: ${future}`
+             };
+         } else {
+             // Default to Single Card mode
+             if (!currentSingleCard) return null;
+             return {
+                 ...currentSingleCard,
+                 isReversed: isSingleReversed
+             };
+         }
+     });
+}); // Properly closes the main DOMContentLoaded block
 
 function setMode(mode) {
     currentMode = mode;

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <title>Arcana - Daily Tarot Companion</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -187,6 +188,11 @@
                             <!-- Guidance -->
                         </p>
                     </div>
+                    <button id="share-card-btn" class="flex items-center mt-4 gap-2 px-4 py-2 rounded-lg bg-gold hover:bg-indigo-500 text-obsidian text-sm font-cinzel font-bold transition-all shadow-md hover:shadow-gold/30">
+                      <i class="fa-solid fa-share-nodes"></i>
+                      <span>Share Draw</span>
+                    </button>
+                    <span id="share-feedback" class="text-xs text-indigo-300 ml-2 hidden">Copied to clipboard!</span>
                 </div>
             </div>
         </div>
@@ -252,10 +258,17 @@
             </div>
 
             <!-- Save Spread Button -->
-            <div id="triple-actions" class="mt-8 hidden">
-                <button onclick="saveTripleReading()" class="px-6 py-2 rounded-full bg-velvet border border-gold/40 text-gold font-cinzel text-xs font-bold hover:bg-gold hover:text-obsidian transition-all">
+            <div id="triple-actions" class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8 hidden w-full">
+                <button onclick="saveTripleReading()" class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-velvet border border-gold/40 text-gold font-cinzel text-xs font-bold hover:bg-gold hover:text-obsidian transition-all text-center">
                     <i class="fa-solid fa-book-bookmark mr-1.5"></i> Save Spread to Journal
                 </button>
+                <div class="flex items-center justify-center gap-2 w-full sm:w-auto">
+                    <button id="share-card-btn" class="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-gold hover:bg-gold/80 text-obsidian text-xs font-cinzel font-bold transition-all shadow-md hover:shadow-gold/30">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>Share Draw</span>
+                    </button>
+                    <span id="share-feedback" class="text-xs text-gold/80 hidden">Copied!</span>
+                </div>
             </div>
         </div>
     </main>
