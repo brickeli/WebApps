@@ -3,28 +3,92 @@
 let globalGetCardCallback = null;
 
 /**
+ * Formats clean, atmospheric share text for single draws or 3-card spreads
+ */
+export function generateTarotShareText(cardData) {
+    if (!cardData) return "Consulting the Arcana Tarot grimoire...";
+
+    const shareUrl = window.location.href;
+
+    if (cardData.isTripleSpread) {
+        const cardNames = cardData.cards ? cardData.cards.map(c => c.name).join(' • ') : (cardData.description || '');
+        const dominant = cardData.dominantElement || 'Cosmic';
+        const loreBlurb = cardData.loreBlurb || "A harmonious equilibrium of cosmic forces flowing through the timeline.";
+        return `✦ Arcana Tarot 3-Card Spread ✦\n` +
+               `🔮 ${cardNames}\n` +
+               `🌌 Dominant Energy: ${dominant}\n` +
+               `📜 ${loreBlurb}\n\n` +
+               `✨ Explore your path: ${shareUrl}`;
+    } else {
+        const cardName = cardData.name || 'Unknown Card';
+        const isReversed = cardData.isReversed ?? false;
+        const orientation = isReversed ? 'Reversed' : 'Upright';
+        const element = cardData.element || cardData.suit || 'Cosmic';
+        const advice = cardData.advice || cardData.description || 'Embracing the energy of the archetypes.';
+
+        return `✦ Arcana Tarot Daily Pull ✦\n` +
+               `🎴 ${cardName} (${orientation})\n` +
+               `🌌 Element: ${element}\n` +
+               `📜️ ${advice}\n\n` +
+               `✨ Consult the stars: ${shareUrl}`;
+    }
+}
+
+/**
+ * Displays a floating esoteric toast notification on clipboard copy
+ */
+export function showShareToast(message = "✦ Copied to Grimoire ✦") {
+    const existingToast = document.getElementById('tarot-share-toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'tarot-share-toast';
+    toast.textContent = message;
+
+    Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: '2rem',
+        left: '50%',
+        transform: 'translateX(-50%) translateY(20px)',
+        background: 'linear-gradient(135deg, rgba(25, 18, 40, 0.95), rgb(var(--color-velvet)))',
+        color: 'rgb(var(--color-gold))',
+        border: '1px solid rgb(var(--color-gold) / 0.6)',
+        padding: '0.75rem 1.5rem',
+        borderRadius: '0.5rem',
+        fontFamily: 'var(--font-cinzel, "Cinzel", serif)',
+        fontSize: '0.85rem',
+        letterSpacing: '0.1em',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgb(var(--color-gold) / 0.2)',
+        zIndex: '9999',
+        opacity: '0',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+    });
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+/**
  * Handles sharing tarot draw details or card insights
  */
 export async function handleTarotShare(cardData) {
   if (!cardData) return;
 
-  let shareTitle = '';
-  let shareText = '';
-  const shareUrl = window.location.href; // Uses current live URL dynamically
-  const shareFeedback = document.getElementById('share-feedback');
-
-  if (cardData.isTripleSpread) {
-    shareTitle = cardData.title;
-    shareText = `Today's 3-Card Spread from Arcana Tarot — ${cardData.description}`;
-  } else {
-    const cardName = cardData.name || 'Unknown Card';
-    const isReversed = cardData.isReversed ?? false;
-    const orientation = isReversed ? 'Reversed' : 'Upright';
-    const description = cardData.description || cardData.advice || 'Embracing the energy of the archetypes.';
-
-    shareTitle = `My Tarot Draw: ${cardName} (${orientation})`;
-    shareText = `Today's card from Arcana Tarot: ${cardName} (${orientation}). ${description}`;
-  }
+  const shareUrl = window.location.href;
+  const shareText = generateTarotShareText(cardData);
+  const shareTitle = cardData.isTripleSpread
+    ? (cardData.title || "Arcana Tarot 3-Card Spread")
+    : `My Tarot Draw: ${cardData.name || 'Card'} (${cardData.isReversed ? 'Reversed' : 'Upright'})`;
 
   // Check if native Web Share API is available
   if (navigator.share) {
@@ -41,11 +105,13 @@ export async function handleTarotShare(cardData) {
     }
   }
 
-  // Fallback Clipboard Copy
+  // Fallback Clipboard Copy with Ritual Toast
   try {
-    const fallbackString = `${shareTitle}\n\n${shareText}\n\nApp Link: ${shareUrl}`;
-    await navigator.clipboard.writeText(fallbackString);
+    await navigator.clipboard.writeText(shareText);
+    showShareToast("✦ Copied to Grimoire Clipboard ✦");
 
+    // Optional legacy feedback support if element still exists in DOM
+    const shareFeedback = document.getElementById('share-feedback');
     if (shareFeedback) {
       shareFeedback.classList.remove('hidden');
       setTimeout(() => shareFeedback.classList.add('hidden'), 3000);
@@ -67,21 +133,20 @@ export function initShareButton(getCardCallback) {
   if (window._shareListenerInitialized) return;
   window._shareListenerInitialized = true;
 
-  // Use a broad document listener that catches any element with id or class containing 'share'
   document.addEventListener('click', (event) => {
-    const shareBtn = event.target.closest('#share-card-btn') ||
-                     event.target.closest('.share-card-btn') ||
+    // Broadened selector to catch any button with 'share' in its ID or class
+    const shareBtn = event.target.closest('[id*="share"]') ||
+                     event.target.closest('[class*="share"]') ||
                      event.target.id === 'share-card-btn';
 
     if (!shareBtn) return;
 
-    // Prevent default anchor/button behaviors just in case
     event.preventDefault();
 
     const activeCard = globalGetCardCallback ? globalGetCardCallback() : {
       name: 'The Fool',
       isReversed: false,
-      description: 'New beginnings and uninhibited potential.'
+      advice: 'New beginnings and uninhibited potential.'
     };
 
     handleTarotShare(activeCard);

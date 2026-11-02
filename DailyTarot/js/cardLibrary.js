@@ -1013,5 +1013,15 @@ const MINOR_ARCANA = [
     }
 ];
 
+/* ==========================================================================
+   ELEMENTAL LORE DICTIONARY
+   ========================================================================== */
+const ELEMENTAL_LORE = {
+    Fire: "Governed by Wands and passion—sparking willpower, creative drive, sudden transformation, and dynamic action.",
+    Water: "Governed by Cups and intuition—reflecting deep emotional currents, subconscious realms, relationships, and fluid adaptability.",
+    Air: "Governed by Swords and intellect—ruling clear perception, strategic thought, communication, and decisive mental clarity.",
+    Earth: "Governed by Pentacles and matter—anchored in physical manifestation, tangible stability, patience, and grounded growth."
+};
+
 export const fullTarotDeck = [...MAJOR_ARCANA, ...MINOR_ARCANA];
-export { MAJOR_ARCANA, MINOR_ARCANA };
+export { MAJOR_ARCANA, MINOR_ARCANA, ELEMENTAL_LORE };

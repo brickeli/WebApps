@@ -1,0 +1,225 @@
+/* -------------------------------------------------------------
+   THEME COLOR PALETTES (Raw RGB channels: R G B)
+------------------------------------------------------------- */
+
+/* Default Theme: Gothic Obsidian & Plum */
+:root, [data-theme="obsidian-plum"] {
+    --color-obsidian: 9 8 12;         /* #09080c */
+    --color-abyss: 17 13 24;          /* #110d18 */
+    --color-velvet: 26 16 40;         /* #1a1028 */
+    --color-plum: 45 27 64;           /* #2d1b40 */
+    --color-gold: 212 175 55;         /* #d4af37 */
+    --color-antique-gold: 184 151 38; /* #b89726 */
+    --color-dark-gold: 140 112 23;    /* #8c7017 */
+    --color-ivory: 244 239 230;       /* #f4efe6 */
+    --color-starlight: 226 217 243;   /* #e2d9f3 */
+    --color-mystic-purple: 123 66 188;/* #7b42bc */
+    --color-element-fire: 225 29 72;    /* Red / Crimson */
+    --color-element-earth: 16 185 129;  /* Emerald Green */
+    --color-element-air: 241 245 249;   /* Starlight White */
+    --color-element-water: 59 130 246;  /* Sapphire Blue */
+}
+
+/* Alternate Theme: Crimson Alchemist */
+[data-theme="crimson-alchemist"] {
+    --color-obsidian: 11 9 10;        /* Deep Charcoal */
+    --color-abyss: 26 15 18;          /* Dark Oxblood */
+    --color-velvet: 45 18 22;         /* Crimson Background */
+    --color-plum: 74 21 28;           /* Deep Wine */
+    --color-gold: 205 163 95;         /* Burnished Bronze */
+    --color-antique-gold: 170 128 65;
+    --color-dark-gold: 125 90 40;
+    --color-ivory: 245 240 235;       /* Warm Parchment */
+    --color-starlight: 235 215 215;
+    --color-mystic-purple: 225 29 72; /* Ember Crimson */
+    --color-element-fire: 244 63 94;    /* Bright Alchemical Red */
+    --color-element-earth: 52 211 153;  /* Alchemical Moss */
+    --color-element-air: 254 243 199;   /* Warm Parchment White */
+    --color-element-water: 14 165 233;  /* Mystic Azure */
+}
+
+/* Alternate Theme: Nocturnal Cosmic */
+[data-theme="nocturnal-cosmic"] {
+    --color-obsidian: 7 10 18;        /* Void Black */
+    --color-abyss: 15 23 42;          /* Deep Blue Slate */
+    --color-velvet: 30 41 59;         /* Midnight Blue */
+    --color-plum: 40 55 80;           /* Cosmic Indigo */
+    --color-gold: 56 189 248;         /* Celestial Blue Accent */
+    --color-antique-gold: 14 165 233;
+    --color-dark-gold: 3 105 161;
+    --color-ivory: 241 245 249;       /* Pure Starlight */
+    --color-starlight: 203 213 225;
+    --color-mystic-purple: 99 102 241;/* Deep Violet Glow */
+    --color-element-fire: 248 113 113;  /* Nebula Red */
+    --color-element-earth: 74 222 128;  /* Astral Green */
+    --color-element-air: 226 232 240;   /* Cosmic Starlight */
+    --color-element-water: 56 189 248;  /* Celestial Blue */
+}
+
+/* Alternate Theme: Modern Astral Minimalist */
+[data-theme="modern-astral"] {
+    --color-obsidian: 15 23 42;       /* Slate 900 */
+    --color-abyss: 30 41 59;          /* Slate 800 */
+    --color-velvet: 51 65 85;         /* Slate 700 */
+    --color-plum: 71 85 105;          /* Slate 600 */
+    --color-gold: 248 250 252;        /* Crisp Pure White Accent */
+    --color-antique-gold: 226 232 240;/* Slate 200 */
+    --color-dark-gold: 148 163 184;   /* Slate 400 */
+    --color-ivory: 255 255 255;       /* Bright White */
+    --color-starlight: 203 213 225;   /* Slate 300 */
+    --color-mystic-purple: 14 165 233;/* Electric Sky Blue Glow */
+
+    /* Element Color Tokens for Modern Theme */
+    --color-element-fire: 244 63 94;    /* Modern Rose Red */
+    --color-element-earth: 34 197 94;   /* Modern Emerald */
+    --color-element-air: 255 255 255;   /* Crisp White */
+    --color-element-water: 56 189 248;  /* Electric Cyan */
+}
+
+/* -------------------------------------------------------------
+   CORE STYLES
+------------------------------------------------------------- */
+body {
+    background-color: rgb(var(--color-obsidian));
+    color: rgb(var(--color-ivory));
+    font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Ambient Starlight Canvas */
+#fx-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Dynamic Glow & Box Shadows */
+.text-glow-gold {
+    text-shadow: 0 0 12px rgb(var(--color-gold) / 0.6), 0 0 24px rgb(var(--color-gold) / 0.25);
+}
+.text-glow-purple {
+    text-shadow: 0 0 12px rgb(var(--color-mystic-purple) / 0.6), 0 0 24px rgb(var(--color-mystic-purple) / 0.2);
+}
+.box-glow-gold {
+    box-shadow: 0 0 20px rgb(var(--color-gold) / 0.2), inset 0 0 15px rgb(var(--color-gold) / 0.08);
+}
+.box-glow-plum {
+    box-shadow: 0 0 20px rgb(var(--color-plum) / 0.5), inset 0 0 10px rgb(var(--color-mystic-purple) / 0.15);
+}
+
+/* 3D Card Flip Perspective */
+.card-container {
+    perspective: 1200px;
+}
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+.card-inner.flipped {
+    transform: rotateY(180deg);
+}
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+.card-back {
+    transform: rotateY(0deg);
+}
+.card-front {
+    transform: rotateY(180deg);
+}
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgb(var(--color-obsidian));
+}
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-plum));
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-gold));
+}
+
+/* Deck Stack Animation */
+.deck-card {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.deck-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 10px 30px rgb(var(--color-gold) / 0.25);
+}
+
+/* Container relativity for fluid motion stage */
+#single-card-view {
+    position: relative;
+    min-height: 440px;
+}
+
+/* Stage 1: Physical Travel across the screen */
+.card-slide-travel {
+    transition: transform 0.55s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+}
+
+/* Stage 2: Interpretation box entry */
+.details-slide-enter {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.details-slide-active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Elemental Styles */
+.badge-fire { background-color: rgb(var(--color-element-fire) / 0.15); border-color: rgb(var(--color-element-fire) / 0.4); color: rgb(var(--color-element-fire)); }
+.badge-earth { background-color: rgb(var(--color-element-earth) / 0.15); border-color: rgb(var(--color-element-earth) / 0.4); color: rgb(var(--color-element-earth)); }
+.badge-air { background-color: rgb(var(--color-element-air) / 0.15); border-color: rgb(var(--color-element-air) / 0.4); color: rgb(var(--color-element-air)); }
+.badge-water { background-color: rgb(var(--color-element-water) / 0.15); border-color: rgb(var(--color-element-water) / 0.4); color: rgb(var(--color-element-water)); }
+
+
+/* Library Filter Button Styles */
+.lib-filter-btn {
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    background-color: rgb(var(--color-obsidian) / 0.4);
+    color: rgb(var(--color-starlight) / 0.7);
+    font-family: var(--font-atkinson, Atkinson, sans-serif);
+}
+
+.lib-filter-btn:hover {
+    color: rgb(var(--color-gold));
+    border-color: rgba(212, 175, 55, 0.6);
+}
+
+.lib-filter-btn.active {
+    background-color: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.6);
+    color: rgb(var(--color-gold));
+    font-weight: 600;
+}

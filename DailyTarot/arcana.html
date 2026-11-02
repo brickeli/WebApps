@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <title>Arcana - Daily Tarot Companion</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Base Styles -->
+    <!-- Base Custom Design System Stylesheet -->
     <link rel="stylesheet" href="./css/styles.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,316 +13,318 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // Map tokens to CSS variables with alpha channel support
-                        obsidian: 'rgb(var(--color-obsidian) / <alpha-value>)',
-                        abyss: 'rgb(var(--color-abyss) / <alpha-value>)',
-                        velvet: 'rgb(var(--color-velvet) / <alpha-value>)',
-                        plum: 'rgb(var(--color-plum) / <alpha-value>)',
-                        gold: 'rgb(var(--color-gold) / <alpha-value>)',
-                        antiqueGold: 'rgb(var(--color-antique-gold) / <alpha-value>)',
-                        darkGold: 'rgb(var(--color-dark-gold) / <alpha-value>)',
-                        ivory: 'rgb(var(--color-ivory) / <alpha-value>)',
-                        starlight: 'rgb(var(--color-starlight) / <alpha-value>)',
-                        mysticPurple: 'rgb(var(--color-mystic-purple) / <alpha-value>)'
-                    },
-                    fontFamily: {
-                        cinzel: ['Cinzel', 'serif'],
-                        cinzelDeco: ['"Cinzel Decorative"', 'serif'],
-                        sans: ['"Atkinson Hyperlegible"', 'sans-serif'],
-                        atkinson: ['"Atkinson Hyperlegible"', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="min-h-screen flex flex-col justify-between relative selection:bg-gold selection:text-obsidian">
+<body class="site-body">
     <!-- FX Canvas for celestial starlight and dust -->
     <canvas id="fx-canvas"></canvas>
 
     <!-- Header Navigation -->
-    <header class="relative border-b border-gold/20 bg-abyss/80 backdrop-blur-md p-4 top-0">
-        <div class="max-w-6xl mx-auto flex flex-wrap justify-center lg:justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-eye text-gold text-xl sm:text-2xl animate-pulse"></i>
-                <h1 class="font-cinzelDeco text-lg sm:text-2xl font-bold tracking-widest text-gold text-glow-gold">Arcana</h1>
-                <span class="hidden sm:inline-block text-[12px] font-cinzel tracking-widest text-starlight/70 uppercase border-l border-gold/20 pl-3">Daily Tarot Companion</span>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-group">
+                <i class="fa-solid fa-eye brand-icon"></i>
+                <h1 class="brand-title">Arcana</h1>
+                <span class="brand-subtitle">Daily Tarot Companion</span>
             </div>
 
-            <nav class="flex items-center gap-2 sm:gap-4">
-                <button id="btn-single" onclick="setMode('single')" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-cinzel text-xs sm:text-sm font-semibold transition-all border border-gold/40 bg-gold/10 text-gold shadow-md">
-                    <i class="fa-solid fa-compass mr-1.5"></i> Daily Card
+            <nav class="nav-container">
+                <button id="btn-single" onclick="setMode('single')" class="tarot-nav-btn active">
+                    <i class="fa-solid fa-compass"></i> Daily Card
                 </button>
-                <button id="btn-triple" onclick="setMode('triple')" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-cinzel text-xs sm:text-sm font-semibold transition-all border border-purple-900/40 bg-velvet/40 text-starlight/70 hover:text-gold hover:border-gold/30">
-                    <i class="fa-solid fa-hamsa mr-1.5"></i> 3-Card Spread
+                <button id="btn-triple" onclick="setMode('triple')" class="tarot-nav-btn">
+                    <i class="fa-solid fa-hamsa"></i> 3-Card Spread
                 </button>
-                <button id="btn-archives" onclick="toggleArchivesModal(true)" class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-cinzel text-xs sm:text-sm font-semibold transition-all border border-purple-900/40 bg-velvet/40 text-starlight/70 hover:text-gold hover:border-gold/30">
-                    <i class="fa-solid fa-landmark mr-1.5"></i> The Archives (<span id="archive-journal-count">0</span>)
+                <button id="btn-archives" onclick="toggleArchivesModal(true)" class="tarot-nav-btn">
+                    <i class="fa-solid fa-landmark"></i> The Archives
                 </button>
             </nav>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <main class="relative max-w-5xl mx-auto px-4 py-8 flex-grow flex flex-col items-center justify-center w-full">
+    <main class="site-main">
 
         <!-- Intro Greeting & Esoteric Subtitle -->
-        <div class="text-center mb-8 max-w-xl">
-            <h2 id="reading-title" class="font-cinzelDeco text-2xl sm:text-3xl text-gold font-bold mb-2 tracking-wide text-glow-gold">
+        <div class="intro-container">
+            <h2 id="reading-title" class="intro-title">
                 Consult the Sacred Arcana
             </h2>
-            <p id="reading-desc" class="text-xs sm:text-sm text-starlight/70 font-light leading-relaxed">
+            <p id="reading-desc" class="intro-description">
                 Clear your mind, focus upon your daily path, and draw from the ancient wisdom of the deck.
             </p>
         </div>
 
         <!-- Single Card Area -->
-        <div id="single-card-view" class="w-full flex flex-col items-center">
-
+        <div id="single-card-view" class="single-card-view-container">
             <!-- Deck Stack Container -->
-            <div id="deck-draw-area" class="flex flex-col items-center gap-6 my-4">
-                <div id="deck-card-container" class="card-container cursor-pointer group">
-                    <div class="deck-card w-56 min-h-[360px] sm:w-60 sm:h-96 rounded-2xl border-2 border-gold/50 bg-gradient-to-b from-plum via-velvet to-obsidian p-5 flex flex-col items-center justify-between box-glow-gold relative overflow-hidden">
+            <div id="deck-draw-area" class="deck-draw-area">
+                <div id="deck-card-container" class="card-container cursor-pointer deck-hover-group">
+                    <div class="deck-card-base">
                         <!-- Filigree Card Back -->
-                        <div class="absolute inset-2 border border-gold/30 rounded-xl pointer-events-none flex items-center justify-center">
-                            <div class="w-full h-full border border-gold/15 rounded-lg m-1"></div>
+                        <div class="deck-filigree-outer">
+                            <div class="deck-filigree-inner"></div>
                         </div>
-                        <div class="text-gold/60 text-[10px] tracking-widest font-cinzel">• ARCANA TAROT •</div>
-                        <div class="my-auto text-center">
-                            <i class="fa-solid fa-sun-plant-wilt text-4xl sm:text-5xl text-gold group-hover:scale-110 transition-all duration-500"></i>
-                            <p class="font-cinzel text-xs text-starlight/80 mt-4 tracking-widest">TAP TO DRAW</p>
+                        <div class="deck-card-text">✦ SACRED ARCANA ✦</div>
+                        <div class="deck-center-content">
+                            <i class="fa-solid fa-sun-plant-wilt deck-center-icon"></i>
+                            <p class="deck-tap-text">TAP TO DRAW</p>
                         </div>
-                        <div class="text-gold/60 text-[10px] tracking-widest font-cinzel">✦ INTUITION ✦</div>
+                        <div class="deck-card-text">✦ INTUITION ✦</div>
                     </div>
                 </div>
-                <button id="btn-draw-single" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-antiqueGold via-gold to-darkGold text-obsidian font-cinzel font-bold text-sm tracking-wider shadow-md hover:shadow-gold/30 hover:scale-105 active:scale-95 transition-all">
+                <button id="btn-draw-single" class="tarot-btn-draw-daily">
                     <i class="fa-solid fa-sparkles mr-2"></i>✦ Draw Daily Card ✦
                 </button>
             </div>
-
             <!-- Single Drawn Card Reveal Area -->
-            <div id="single-reveal-area" class="hidden w-full flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 my-4">
+            <div id="single-reveal-area" class="single-reveal-area hidden">
                 <!-- Interactive 3D Card -->
-                <div class="card-container flex flex-col items-center gap-6">
-                    <div id="single-card-inner" class="card-inner w-56 min-h-[360px] sm:w-60 sm:h-96 cursor-pointer">
+                <div class="card-wrapper card-container single-slot-container">
+                    <div id="single-card-inner" class="card-inner tarot-card-inner cursor-pointer">
                         <!-- Card Back -->
-                        <div class="card-back border-2 border-gold/50 bg-gradient-to-b from-plum via-velvet to-obsidian p-4 flex flex-col items-center justify-between box-glow-gold">
-                            <div class="text-gold/60 text-[10px] tracking-widest font-cinzel">✦ SACRED ARCANA ✦</div>
-                            <i class="fa-solid fa-sun-plant-wilt text-5xl text-gold animate-pulse"></i>
-                            <p class="font-cinzel text-xs text-starlight/80 text-center">UNVEILING THE CARD...</p>
+                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                            <div class="deck-filigree-outer">
+                                <div class="deck-filigree-inner"></div>
+                            </div>
+                            <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                            <div class="deck-center-content">
+                                <i class="fa-solid fa-sun-plant-wilt card-back-icon"></i>
+                                <p class="card-back-status">UNVEILING THE CARD...</p>
+                            </div>
+                            <div class="deck-card-text">✦ INTUITION ✦</div>
                         </div>
                         <!-- Card Front -->
-                        <div id="single-card-front" class="card-front border-2 border-gold/70 bg-gradient-to-b from-plum via-abyss to-obsidian p-4 flex flex-col justify-between box-glow-gold">
+                        <div id="single-card-front" class="card-front tarot-card-front-face box-glow-gold">
                             <!-- Visual Content rendered via JS -->
                         </div>
                     </div>
-                    <!-- Redraw button -->
-                    <button id="btn-redraw-single" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-antiqueGold via-gold to-darkGold text-obsidian font-cinzel font-bold text-sm tracking-wider shadow-md hover:shadow-gold/30 hover:scale-105 active:scale-95 transition-all">
-                        <i class="fa-solid fa-rotate-right"></i> Draw Another Card
-                    </button>
                 </div>
 
                 <!-- Detailed Card Interpretations -->
-                <div id="single-card-details" class="w-full max-w-xl bg-abyss/85 border border-gold/30 rounded-2xl p-5 sm:p-6 backdrop-blur-md details-slide-enter box-glow-plum">
-                    <div class="flex justify-between items-start border-b border-gold/20 pb-3 mb-4">
-                        <div>
-                            <span id="card-arcana" class="text-xs font-cinzel uppercase tracking-widest text-gold font-semibold">Major Arcana</span>
-                            <h3 id="card-title" class="font-cinzel text-2xl sm:text-3xl font-bold text-ivory">The Fool</h3>
-                        </div>
-                        <button onclick="saveCurrentReading()" class="px-3 py-1.5 rounded-lg bg-plum/40 border border-gold/30 text-xs font-cinzel text-starlight hover:text-gold hover:border-gold transition-all">
-                            <i class="fa-regular fa-bookmark mr-1"></i> Save
-                        </button>
+                <div id="single-card-details" class="tarot-details-card details-slide-enter box-glow-plum">
+                    <div class="card-details-header">
+                        <h4 id="card-arcana" class="card-arcana-badge">Major Arcana</h4>
+                        <h3 id="card-title" class="card-title-main">The Fool</h3>
                     </div>
 
                     <!-- Keywords -->
-                    <div class="mb-4">
-                        <span class="text-xs font-cinzel text-starlight/50 block mb-1.5">RESONATING KEYWORDS</span>
-                        <div id="card-keywords" class="flex flex-wrap gap-1.5 text-[12px] text-gold">
+                    <div class="card-section-mb">
+                        <span class="card-section-label">RESONATING KEYWORDS</span>
+                        <div id="card-keywords" class="card-keywords-flex">
                             <!-- Populated via JS -->
                         </div>
                     </div>
 
                     <!-- General Meaning -->
-                    <div class="mb-5">
-                        <h4 class="text-xs font-cinzel text-gold font-semibold tracking-wider mb-1 flex items-center">
-                            <i class="fa-solid fa-compass mr-1.5"></i> ESOTERIC SIGNIFICANCE
+                    <div class="card-section-mb">
+                        <h4 class="card-section-heading">
+                            <i class="fa-solid fa-compass card-heading-icon"></i> ESOTERIC SIGNIFICANCE
                         </h4>
-                        <p id="card-desc" class="text-xs sm:text-sm text-ivory/90 leading-relaxed font-light">
+                        <p id="card-desc" class="card-description-text">
                             <!-- Description here -->
                         </p>
                     </div>
 
                     <!-- Light vs Shadow breakdown -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                        <div class="bg-velvet/50 border border-emerald-500/30 rounded-xl p-3.5">
-                            <h5 class="text-xs font-cinzel text-emerald-300 font-bold mb-1 flex items-center">
-                                <i class="fa-solid fa-sun mr-1.5"></i> LIGHT / UPRIGHT
+                    <div class="card-aspects-grid">
+                        <div class="tarot-aspect-box tarot-aspect-light">
+                            <h5 class="card-aspect-title-light">
+                                <i class="fa-solid fa-sun card-aspect-icon"></i> LIGHT / UPRIGHT
                             </h5>
-                            <p id="card-light" class="text-xs text-ivory/80 leading-relaxed">
+                            <p id="card-light" class="card-aspect-text">
                                 <!-- Upright aspect -->
                             </p>
                         </div>
-                        <div class="bg-velvet/50 border border-rose-500/30 rounded-xl p-3.5">
-                            <h5 class="text-xs font-cinzel text-rose-300 font-bold mb-1 flex items-center">
-                                <i class="fa-solid fa-moon mr-1.5"></i> SHADOW / REVERSED
+                        <div class="tarot-aspect-box tarot-aspect-shadow">
+                            <h5 class="card-aspect-title-shadow">
+                                <i class="fa-solid fa-moon card-aspect-icon"></i> SHADOW / REVERSED
                             </h5>
-                            <p id="card-shadow" class="text-xs text-ivory/80 leading-relaxed">
+                            <p id="card-shadow" class="card-aspect-text">
                                 <!-- Reversed aspect -->
                             </p>
                         </div>
                     </div>
+                    <div class="tarot-insights-container">
+                        <!-- Tab Navigation Headers -->
+                        <div class="insight-tabs-nav">
+                            <button class="insight-tab-btn active" id="btn-tab-wisdom">
+                                <i class="fa-solid fa-scroll"></i> Arcanum Wisdom
+                            </button>
+                            <button class="insight-tab-btn" id="btn-tab-elemental">
+                                <i class="fa-solid fa-fire-flame-curved"></i> Elemental Insight
+                            </button>
+                        </div>
 
-                    <!-- Esoteric Guidance -->
-                    <div class="bg-gradient-to-r from-gold/10 to-purple-950/30 border border-gold/30 rounded-xl p-3.5">
-                        <h5 class="text-xs font-cinzel text-gold font-bold mb-1 flex items-center">
-                            <i class="fa-solid fa-scroll mr-1.5"></i> DAILY GUIDANCE
-                        </h5>
-                        <p id="card-advice" class="text-md text-starlight/90 italic">
-                            <!-- Guidance -->
-                        </p>
+                        <!-- Tab Content Panels -->
+                        <div id="tab-content-wisdom" class="insight-tab-panel active">
+                          <div id="card-advice" class="tarot-guidance-quote esoteric">
+                              <div class="esoteric-scroll-header">✦ ARCANUM WISDOM ✦</div>
+                              <div class="esoteric-scroll-body" id="card-advice-text"></div>
+                          </div>
+                        </div>
+
+                        <div id="tab-content-elemental" class="insight-tab-panel">
+                            <div id="single-elemental-container"></div>
+                        </div>
                     </div>
-                    <button id="share-card-btn" class="flex mt-4 items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-gold hover:bg-gold/80 text-obsidian text-xs font-cinzel font-bold transition-all shadow-md hover:shadow-gold/30">
-                      <i class="fa-solid fa-share-nodes"></i>
-                      <span>Share Draw</span>
+                </div>
+              </div>
+              <div class="card-share-container">
+                  <button onclick="saveCurrentReading()" class="tarot-save-btn">
+                      <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
+                  </button>
+                  <button id="share-card-btn-single" class="tarot-share-btn">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>Share Card</span>
+                  </button>
+                  <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
+              </div>              
+            </div>
+
+            <!-- 3-Card Spread Area -->
+            <div id="triple-card-view" class="triple-view-container hidden">
+                <div class="triple-btn-wrapper">
+                    <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
+                        <i class="fa-solid fa-hamsa triple-btn-icon"></i> Cast 3-Card Spread (Past • Present • Future)
                     </button>
-                    <span id="share-feedback" class="text-xs text-indigo-300 ml-2 hidden">Copied to clipboard!</span>
                 </div>
-            </div>
-        </div>
 
-        <!-- 3-Card Spread Area -->
-        <div id="triple-card-view" class="hidden w-full flex flex-col items-center">
-            <div id="triple-draw-btn-container" class="mb-6">
-                <button onclick="drawTripleSpread()" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-antiqueGold via-gold to-darkGold text-obsidian font-cinzel font-bold text-sm tracking-wider shadow-md hover:shadow-gold/30 hover:scale-105 active:scale-95 transition-all">
-                    <i class="fa-solid fa-hamsa mr-2"></i> Cast 3-Card Spread (Past • Present • Future)
-                </button>
-            </div>
-
-            <!-- Triple Cards Layout -->
-            <div id="triple-cards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl mb-6">
-
-              <!-- Slot 0: Past -->
-              <div class="flex flex-col items-center">
-                <span class="font-cinzel text-xs text-gold font-bold mb-2 tracking-widest">I. THE PAST</span>
-                <div class="card-container w-60 h-[26rem]">
-                  <div id="triple-card-inner-0" class="card-inner" onclick="flipTripleCard(0)">
-                    <div class="card-back border-2 border-gold/40 bg-velvet p-4 flex flex-col items-center justify-between box-glow-gold">
-                      <span class="text-xs font-cinzel text-gold/70">PAST</span>
-                      <i class="fa-solid fa-hourglass-half text-4xl text-gold/60"></i>
-                      <span class="text-[10px] font-cinzel text-starlight/50">TAP TO REVEAL</span>
+                <div class="triple-cards-grid">
+                  <!-- Slot 0: Past -->
+                  <div class="triple-card-slot">
+                    <span class="triple-slot-label">I. THE PAST</span>
+                    <div class="card-container triple-slot-container">
+                      <div id="triple-card-inner-0" class="card-inner cursor-pointer" onclick="flipTripleCard(0)">
+                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                          <div class="deck-filigree-outer">
+                            <div class="deck-filigree-inner"></div>
+                          </div>
+                          <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                          <div class="deck-center-content">
+                            <i class="fa-solid fa-hourglass-half card-back-icon"></i>
+                            <p class="card-back-status">PAST PORTAL</p>
+                          </div>
+                          <div class="deck-card-text">✦ INTUITION ✦</div>
+                        </div>
+                        <div id="triple-card-front-0" class="card-front"></div>
+                      </div>
                     </div>
-                    <!-- Front container dynamically populated by drawTripleSpread() -->
-                    <div id="triple-card-front-0" class="card-front"></div>
+                  </div>
+
+                  <!-- Slot 1: Present -->
+                  <div class="triple-card-slot">
+                    <span class="triple-slot-label">II. THE PRESENT</span>
+                    <div class="card-container triple-slot-container">
+                      <div id="triple-card-inner-1" class="card-inner cursor-pointer" onclick="flipTripleCard(1)">
+                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                          <div class="deck-filigree-outer">
+                            <div class="deck-filigree-inner"></div>
+                          </div>
+                          <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                          <div class="deck-center-content">
+                            <i class="fa-solid fa-compass card-back-icon"></i>
+                            <p class="card-back-status">PRESENT PORTAL</p>
+                          </div>
+                          <div class="deck-card-text">✦ INTUITION ✦</div>
+                        </div>
+                        <div id="triple-card-front-1" class="card-front"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Slot 2: Future -->
+                  <div class="triple-card-slot">
+                    <span class="triple-slot-label">III. THE FUTURE</span>
+                    <div class="card-container triple-slot-container">
+                      <div id="triple-card-inner-2" class="card-inner cursor-pointer" onclick="flipTripleCard(2)">
+                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                          <div class="deck-filigree-outer">
+                            <div class="deck-filigree-inner"></div>
+                          </div>
+                          <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                          <div class="deck-center-content">
+                            <i class="fa-solid fa-eye card-back-icon"></i>
+                            <p class="card-back-status">FUTURE PORTAL</p>
+                          </div>
+                          <div class="deck-card-text">✦ INTUITION ✦</div>
+                        </div>
+                        <div id="triple-card-front-2" class="card-front"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Slot 1: Present -->
-              <div class="flex flex-col items-center">
-                <span class="font-cinzel text-xs text-gold font-bold mb-2 tracking-widest">II. THE PRESENT</span>
-                <div class="card-container w-60 h-[26rem]">
-                  <div id="triple-card-inner-1" class="card-inner" onclick="flipTripleCard(1)">
-                    <div class="card-back border-2 border-gold/40 bg-velvet p-4 flex flex-col items-center justify-between box-glow-gold">
-                      <span class="text-xs font-cinzel text-gold/70">PRESENT</span>
-                      <i class="fa-solid fa-compass text-4xl text-gold/60"></i>
-                      <span class="text-[10px] font-cinzel text-starlight/50">TAP TO REVEAL</span>
-                    </div>
-                    <!-- Front container dynamically populated by drawTripleSpread() -->
-                    <div id="triple-card-front-1" class="card-front"></div>
-                  </div>
-                </div>
-              </div>
+                <!-- Elemental Analyzer Target -->
+                <div id="triple-elemental-container"></div>
 
-              <!-- Slot 2: Future -->
-              <div class="flex flex-col items-center">
-                <span class="font-cinzel text-xs text-gold font-bold mb-2 tracking-widest">III. THE FUTURE</span>
-                <div class="card-container w-60 h-[26rem]">
-                  <div id="triple-card-inner-2" class="card-inner" onclick="flipTripleCard(2)">
-                    <div class="card-back border-2 border-gold/40 bg-velvet p-4 flex flex-col items-center justify-between box-glow-gold">
-                      <span class="text-xs font-cinzel text-gold/70">FUTURE</span>
-                      <i class="fa-solid fa-eye text-4xl text-gold/60"></i>
-                      <span class="text-[10px] font-cinzel text-starlight/50">TAP TO REVEAL</span>
-                    </div>
-                    <!-- Front container dynamically populated by drawTripleSpread() -->
-                    <div id="triple-card-front-2" class="card-front"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Save Spread Button -->
-            <div id="triple-actions" class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8 hidden w-full">
-                <button onclick="saveTripleReading()" class="w-full sm:w-auto px-6 py-2.5 rounded-full bg-velvet border border-gold/40 text-gold font-cinzel text-xs font-bold hover:bg-gold hover:text-obsidian transition-all text-center">
-                    <i class="fa-solid fa-book-bookmark mr-1.5"></i> Save Spread to Journal
-                </button>
-                <div class="flex items-center justify-center gap-2 w-full sm:w-auto">
-                    <button id="share-card-btn" class="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-2.5 rounded-lg bg-gold hover:bg-gold/80 text-obsidian text-xs font-cinzel font-bold transition-all shadow-md hover:shadow-gold/30">
-                        <i class="fa-solid fa-share-nodes"></i>
-                        <span>Share Draw</span>
+                <!-- Save Spread Button -->
+                <div id="triple-actions" class="triple-actions-container hidden">
+                    <button onclick="saveTripleReading()" class="tarot-save-btn">
+                        <i class="fa-solid fa-book-bookmark save-icon"></i> Save Spread to Journal
                     </button>
-                    <span id="share-feedback" class="text-xs text-gold/80 hidden">Copied!</span>
+                    <div class="triple-share-group">
+                        <button id="share-card-btn-triple" class="tarot-share-btn">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>Share Spread</span>
+                        </button>
+                        <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
+                    </div>
                 </div>
             </div>
-        </div>
     </main>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-abyss border border-gold/50 text-ivory text-xs font-cinzel px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-16 opacity-0 flex items-center gap-2">
-        <i class="fa-solid fa-star-of-david text-gold"></i>
+    <div id="toast" class="tarot-toast">
+        <i class="fa-solid fa-star-of-david toast-star-icon"></i>
         <span id="toast-msg">Reading saved to your journal!</span>
     </div>
 
     <!-- Footer -->
-    <footer class="border-t border-gold/20 p-4 text-center text-xs text-starlight/50 font-cinzel relative z-20">
-      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <p>✦ Arcana Tarot Companion • Seek Wisdom within the Stars ✦</p>
+    <footer class="tarot-footer">
+      <div class="footer-inner">
+        <p class="footer-copyright">✦ Arcana Tarot Companion • Seek Wisdom within the Stars ✦</p>
 
         <!-- Combined Utilities / Settings Menu -->
-        <div class="relative inline-block text-left">
-          <button id="utils-menu-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gold/30 bg-obsidian/60 text-gold hover:border-gold/60 transition-colors font-cinzel text-xs">
-              <i class="fa-solid fa-sliders text-sm"></i>
+        <div class="footer-settings-wrapper">
+          <button id="utils-menu-btn" class="tarot-settings-btn">
+              <i class="fa-solid fa-sliders settings-icon"></i>
               <span>Settings</span>
-              <i class="fa-solid fa-chevron-up text-[10px] opacity-70"></i>
+              <i class="fa-solid fa-chevron-up settings-chevron"></i>
           </button>
 
           <!-- Upward Opening Utilities Popup Menu -->
-          <div id="utils-dropdown" class="hidden absolute left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0 bottom-full mb-2 w-56 bg-velvet border border-gold/40 rounded-xl shadow-2xl p-3 z-50 backdrop-blur-md text-left">
+          <div id="utils-dropdown" class="tarot-settings-dropdown hidden">
             <!-- Section 1: Ambient Audio Toggle -->
-            <div class="pb-2.5 mb-2.5 border-b border-gold/20">
-              <span class="text-[10px] font-cinzel text-gold/70 tracking-widest uppercase block mb-1.5">Audio</span>
-              <button id="menu-audio-btn" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-gold/20 bg-obsidian/40 text-starlight hover:border-gold/40 hover:text-gold transition-colors">
-                <div class="flex items-center gap-2">
-                  <i id="audio-icon" class="fa-solid fa-volume-xmark text-sm text-starlight/60"></i>
-                  <span id="audio-status-text" class="text-xs">Sound Muted</span>
+            <div class="settings-section-audio">
+              <span class="settings-section-label">Audio</span>
+              <button id="menu-audio-btn" class="tarot-audio-toggle-btn">
+                <div class="settings-audio-info">
+                  <i id="audio-icon" class="fa-solid fa-volume-xmark settings-audio-icon"></i>
+                  <span id="audio-status-text" class="settings-audio-text">Sound Muted</span>
                 </div>
-                <span id="audio-toggle-badge" class="text-[9px] font-cinzel px-1.5 py-0.5 rounded bg-plum/60 border border-plum text-starlight/60">OFF</span>
+                <span id="audio-toggle-badge" class="settings-audio-badge">OFF</span>
               </button>
             </div>
 
             <!-- Section 2: Color Theme Selector -->
             <div>
-              <span class="text-[10px] font-cinzel text-gold/70 tracking-widest uppercase block mb-1.5">Aesthetic Palette</span>
-              <div class="flex flex-col gap-1">
-                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="w-full text-left px-2.5 py-1.5 text-xs font-cinzel text-starlight hover:bg-plum/60 hover:text-gold flex items-center justify-between rounded-lg transition-colors">
+              <span class="settings-section-label">Aesthetic Palette</span>
+              <div class="settings-themes-list">
+                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="theme-option-btn">
                   <span>Gothic Plum</span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#7b42bc] border border-gold/40"></span>
+                  <span class="theme-dot theme-dot-plum"></span>
                 </button>
-                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="w-full text-left px-2.5 py-1.5 text-xs font-cinzel text-starlight hover:bg-plum/60 hover:text-gold flex items-center justify-between rounded-lg transition-colors">
+                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="theme-option-btn">
                   <span>Crimson Alchemist</span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#e11d48] border border-gold/40"></span>
+                  <span class="theme-dot theme-dot-crimson"></span>
                 </button>
-                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="w-full text-left px-2.5 py-1.5 text-xs font-cinzel text-starlight hover:bg-plum/60 hover:text-gold flex items-center justify-between rounded-lg transition-colors">
+                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn">
                   <span>Nocturnal Cosmic</span>
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#38bdf8] border border-gold/40"></span>
+                  <span class="theme-dot theme-dot-cosmic"></span>
                 </button>
-                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="w-full text-left px-2.5 py-1.5 text-xs font-cinzel text-starlight hover:bg-plum/60 hover:text-gold flex items-center justify-between rounded-lg transition-colors">
-                    <span>Modern Astral</span>
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#0ea5e9] border border-slate-200/40"></span>
+                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="theme-option-btn">
+                  <span>Modern Astral</span>
+                  <span class="theme-dot theme-dot-astral"></span>
                 </button>
               </div>
             </div>
@@ -334,77 +334,76 @@
     </footer>
 
     <!-- Unified Archives Modal (Journal + Library Tabs) -->
-      <div id="archives-modal" class="fixed inset-0 z-50 bg-obsidian/85 backdrop-blur-md hidden flex items-start justify-center pt-10 sm:pt-16 p-4">
-          <div class="bg-abyss border border-gold/30 rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col box-glow-plum overflow-hidden">
+    <div id="archives-modal" class="tarot-modal-overlay hidden">
+        <div class="tarot-modal-container box-glow-plum">
+            <!-- Modal Header & Tab Navigation -->
+            <div class="tarot-modal-header">
+                <div class="tarot-modal-title-row">
+                    <h3 class="tarot-modal-title">
+                        <i class="fa-solid fa-landmark"></i> The Arcane Archives
+                    </h3>
+                    <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
 
-                <!-- Modal Header & Tab Navigation -->
-                <div class="p-4 sm:p-5 border-b border-gold/20 bg-obsidian/60 flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-cinzel text-lg sm:text-xl font-bold text-gold flex items-center gap-2">
-                            <i class="fa-solid fa-landmark"></i> The Arcane Archives
-                        </h3>
-                        <button onclick="toggleArchivesModal(false)" class="text-starlight/60 hover:text-gold p-1 transition-colors">
-                            <i class="fa-solid fa-xmark text-xl"></i>
+                <!-- Search Bar & Mobile Filter Toggle Header -->
+                <div class="tarot-modal-controls-row">
+                    <!-- Tab Buttons -->
+                    <div class="tarot-tabs-group">
+                        <button id="tab-btn-journal" onclick="switchArchiveTab('journal')" class="tarot-tab-btn active">
+                            <i class="fa-solid fa-book-bookmark tab-icon"></i> Journal (<span id="tab-journal-count">0</span>)
+                        </button>
+                        <button id="tab-btn-library" onclick="switchArchiveTab('library')" class="tarot-tab-btn">
+                            <i class="fa-solid fa-book-atlas tab-icon"></i> Card Library
                         </button>
                     </div>
 
-                    <!-- Search Bar & Mobile Filter Toggle Header -->
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <!-- Tab Buttons -->
-                        <div class="flex items-center gap-2 bg-obsidian/60 p-1 rounded-xl border border-gold/20 w-full sm:w-auto">
-                            <button id="tab-btn-journal" onclick="switchArchiveTab('journal')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg font-cinzel text-xs font-semibold transition-all bg-gold/15 text-gold border border-gold/30 shadow">
-                                <i class="fa-solid fa-book-bookmark mr-1.5"></i> Journal (<span id="tab-journal-count">0</span>)
-                            </button>
-                            <button id="tab-btn-library" onclick="switchArchiveTab('library')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg font-cinzel text-xs font-semibold transition-all text-starlight/70 hover:text-gold">
-                                <i class="fa-solid fa-book-atlas mr-1.5"></i> Card Library
-                            </button>
+                    <!-- Contextual Search Bar & Filter Toggle (Visible in Library Tab) -->
+                    <div id="archive-search-container" class="tarot-search-group hidden">
+                        <div class="tarot-search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass tarot-search-icon"></i>
+                            <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input">
                         </div>
-
-                        <!-- Contextual Search Bar & Filter Toggle (Visible in Library Tab) -->
-                        <div id="archive-search-container" class="w-full sm:w-auto flex items-center gap-2 hidden">
-                            <div class="relative flex-grow sm:w-60">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gold/50 text-xs"></i>
-                                <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="w-full bg-obsidian/80 border border-gold/30 rounded-xl pl-9 pr-3 py-1.5 text-xs text-ivory font-sans focus:outline-none focus:border-gold transition-colors">
-                            </div>
-                            <!-- Mobile Filter Toggle Button -->
-                            <button onclick="toggleMobileFilters()" id="filter-toggle-btn" class="sm:hidden px-3 py-1.5 rounded-xl border border-gold/30 bg-obsidian/80 text-gold text-xs font-cinzel flex items-center gap-1.5 hover:border-gold transition-colors whitespace-nowrap">
-                                <i class="fa-solid fa-filter"></i> Filters
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Collapsible Element & Arcana Filter Chips -->
-                    <div id="archive-filters" class="hidden flex-wrap items-center gap-1.5 pt-1 transition-all duration-300">
-                        <button onclick="filterLibrary('all')" class="lib-filter-btn active">All</button>
-                        <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><i class="fa-solid fa-crown mr-1"></i>Major</button>
-                        <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><i class="fa-solid fa-star mr-1"></i>Minor</button>
-                        <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Wands</button>
-                        <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><i class="fa-solid fa-mug-saucer mr-1"></i> Cups</button>
-                        <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><i class="fa-solid fa-wind mr-1"></i> Swords</button>
-                        <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><i class="fa-solid fa-coins mr-1"></i> Pentacles</button>
+                        <!-- Mobile Filter Toggle Button -->
+                        <button onclick="toggleMobileFilters()" id="filter-toggle-btn" class="tarot-filter-toggle-btn">
+                            <i class="fa-solid fa-filter"></i> Filters
+                        </button>
                     </div>
                 </div>
 
-                <!-- Tab Content Views -->
-                <div class="flex-grow overflow-y-auto p-4 sm:p-6">
-                    <!-- Journal View Pane -->
-                    <div id="archive-view-journal" class="flex flex-col gap-3">
-                        <!-- Populated via JS -->
-                    </div>
-
-                    <!-- Library View Pane (Grid) -->
-                    <div id="archive-view-library" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        <!-- Populated via JS -->
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="p-3 border-t border-gold/20 flex justify-between items-center bg-obsidian/40 text-xs text-starlight/60">
-                    <span id="archives-footer-status">Stored in local browser memory</span>
-                    <button id="archive-footer-action" onclick="clearHistory()" class="text-rose-400 hover:text-rose-300 underline font-cinzel">Clear Journal Readings</button>
+                <!-- Collapsible Element & Arcana Filter Chips -->
+                <div id="archive-filters" class="tarot-filters-collapse hidden">
+                    <button onclick="filterLibrary('all')" class="lib-filter-btn active">All</button>
+                    <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><i class="fa-solid fa-crown filter-icon"></i>Major</button>
+                    <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><i class="fa-solid fa-star filter-icon"></i>Minor</button>
+                    <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><i class="fa-solid fa-wand-magic-sparkles filter-icon"></i> Wands</button>
+                    <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><i class="fa-solid fa-mug-saucer filter-icon"></i> Cups</button>
+                    <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><i class="fa-solid fa-wind filter-icon"></i> Swords</button>
+                    <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><i class="fa-solid fa-coins filter-icon"></i> Pentacles</button>
                 </div>
             </div>
+
+            <!-- Tab Content Views -->
+            <div class="tarot-modal-body">
+                <!-- Journal View Pane -->
+                <div id="archive-view-journal" class="tarot-journal-pane">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Library View Pane (Grid) -->
+                <div id="archive-view-library" class="tarot-library-grid">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="tarot-modal-footer">
+                <span id="archives-footer-status">Stored in local browser memory</span>
+                <button id="archive-footer-action" onclick="clearHistory()" class="tarot-clear-journal-btn">Clear Journal Readings</button>
+            </div>
         </div>
+    </div>
 
     <!-- Javascript Logic -->
     <script type="module" src="./main.js"></script>

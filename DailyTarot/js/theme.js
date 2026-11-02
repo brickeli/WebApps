@@ -30,17 +30,10 @@ export function updateAudioUI(audioActive) {
     const audioBadge = document.getElementById('audio-toggle-badge');
 
     if (audioIcon && audioText && audioBadge) {
-        if (audioActive) {
-            audioIcon.className = 'fa-solid fa-volume-high text-sm text-gold';
-            audioText.textContent = 'Ambient Active';
-            audioBadge.className = 'text-[9px] font-cinzel px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/50 text-emerald-400 font-semibold';
-            audioBadge.textContent = 'ON';
-        } else {
-            audioIcon.className = 'fa-solid fa-volume-xmark text-sm text-starlight/60';
-            audioText.textContent = 'Sound Muted';
-            audioBadge.className = 'text-[9px] font-cinzel px-1.5 py-0.5 rounded bg-plum/60 border border-plum text-starlight/60';
-            audioBadge.textContent = 'OFF';
-        }
+        audioIcon.className = `fa-solid ${audioActive ? 'fa-volume-high is-active' : 'fa-volume-xmark is-muted'} settings-audio-icon`;
+        audioText.textContent = audioActive ? 'Ambient Active' : 'Sound Muted';
+        audioBadge.className = `settings-audio-badge ${audioActive ? 'is-on' : 'is-off'}`;
+        audioBadge.textContent = audioActive ? 'ON' : 'OFF';
     }
 }
 
