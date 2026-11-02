@@ -443,6 +443,7 @@ p {
 /* Card Geometry & Flip Engine */
 .card-container, .tarot-card-inner {
     perspective: 1200px;
+    width: 16rem;
     max-width: 90vw;        /* Responsive safety for small screens */
     position: relative;
 }
