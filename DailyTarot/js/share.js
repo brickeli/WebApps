@@ -124,31 +124,32 @@ export async function handleTarotShare(cardData) {
 /**
  * Initializes share handling and binds directly to share buttons
  */
-export function initShareButton(getCardCallback) {
-  if (getCardCallback) {
-    globalGetCardCallback = getCardCallback;
-  }
+ export function initShareButton(getCardCallback) {
+   if (getCardCallback) {
+     globalGetCardCallback = getCardCallback;
+   }
 
-  // Prevent duplicate global listeners
-  if (window._shareListenerInitialized) return;
-  window._shareListenerInitialized = true;
+   // Prevent duplicate global listeners
+   if (window._shareListenerInitialized) return;
+   window._shareListenerInitialized = true;
 
-  document.addEventListener('click', (event) => {
-    // Broadened selector to catch any button with 'share' in its ID or class
-    const shareBtn = event.target.closest('[id*="share"]') ||
-                     event.target.closest('[class*="share"]') ||
-                     event.target.id === 'share-card-btn';
+   document.addEventListener('click', (event) => {
+     // Laser-focused specifically on dedicated share buttons
+     const shareBtn = event.target.closest('#share-card-btn-single') ||
+                      event.target.closest('#share-card-btn-triple');
 
-    if (!shareBtn) return;
+     if (!shareBtn) return;
 
-    event.preventDefault();
+     event.preventDefault();
+     event.stopPropagation();
 
-    const activeCard = globalGetCardCallback ? globalGetCardCallback() : {
-      name: 'The Fool',
-      isReversed: false,
-      advice: 'New beginnings and uninhibited potential.'
-    };
+     const activeCard = globalGetCardCallback ? globalGetCardCallback() : null;
 
-    handleTarotShare(activeCard);
-  }, { passive: false });
-}
+     if (!activeCard) {
+       console.warn("Share callback returned no card data.");
+       return;
+     }
+
+     handleTarotShare(activeCard);
+   }, { passive: false });
+ }

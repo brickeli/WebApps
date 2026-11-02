@@ -98,6 +98,16 @@
                             <!-- Visual Content rendered via JS -->
                         </div>
                     </div>
+                    <div class="card-action-container">
+                        <button onclick="saveCurrentReading()" class="tarot-save-btn">
+                            <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
+                        </button>
+                        <button id="share-card-btn-single" class="tarot-share-btn">
+                          <i class="fa-solid fa-share-nodes"></i>
+                          <span>Share Card</span>
+                        </button>
+                        <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
+                    </div>
                 </div>
 
                 <!-- Detailed Card Interpretations -->
@@ -169,16 +179,6 @@
                     </div>
                 </div>
               </div>
-              <div class="card-share-container">
-                  <button onclick="saveCurrentReading()" class="tarot-save-btn">
-                      <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
-                  </button>
-                  <button id="share-card-btn-single" class="tarot-share-btn">
-                    <i class="fa-solid fa-share-nodes"></i>
-                    <span>Share Card</span>
-                  </button>
-                  <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
-              </div>              
             </div>
 
             <!-- 3-Card Spread Area -->

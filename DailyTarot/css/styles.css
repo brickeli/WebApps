@@ -443,8 +443,6 @@ p {
 /* Card Geometry & Flip Engine */
 .card-container, .tarot-card-inner {
     perspective: 1200px;
-    width: 16rem;           /* Fixed desktop width (256px) */
-    height: 26rem;          /* Fixed height matching tarot proportion */
     max-width: 90vw;        /* Responsive safety for small screens */
     position: relative;
 }
@@ -486,8 +484,8 @@ p {
 
 .card-inner {
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 16rem;
+    height: 26rem;
     transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-style: preserve-3d;
     cursor: pointer;
@@ -1017,11 +1015,10 @@ p {
     transform: none;
 }
 
-.card-share-container {
+.card-action-container {
     display: grid;
     align-items: center;
     gap: 0.75rem;
-    margin-top: 1rem;
 }
 
 .tarot-share-btn {
@@ -1050,7 +1047,6 @@ p {
 
 @media (min-width: 640px) {
     .tarot-share-btn { width: auto; }
-    .card-share-container { display: flex; }
 }
 
 /* ==========================================================================
@@ -1785,6 +1781,8 @@ p {
     background: rgb(var(--color-obsidian, 15 15 20) / 0.6);
     border: 1px solid rgb(var(--color-gold) / 0.2);
     padding: 1rem;
+    margin-top: 1rem;
+    max-width: 480px;
 }
 
 .elemental-header {
