@@ -6,32 +6,28 @@ let globalGetCardCallback = null;
  * Formats clean, atmospheric share text for single draws or 3-card spreads
  */
 export function generateTarotShareText(cardData) {
-    if (!cardData) return "Consulting the Arcana Tarot grimoire...";
+   if (!cardData) return "Consulting the Arcana Tarot grimoire...";
 
-    const shareUrl = window.location.href;
+   if (cardData.isTripleSpread) {
+       const cardNames = cardData.cards ? cardData.cards.map(c => c.name).join(' • ') : (cardData.description || '');
+       const dominant = cardData.dominantElement || 'Cosmic';
+       const loreBlurb = cardData.loreBlurb || "A harmonious equilibrium of cosmic forces flowing through the timeline.";
+       return `✦ Arcana Tarot 3-Card Spread ✦\n` +
+              `🔮 ${cardNames}\n` +
+              `🌌 Dominant Energy: ${dominant}\n` +
+              `📜 ${loreBlurb}`;
+   } else {
+       const cardName = cardData.name || 'Unknown Card';
+       const isReversed = cardData.isReversed ?? false;
+       const orientation = isReversed ? 'Reversed' : 'Upright';
+       const element = cardData.element || cardData.suit || 'Cosmic';
+       const advice = cardData.advice || cardData.description || 'Embracing the energy of the archetypes.';
 
-    if (cardData.isTripleSpread) {
-        const cardNames = cardData.cards ? cardData.cards.map(c => c.name).join(' • ') : (cardData.description || '');
-        const dominant = cardData.dominantElement || 'Cosmic';
-        const loreBlurb = cardData.loreBlurb || "A harmonious equilibrium of cosmic forces flowing through the timeline.";
-        return `✦ Arcana Tarot 3-Card Spread ✦\n` +
-               `🔮 ${cardNames}\n` +
-               `🌌 Dominant Energy: ${dominant}\n` +
-               `📜 ${loreBlurb}\n\n` +
-               `✨ Explore your path: ${shareUrl}`;
-    } else {
-        const cardName = cardData.name || 'Unknown Card';
-        const isReversed = cardData.isReversed ?? false;
-        const orientation = isReversed ? 'Reversed' : 'Upright';
-        const element = cardData.element || cardData.suit || 'Cosmic';
-        const advice = cardData.advice || cardData.description || 'Embracing the energy of the archetypes.';
-
-        return `✦ Arcana Tarot Daily Pull ✦\n` +
-               `🎴 ${cardName} (${orientation})\n` +
-               `🌌 Element: ${element}\n` +
-               `📜️ ${advice}\n\n` +
-               `✨ Consult the stars: ${shareUrl}`;
-    }
+       return `✦ Arcana Tarot Daily Pull ✦\n` +
+              `🎴 ${cardName} (${orientation})\n` +
+              `🌌 Element: ${element}\n` +
+              `📜 ${advice}`;
+   }
 }
 
 /**
@@ -82,43 +78,37 @@ export function showShareToast(message = "✦ Copied to Grimoire ✦") {
  * Handles sharing tarot draw details or card insights
  */
 export async function handleTarotShare(cardData) {
-  if (!cardData) return;
+ if (!cardData) return;
 
-  const shareUrl = window.location.href;
-  const shareText = generateTarotShareText(cardData);
-  const shareTitle = cardData.isTripleSpread
-    ? (cardData.title || "Arcana Tarot 3-Card Spread")
-    : `My Tarot Draw: ${cardData.name || 'Card'} (${cardData.isReversed ? 'Reversed' : 'Upright'})`;
+ const shareUrl = window.location.href;
+ const shareText = generateTarotShareText(cardData);
+ const shareTitle = cardData.isTripleSpread
+   ? (cardData.title || "Arcana Tarot 3-Card Spread")
+   : `My Tarot Draw: ${cardData.name || 'Card'} (${cardData.isReversed ? 'Reversed' : 'Upright'})`;
 
-  // Check if native Web Share API is available
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: shareTitle,
-        text: shareText,
-        url: shareUrl,
-      });
-      return; // Successfully opened mobile share sheet
-    } catch (err) {
-      if (err.name === 'AbortError') return; // User cancelled, ignore
-      console.warn('Native share failed or blocked, falling back to clipboard:', err);
-    }
-  }
+ // 1. Web Share API (Mobile native sheet handles `url` parameter once at bottom)
+ if (navigator.share) {
+   try {
+     await navigator.share({
+       title: shareTitle,
+       text: shareText,
+       url: shareUrl,
+     });
+     return;
+   } catch (err) {
+     if (err.name === 'AbortError') return;
+     console.warn('Native share failed or blocked, falling back to clipboard:', err);
+   }
+ }
 
-  // Fallback Clipboard Copy with Ritual Toast
-  try {
-    await navigator.clipboard.writeText(shareText);
-    showShareToast("✦ Copied to Grimoire Clipboard ✦");
-
-    // Optional legacy feedback support if element still exists in DOM
-    const shareFeedback = document.getElementById('share-feedback');
-    if (shareFeedback) {
-      shareFeedback.classList.remove('hidden');
-      setTimeout(() => shareFeedback.classList.add('hidden'), 3000);
-    }
-  } catch (clipboardErr) {
-    console.error('Failed to copy share text to clipboard:', clipboardErr);
-  }
+ // 2. Clipboard Fallback (Manually append URL once for copy/paste)
+ try {
+   const fullClipboardText = `${shareText}\n\n✨ Consult the stars: ${shareUrl}`;
+   await navigator.clipboard.writeText(fullClipboardText);
+   showShareToast("✦ Copied to Grimoire Clipboard ✦");
+ } catch (clipboardErr) {
+   console.error('Failed to copy share text to clipboard:', clipboardErr);
+ }
 }
 
 /**
