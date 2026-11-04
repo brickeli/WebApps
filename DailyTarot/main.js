@@ -1,16 +1,18 @@
 import { fullTarotDeck, ELEMENTAL_LORE } from './js/cardLibrary.js';
 import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI } from './js/theme.js';
 import { toggleAudio, playMysticChime } from './js/audio.js';
-import { handleTarotShare, initShareButton, generateTarotShareText, showShareToast } from './js/share.js';
+import { initShareButton } from './js/share.js';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeParse } from './js/storage.js';
 
 let currentMode = 'single';
 let currentSingleCard = null;
 let isSingleFlipped = false;
 let tripleCards = [null, null, null];
 let tripleFlipped = [false, false, false];
-let readingHistory = JSON.parse(localStorage.getItem('arcana_tarot_history') || '[]');
+let readingHistory = loadHistory();
 let activeArchiveTab = 'journal'; // 'journal' or 'library'
 let currentLibraryFilter = 'all';
+let browseCard = null; // card being previewed from the Library (never overwrites today's draw)
 
 /* ==========================================================================
    1. HANDLERS & HELPER FUNCTIONS
@@ -21,30 +23,72 @@ function handleToggleAudio() {
 }
 
 function updateHistoryBadge() {
-    const historyCountEl = document.getElementById('history-count');
     const tabCountEl = document.getElementById('tab-journal-count');
-    if (historyCountEl) historyCountEl.textContent = readingHistory.length;
     if (tabCountEl) tabCountEl.textContent = readingHistory.length;
 }
 
 function showToast(message) {
     const toast = document.getElementById('toast');
     if (!toast) return;
-    toast.textContent = message;
+    const msgEl = document.getElementById('toast-msg');
+    if (msgEl) msgEl.textContent = message;
+    else toast.textContent = message;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+/* ==========================================================================
+   0. SMALL SHARED HELPERS
+   ========================================================================== */
+function loadHistory() {
+    const parsed = safeParse(safeGetItem('arcana_tarot_history'), []);
+    return Array.isArray(parsed) ? parsed : [];
+}
+
+// Returns { cards, reversed } for today's saved 3-card spread, or null if missing/corrupt
+function loadSavedTriple() {
+    const cards = safeParse(safeGetItem('arcana_saved_triple_cards'), null);
+    if (!Array.isArray(cards) || cards.length !== 3 || !cards.every(Boolean)) return null;
+
+    const rev = safeParse(safeGetItem('arcana_saved_triple_reversed'), null);
+    return {
+        cards: cards.map(c => fullTarotDeck.find(d => d.id === c.id) || c),
+        reversed: Array.isArray(rev) && rev.length === 3 ? rev : [false, false, false]
+    };
+}
+
+// Unbiased Fisher-Yates shuffle (the old sort(() => 0.5 - Math.random()) is biased)
+function shuffle(list) {
+    for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+}
+
+// The card currently displayed in the single-card view: a Library preview, else today's draw
+function getShownCard() {
+    return browseCard || currentSingleCard;
+}
+
+function getShownReversed() {
+    return browseCard ? false : isSingleReversed;
+}
+
+function setSingleActionsVisible(visible) {
+    document.querySelector('#single-reveal-area .card-action-container')?.classList.toggle('hidden', !visible);
+}
+
 // Daily Limit Check & Record Helpers
 function canDrawToday(drawType) {
-    const lastDate = localStorage.getItem(`arcana_last_${drawType}_date`);
+    const lastDate = safeGetItem(`arcana_last_${drawType}_date`);
     const today = new Date().toDateString();
     return lastDate !== today;
 }
 
 function recordDrawToday(drawType) {
     const today = new Date().toDateString();
-    localStorage.setItem(`arcana_last_${drawType}_date`, today);
+    safeSetItem(`arcana_last_${drawType}_date`, today);
 }
 
 /* ==========================================================================
@@ -58,7 +102,6 @@ Object.assign(window, {
     flipTripleCard,
     saveCurrentReading,
     saveTripleReading,
-    toggleHistoryModal,
     clearHistory,
     toggleAudio: handleToggleAudio,
     toggleUtilsMenu,
@@ -81,25 +124,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mode Navigation
     document.getElementById('btn-single')?.addEventListener('click', () => setMode('single'));
     document.getElementById('btn-triple')?.addEventListener('click', () => setMode('triple'));
-    document.getElementById('btn-history')?.addEventListener('click', () => toggleArchivesModal(true));
 
     // Single Card Draw & Flip
     document.getElementById('deck-card-container')?.addEventListener('click', drawSingleCard);
     document.getElementById('btn-draw-single')?.addEventListener('click', drawSingleCard);
-    document.getElementById('btn-redraw-single')?.addEventListener('click', drawSingleCard);
     document.getElementById('single-card-inner')?.addEventListener('click', flipSingleCard);
     document.getElementById('btn-tab-wisdom')?.addEventListener('click', () => switchInsightTab('wisdom'));
     document.getElementById('btn-tab-elemental')?.addEventListener('click', () => switchInsightTab('elemental'));
 
     // ✦ UNIFIED 3-CARD SPREAD DRAW & FLIP LISTENERS ✦
-    document.getElementById('btn-draw-triple')?.addEventListener('click', drawTripleSpread);
 
     for (let i = 0; i < 3; i++) {
         const cardInner = document.getElementById(`triple-card-inner-${i}`);
         if (cardInner) {
             cardInner.addEventListener('click', (e) => {
                 const todayDate = new Date().toDateString();
-                const lastDate = localStorage.getItem('arcana_last_triple_date');
+                const lastDate = safeGetItem('arcana_last_triple_date');
 
                 // If not drawn today yet, tapping Present (Center Card, i === 1) casts the spread
                 if (lastDate !== todayDate) {
@@ -123,6 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('archive-search-input')?.addEventListener('input', applyLibrarySearch);
     document.getElementById('filter-toggle-btn')?.addEventListener('click', toggleMobileFilters);
     document.getElementById('btn-archives')?.addEventListener('click', () => toggleArchivesModal(true));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') toggleArchivesModal(false);
+    });
 
     // ==========================================================
     // RESTORE TODAY'S COMPLETED DRAWS ON LOAD
@@ -130,12 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toDateString();
 
     // 1. Check Single Draw State
-    if (localStorage.getItem('arcana_last_single_date') === today) {
-        const savedCardJson = localStorage.getItem('arcana_saved_single_card');
-        const savedReversed = localStorage.getItem('arcana_saved_single_reversed') === 'true';
+    if (safeGetItem('arcana_last_single_date') === today) {
+        const savedCardJson = safeGetItem('arcana_saved_single_card');
+        const savedReversed = safeGetItem('arcana_saved_single_reversed') === 'true';
 
-        if (savedCardJson) {
-            currentSingleCard = JSON.parse(savedCardJson);
+        const savedCard = safeParse(savedCardJson, null);
+        if (savedCard) {
+            currentSingleCard = fullTarotDeck.find(c => c.id === savedCard.id) || savedCard;
             isSingleReversed = savedReversed;
 
             restoreSingleCardUI();
@@ -143,17 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 2. Check Triple Spread State
-    if (localStorage.getItem('arcana_last_triple_date') === today) {
-        const savedTripleJson = localStorage.getItem('arcana_saved_triple_cards');
-        const savedTripleRevJson = localStorage.getItem('arcana_saved_triple_reversed');
+    if (safeGetItem('arcana_last_triple_date') === today) {
         const tripleBtn = document.querySelector('.tarot-btn-cast-triple');
         if (tripleBtn) {
             tripleBtn.innerHTML = `<i class="fa-solid fa-hourglass-end triple-btn-icon"></i> Return tomorrow for another reading`;
             tripleBtn.classList.add('is-locked');
         }
-        if (savedTripleJson) {
-            tripleCards = JSON.parse(savedTripleJson);
-            tripleReversed = JSON.parse(savedTripleRevJson || '[false, false, false]');
+        const savedTriple = loadSavedTriple();
+        if (savedTriple) {
+            tripleCards = savedTriple.cards;
+            tripleReversed = savedTriple.reversed;
             tripleFlipped = [true, true, true];
 
             const actionsDiv = document.getElementById('triple-actions');
@@ -190,18 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMode === 'triple') {
             if (!tripleCards || !tripleCards[0]) return null;
             const balance = typeof calculateElementalBalance === 'function' ? calculateElementalBalance(tripleCards) : null;
-            const dominant = balance ? balance.dominant : 'Cosmic';
-            const loreMap = typeof ELEMENTAL_LORE !== 'undefined' ? ELEMENTAL_LORE : {};
             return {
                 isTripleSpread: true,
                 title: 'My 3-Card Arcana Spread',
                 cards: tripleCards,
                 dominantElement: balance ? balance.dominant : 'Cosmic',
-                loreBlurb: loreMap[dominant] || "A harmonious equilibrium of cosmic forces flowing through the timeline.",
+                loreBlurb: balance ? balance.lore : "A harmonious equilibrium of cosmic forces flowing through the timeline.",
                 description: `Past: ${tripleCards[0].name} | Present: ${tripleCards[1].name} | Future: ${tripleCards[2].name}`
             };
         } else {
-            if (!currentSingleCard) return null;
+            if (browseCard || !currentSingleCard) return null;
             return {
                 ...currentSingleCard,
                 isReversed: isSingleReversed
@@ -231,9 +272,16 @@ function setMode(mode) {
         if (titleEl) titleEl.textContent = "Consult the Sacred Arcana";
         if (descEl) descEl.textContent = "Clear your mind, focus upon your daily path, and draw from the ancient wisdom of the deck.";
 
+        browseCard = null;
+        setSingleActionsVisible(true);
+
         if (!canDrawToday('single')) {
-            if (deckArea) deckArea.classList.add('hidden');
-            if (revealArea) revealArea.classList.remove('hidden');
+            if (currentSingleCard) {
+                restoreSingleCardUI(); // re-render today's draw (undoes any library preview)
+            } else {
+                if (deckArea) deckArea.classList.add('hidden');
+                if (revealArea) revealArea.classList.remove('hidden');
+            }
         } else {
             if (deckArea) {
                 deckArea.classList.remove('hidden', 'card-slide-travel');
@@ -261,14 +309,14 @@ let isSingleReversed = false;
 
 function drawSingleCard() {
    const today = new Date().toDateString();
-   const lastDate = localStorage.getItem('arcana_last_single_date');
+   const lastDate = safeGetItem('arcana_last_single_date');
 
    if (lastDate === today) {
-       const savedCardJson = localStorage.getItem('arcana_saved_single_card');
-       const savedReversed = localStorage.getItem('arcana_saved_single_reversed') === 'true';
+       const savedCardJson = safeGetItem('arcana_saved_single_card');
+       const savedReversed = safeGetItem('arcana_saved_single_reversed') === 'true';
 
-       if (savedCardJson) {
-           const parsedCard = JSON.parse(savedCardJson);
+       const parsedCard = safeParse(savedCardJson, null);
+       if (parsedCard) {
            currentSingleCard = fullTarotDeck.find(c => c.name === parsedCard.name || c.id === parsedCard.id) || parsedCard;
            isSingleReversed = savedReversed;
 
@@ -282,10 +330,12 @@ function drawSingleCard() {
    currentSingleCard = fullTarotDeck[randomIndex];
    isSingleFlipped = false;
    isSingleReversed = Math.random() < REVERSAL_CHANCE;
+   browseCard = null;
+   setSingleActionsVisible(true);
 
    recordDrawToday('single');
-   localStorage.setItem('arcana_saved_single_card', JSON.stringify(currentSingleCard));
-   localStorage.setItem('arcana_saved_single_reversed', isSingleReversed);
+   safeSetItem('arcana_saved_single_card', JSON.stringify(currentSingleCard));
+   safeSetItem('arcana_saved_single_reversed', isSingleReversed);
 
    const deckArea = document.getElementById('deck-draw-area');
    const revealArea = document.getElementById('single-reveal-area');
@@ -335,6 +385,8 @@ function drawSingleCard() {
 }
 
 function restoreSingleCardUI() {
+    browseCard = null;
+    setSingleActionsVisible(true);
     const deckArea = document.getElementById('deck-draw-area');
     const revealArea = document.getElementById('single-reveal-area');
     const cardInner = document.getElementById('single-card-inner');
@@ -355,9 +407,11 @@ function restoreSingleCardUI() {
 }
 
 function renderCardFront(cardFront) {
-    if (!cardFront || !currentSingleCard) return;
+    const card = getShownCard();
+    const reversed = getShownReversed();
+    if (!cardFront || !card) return;
 
-    const rawElem = currentSingleCard.element || currentSingleCard.suit || currentSingleCard.elemental || '';
+    const rawElem = card.element || card.suit || card.elemental || '';
     let elemKey = String(rawElem).toLowerCase();
 
     if (elemKey.includes('fire') || elemKey.includes('wand')) elemKey = 'fire';
@@ -371,25 +425,25 @@ function renderCardFront(cardFront) {
 
     cardFront.style.background = '';
 
-    const artRotation = isSingleReversed ? 'rotate-180' : '';
+    const artRotation = reversed ? 'rotate-180' : '';
 
     cardFront.innerHTML = `
         <div class="tarot-single-header">
-            <span>${currentSingleCard.arcana || 'TAROT'}</span>
+            <span>${card.arcana || 'TAROT'}</span>
             <span class="tarot-element-badge badge-${elemKey}">
-                ${currentSingleCard.element || rawElem || 'Spirit'}
+                ${card.element || rawElem || 'Spirit'}
             </span>
         </div>
 
         <div class="tarot-single-body ${artRotation}">
-            <i class="fa-solid ${currentSingleCard.icon} tarot-single-icon"></i>
-            <h3 class="tarot-single-title">${currentSingleCard.name}</h3>
-            <p class="tarot-single-subtitle">(${currentSingleCard.originalName || currentSingleCard.name})</p>
+            <i class="fa-solid ${card.icon} tarot-single-icon"></i>
+            <h3 class="tarot-single-title">${card.name}</h3>
+            <p class="tarot-single-subtitle">(${card.originalName || card.name})</p>
         </div>
 
         <div class="tarot-single-footer">
             <span>ARCANA TAROT</span>
-            <span>✦ ${isSingleReversed ? 'REVERSED' : 'UPRIGHT'}</span>
+            <span>✦ ${reversed ? 'REVERSED' : 'UPRIGHT'}</span>
         </div>
     `;
 }
@@ -417,29 +471,31 @@ function flipSingleCard() {
 }
 
 function populateSingleDetails() {
-    if (!currentSingleCard) return;
+    const card = getShownCard();
+    const reversed = getShownReversed();
+    if (!card) return;
 
-    const titleText = isSingleReversed
-        ? `${currentSingleCard.name} (Reversed)`
-        : currentSingleCard.name;
+    const titleText = reversed
+        ? `${card.name} (Reversed)`
+        : card.name;
 
     const elArcana = document.getElementById('card-arcana');
     const elTitle = document.getElementById('card-title');
     const elDesc = document.getElementById('card-desc');
     const elLight = document.getElementById('card-light');
     const elShadow = document.getElementById('card-shadow');
-    const elAdvice = document.getElementById('card-advice');
+    const elAdvice = document.getElementById('card-advice-text');
     const elSingleElemental = document.getElementById('single-elemental-container');
 
-    if (elArcana) elArcana.textContent = `${currentSingleCard.arcana || 'TAROT'} ${isSingleReversed ? '• Reversed' : '• Upright'}`;
+    if (elArcana) elArcana.textContent = `${card.arcana || 'TAROT'} ${reversed ? '• Reversed' : '• Upright'}`;
     if (elTitle) elTitle.textContent = titleText;
-    if (elDesc) elDesc.textContent = currentSingleCard.desc || '';
-    if (elLight) elLight.textContent = currentSingleCard.light || '';
-    if (elShadow) elShadow.textContent = currentSingleCard.shadow || '';
-    if (elAdvice) elAdvice.textContent = currentSingleCard.advice || '';
+    if (elDesc) elDesc.textContent = card.desc || '';
+    if (elLight) elLight.textContent = card.light || '';
+    if (elShadow) elShadow.textContent = card.shadow || '';
+    if (elAdvice) elAdvice.textContent = card.advice || '';
 
-    const deckMatch = (typeof fullTarotDeck !== 'undefined' ? fullTarotDeck.find(d => d.name === currentSingleCard.name) : null) || currentSingleCard;
-    const rawElem = deckMatch.element || deckMatch.suit || currentSingleCard.element || currentSingleCard.suit || '';
+    const deckMatch = (typeof fullTarotDeck !== 'undefined' ? fullTarotDeck.find(d => d.name === card.name) : null) || card;
+    const rawElem = deckMatch.element || deckMatch.suit || card.element || card.suit || '';
     const s = String(rawElem).toLowerCase();
 
     let elementKey = 'Fire';
@@ -463,7 +519,7 @@ function populateSingleDetails() {
     const lightBox = elLight ? elLight.closest('div') : null;
     const shadowBox = elShadow ? elShadow.closest('div') : null;
 
-    if (isSingleReversed) {
+    if (reversed) {
         if (lightBox) lightBox.className = "tarot-aspect-box tarot-aspect-dim";
         if (shadowBox) shadowBox.className = "tarot-aspect-box tarot-aspect-highlight-shadow";
     } else {
@@ -472,8 +528,8 @@ function populateSingleDetails() {
     }
 
     const kwContainer = document.getElementById('card-keywords');
-    if (kwContainer && currentSingleCard.keywords) {
-        kwContainer.innerHTML = currentSingleCard.keywords.map(kw =>
+    if (kwContainer && card.keywords) {
+        kwContainer.innerHTML = card.keywords.map(kw =>
             `<span class="tarot-keyword-pill">${kw}</span>`
         ).join('');
     }
@@ -509,7 +565,7 @@ let tripleReversed = [false, false, false];
 
 function drawTripleSpread() {
     const today = new Date().toDateString();
-    const lastDate = localStorage.getItem('arcana_last_triple_date');
+    const lastDate = safeGetItem('arcana_last_triple_date');
     const castTripleBtn = document.querySelector('.tarot-btn-cast-triple');
     const presentCardInner = document.getElementById('triple-card-inner-1');
     const container = document.querySelector('.triple-spread-container');
@@ -524,12 +580,11 @@ function drawTripleSpread() {
             castTripleBtn.classList.add('is-locked');
         }
 
-        const savedTripleJson = localStorage.getItem('arcana_saved_triple_cards');
-        const savedTripleRevJson = localStorage.getItem('arcana_saved_triple_reversed');
 
-        if (savedTripleJson) {
-            tripleCards = JSON.parse(savedTripleJson);
-            tripleReversed = JSON.parse(savedTripleRevJson || '[false, false, false]');
+        const savedTriple = loadSavedTriple();
+        if (savedTriple) {
+            tripleCards = savedTriple.cards;
+            tripleReversed = savedTriple.reversed;
             tripleFlipped = [true, true, true];
 
             playMysticChime();
@@ -562,7 +617,7 @@ function drawTripleSpread() {
         castTripleBtn.classList.add('is-locked');
     }
 
-    const shuffled = [...fullTarotDeck].sort(() => 0.5 - Math.random());
+    const shuffled = shuffle([...fullTarotDeck]);
     tripleCards = shuffled.slice(0, 3);
     tripleFlipped = [false, false, false];
 
@@ -572,8 +627,8 @@ function drawTripleSpread() {
         Math.random() < REVERSAL_CHANCE
     ];
 
-    localStorage.setItem('arcana_saved_triple_cards', JSON.stringify(tripleCards));
-    localStorage.setItem('arcana_saved_triple_reversed', JSON.stringify(tripleReversed));
+    safeSetItem('arcana_saved_triple_cards', JSON.stringify(tripleCards));
+    safeSetItem('arcana_saved_triple_reversed', JSON.stringify(tripleReversed));
 
     const actionsDiv = document.getElementById('triple-actions');
     if (actionsDiv) actionsDiv.classList.add('hidden');
@@ -704,7 +759,7 @@ function flipTripleCard(index) {
    6. HISTORY & JOURNAL SYSTEM
    ========================================================================== */
 function saveCurrentReading() {
-    if (!currentSingleCard) return;
+    if (browseCard || !currentSingleCard) return;
 
     const cardDisplayName = isSingleReversed
         ? `${currentSingleCard.name} (Reversed)`
@@ -718,7 +773,7 @@ function saveCurrentReading() {
     };
 
     readingHistory.unshift(entry);
-    localStorage.setItem('arcana_tarot_history', JSON.stringify(readingHistory));
+    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
     updateHistoryBadge();
     showToast("Single card reading saved to journal!");
 }
@@ -738,53 +793,16 @@ function saveTripleReading() {
     };
 
     readingHistory.unshift(entry);
-    localStorage.setItem('arcana_tarot_history', JSON.stringify(readingHistory));
+    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
     updateHistoryBadge();
     showToast("3-Card Spread saved to journal!");
 }
 
-function deleteHistoryEntry(index) {
-    if (index < 0 || index >= readingHistory.length) return;
-
-    readingHistory.splice(index, 1);
-    localStorage.setItem('arcana_tarot_history', JSON.stringify(readingHistory));
-    updateHistoryBadge();
-
-    toggleHistoryModal(true);
-    showToast("Reading removed from journal.");
-}
-
-function toggleHistoryModal(show) {
-    const modal = document.getElementById('history-modal');
-    const list = document.getElementById('history-list');
-
-    if (!modal || !list) return;
-    if (show) {
-        if (readingHistory.length === 0) {
-            list.innerHTML = `<div class="tarot-empty-history">No readings saved yet. Consult the cards!</div>`;
-        } else {
-            list.innerHTML = readingHistory.map((item) => `
-                <div class="tarot-history-item-card">
-                    <div class="tarot-history-item-top">
-                        <span class="tarot-history-item-type">${item.type}</span>
-                        <span class="tarot-history-item-date">${item.date}</span>
-                    </div>
-                    <div class="tarot-history-item-cards">${item.cards.join(' • ')}</div>
-                    <p class="tarot-history-item-summary">"${item.summary}"</p>
-                </div>
-            `).join('');
-        }
-        modal.classList.remove('hidden');
-    } else {
-        modal.classList.add('hidden');
-    }
-}
-
 function clearHistory() {
+    if (readingHistory.length > 0 && !confirm('Clear all saved readings from your journal? This cannot be undone.')) return;
     readingHistory = [];
-    localStorage.removeItem('arcana_tarot_history');
+    safeRemoveItem('arcana_tarot_history');
     updateHistoryBadge();
-    toggleHistoryModal(true);
     showToast("Journal cleared.");
     renderJournalHistory();
 }
@@ -940,11 +958,18 @@ function renderJournalHistory() {
     }
 }
 
-function removeJournalEntry(index) {
-    let history = JSON.parse(localStorage.getItem('arcana_reading_history') || '[]');
-    history.splice(index, 1);
-    localStorage.setItem('arcana_reading_history', JSON.stringify(history));
+function removeJournalEntry(id) {
+    const rawHistory = safeGetItem('arcana_tarot_history');
+    let history = safeParse(rawHistory, []);
+
+    if (typeof id === 'number' && id >= 0 && id < history.length && !history.some(e => e.id === id)) {
+        history.splice(id, 1);
+    } else {
+        history = history.filter(entry => String(entry.id) !== String(id));
+    }
+
     readingHistory = history;
+    safeSetItem('arcana_tarot_history', JSON.stringify(history));
 
     renderJournalHistory();
     updateHistoryBadge();
@@ -1017,12 +1042,11 @@ function inspectCardFromLibrary(cardId) {
    const card = fullTarotDeck.find(c => c.id === cardId);
    if (!card) return;
 
-   currentSingleCard = card;
-   isSingleFlipped = true;
-   isSingleReversed = false;
-
-   setMode('single');
+   setMode('single');            // restores the correct view for today's state first
    toggleArchivesModal(false);
+
+   // Read-only preview: today's draw (currentSingleCard + saved draw) is left untouched
+   browseCard = card;
 
    const deckArea = document.getElementById('deck-draw-area');
    const revealArea = document.getElementById('single-reveal-area');
@@ -1032,25 +1056,15 @@ function inspectCardFromLibrary(cardId) {
 
    if (deckArea) deckArea.classList.add('hidden');
    if (revealArea) revealArea.classList.remove('hidden');
-   if (cardInner) cardInner.classList.add('flipped');
+   setSingleActionsVisible(false);   // Save / Share apply to today's draw only
 
    renderCardFront(cardFront);
-
+   isSingleFlipped = true;
+   if (cardInner) cardInner.classList.add('flipped');
+   populateSingleDetails();
    if (detailsBox) detailsBox.classList.add('details-slide-active');
 
-   document.getElementById('card-arcana').textContent = card.arcana;
-   document.getElementById('card-title').textContent = card.name;
-   document.getElementById('card-desc').textContent = card.desc;
-   document.getElementById('card-light').textContent = card.light;
-   document.getElementById('card-shadow').textContent = card.shadow;
-   document.getElementById('card-advice').textContent = card.advice;
-
-   const keywordsContainer = document.getElementById('card-keywords');
-   if (keywordsContainer) {
-       keywordsContainer.innerHTML = card.keywords.map(kw =>
-           `<span class="tarot-library-keyword-pill">${kw}</span>`
-       ).join('');
-   }
+   showToast('Previewing from the Library. Tap "Daily Card" to return.');
 }
 
 function toggleMobileFilters() {
@@ -1102,17 +1116,36 @@ function calculateElementalBalance(drawnCards) {
         percentages[elem] = Math.round((count / totalAssigned) * 100);
     }
 
-    const dominant = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+    const maxCount = Math.max(...Object.values(counts));
+    const leaders = Object.keys(counts).filter(k => counts[k] === maxCount);
 
-    return { counts, percentages, dominant };
+    let dominant, headline, lore, cssElement;
+    if (leaders.length === 1) {
+        dominant = leaders[0];
+        headline = `${dominant} Dominant`;
+        lore = ELEMENTAL_LORE[dominant] || '';
+        cssElement = dominant.toLowerCase();
+    } else if (leaders.length === 2) {
+        dominant = leaders.join(' & ');
+        headline = `${dominant} in Balance`;
+        lore = leaders.map(l => ELEMENTAL_LORE[l] || '').join(' ');
+        cssElement = '';
+    } else {
+        dominant = 'Balanced';
+        headline = 'Elements in Balance';
+        lore = "A harmonious equilibrium of cosmic forces flowing through the timeline.";
+        cssElement = '';
+    }
+
+    return { counts, percentages, dominant, headline, lore, leaders, cssElement };
 }
 
 function renderElementalAnalyzer(drawnCards) {
     const balance = calculateElementalBalance(drawnCards);
     if (!balance) return '<div class="elemental-balance-container tarot-guidance-quote esoteric text-xs text-gold/60 text-center">✦ Awaiting Elemental Alignment ✦</div>';
 
-    const { percentages, dominant } = balance;
-    const dominantClass = `element-${dominant.toLowerCase()}`;
+    const { percentages, headline, lore, cssElement } = balance;
+    const dominantClass = cssElement ? `element-${cssElement}` : 'element-balanced';
 
     const elementClassMap = {
         Fire: 'elemental-fill-fire',
@@ -1121,13 +1154,10 @@ function renderElementalAnalyzer(drawnCards) {
         Earth: 'elemental-fill-earth'
     };
 
-    const loreMap = (typeof ELEMENTAL_LORE !== 'undefined') ? ELEMENTAL_LORE : {};
-    const loreBlurb = loreMap[dominant] || "A harmonious equilibrium of cosmic forces.";
-
     return `
         <div class="elemental-balance-container ${dominantClass}">
             <div class="elemental-header">
-                ✦ Elemental Resonance: <span>${dominant} Dominant</span> ✦
+                ✦ Elemental Resonance: <span>${headline}</span> ✦
             </div>
 
             <div class="elemental-bars-list">
@@ -1145,7 +1175,7 @@ function renderElementalAnalyzer(drawnCards) {
             </div>
 
             <div class="elemental-lore-blurb">
-                <p>${loreBlurb}</p>
+                <p>${lore}</p>
             </div>
         </div>
     `;

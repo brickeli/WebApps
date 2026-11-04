@@ -108,7 +108,7 @@ export async function handleTarotShare(cardData) {
     await navigator.clipboard.writeText(shareText);
     showShareToast("✦ Copied to Grimoire Clipboard ✦");
 
-    const shareFeedback = document.getElementById('share-feedback');
+    const shareFeedback = document.getElementById(cardData.isTripleSpread ? 'share-feedback-triple' : 'share-feedback-single');
     if (shareFeedback) {
       shareFeedback.classList.remove('hidden');
       setTimeout(() => shareFeedback.classList.add('hidden'), 3000);

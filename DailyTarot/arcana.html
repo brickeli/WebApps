@@ -73,7 +73,7 @@
                     </div>
                 </div>
                 <button id="btn-draw-single" class="tarot-btn-draw-daily">
-                    <i class="fa-solid fa-sparkles mr-2"></i>✦ Draw Daily Card ✦
+                    <i class="fa-solid fa-sparkles"></i>✦ Draw Daily Card ✦
                 </button>
             </div>
             <!-- Single Drawn Card Reveal Area -->
@@ -328,15 +328,15 @@
 
     <!-- Unified Archives Modal (Journal + Library Tabs) -->
     <div id="archives-modal" class="tarot-modal-overlay hidden">
-        <div class="tarot-modal-container box-glow-plum">
+        <div class="tarot-modal-container box-glow-plum" role="dialog" aria-modal="true" aria-label="The Arcane Archives">
             <!-- Modal Header & Tab Navigation -->
             <div class="tarot-modal-header">
                 <div class="tarot-modal-title-row">
                     <h3 class="tarot-modal-title">
                         <i class="fa-solid fa-landmark"></i> The Arcane Archives
                     </h3>
-                    <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn">
-                        <i class="fa-solid fa-xmark text-xl"></i>
+                    <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn" aria-label="Close archives">
+                        <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 

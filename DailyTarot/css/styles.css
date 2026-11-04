@@ -748,7 +748,8 @@ p {
 /* ==========================================================================
    TABBED INSIGHTS SECTION STYLING
    ========================================================================== */
-.insight-insights-container {
+.insight-insights-container,
+.tarot-insights-container {
    margin: 1.5rem 0;
    text-align: left;
 }
@@ -889,6 +890,7 @@ p {
 .single-elemental-banner,
 .elemental-balance-container.esoteric {
     position: relative;
+    top: -3px;
     font-family: var(--font-cinzel, 'Cinzel', serif);
     font-style: normal;
     font-size: 0.9rem;
@@ -904,12 +906,12 @@ p {
 
 /* Hardcoded Header Rule */
 .esoteric-scroll-header {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 0.2em;
     color: rgb(var(--color-gold) / 0.75);
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid rgb(var(--color-gold) / 0.2);
-    padding-bottom: 0.4rem;
+    padding-bottom: 0.75rem;
 }
 
 /* Hardcoded Footer Marker */
@@ -970,8 +972,8 @@ p {
 
 .details-slide-enter {
     opacity: 0;
-    transform: translateX(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(100px);
+    transition: opacity 0.4s ease-out, transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .details-slide-active {
@@ -1827,12 +1829,12 @@ p {
 .elemental-header {
     font-family: var(--font-cinzel, 'Cinzel', serif);
     font-size: 0.75rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.2em;
     text-align: center;
     text-transform: uppercase;
-    color: rgb(var(--color-gold) / 0.8);
+    color: rgb(var(--color-gold) / 0.75);
     margin-bottom: 1rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid rgb(var(--color-gold) / 0.2);
 }
 
@@ -2163,4 +2165,36 @@ p {
         font-size: 0.875rem;
     }
     .deck-center-icon { font-size: 3rem; }
+}
+
+/* ==========================================================================
+   PATCH: rules for classes the HTML/JS already use but had no styles
+   ========================================================================== */
+.cursor-pointer { cursor: pointer; }
+
+/* Inline "Copied!" text next to the Share buttons (shown by share.js) */
+.card-share-feedback,
+.triple-share-feedback {
+    display: block;
+    text-align: center;
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: rgb(var(--color-gold) / 0.85);
+}
+
+/* Elemental analyzer when no single element leads */
+.elemental-balance-container.element-balanced .elemental-header span {
+    color: rgb(var(--color-gold));
+}
+
+/* Respect the OS "reduce motion" setting */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    #fx-canvas { display: none; }
 }

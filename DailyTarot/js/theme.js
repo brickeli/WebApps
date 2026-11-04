@@ -1,9 +1,12 @@
 // js/theme.js
 
+import { safeGetItem, safeSetItem } from './storage.js';
+
 export const THEME_NAMES = {
     'obsidian-plum': 'Gothic Plum',
     'crimson-alchemist': 'Crimson Alchemist',
-    'nocturnal-cosmic': 'Nocturnal Cosmic'
+    'nocturnal-cosmic': 'Nocturnal Cosmic',
+    'modern-astral': 'Modern Astral'
 };
 
 export function toggleUtilsMenu(event) {
@@ -18,7 +21,7 @@ export function toggleUtilsMenu(event) {
 
 export function selectTheme(themeId, displayName) {
     document.documentElement.setAttribute('data-theme', themeId);
-    localStorage.setItem('arcana_active_theme', themeId);
+    safeSetItem('arcana_active_theme', themeId);
 
     const dropdown = document.getElementById('utils-dropdown');
     if (dropdown) dropdown.classList.add('hidden');
@@ -38,7 +41,7 @@ export function updateAudioUI(audioActive) {
 }
 
 export function initTheme() {
-    const savedTheme = localStorage.getItem('arcana_active_theme') || 'obsidian-plum';
+    const savedTheme = safeGetItem('arcana_active_theme') || 'obsidian-plum';
     selectTheme(savedTheme);
 
     // Close menu on outside click
