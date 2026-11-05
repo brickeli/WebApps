@@ -34,3 +34,23 @@ export function safeParse(text, fallback = null) {
         return fallback;
     }
 }
+
+
+export function checkURLState(onTripleSpread) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'triple') {
+        if (typeof onTripleSpread === 'function') {
+            onTripleSpread();
+        }
+    }
+}
+
+export function updateURLMode(mode) {
+    const url = new URL(window.location);
+    if (mode === 'triple') {
+        url.searchParams.set('mode', 'triple');
+    } else {
+        url.searchParams.delete('mode');
+    }
+    window.history.pushState({ path: url.toString() }, '', url.toString());
+}

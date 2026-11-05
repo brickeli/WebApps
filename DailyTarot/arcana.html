@@ -7,6 +7,7 @@
     <title>Arcana - Daily Tarot Companion</title>
     <!-- Base Custom Design System Stylesheet -->
     <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/card-styles.css">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Cinzel + Cinzel Decorative (Headers) & Atkinson Hyperlegible (Body) -->
@@ -17,25 +18,26 @@
 <body class="site-body">
     <!-- FX Canvas for celestial starlight and dust -->
     <canvas id="fx-canvas"></canvas>
-
     <!-- Header Navigation -->
     <header class="site-header">
         <div class="header-inner">
             <div class="brand-group">
-                <i class="fa-solid fa-eye brand-icon"></i>
+                <svg class="nav-logo" filter="url(#gold-glow)"><use href="./assets/icons.svg#icon-arcana"></use></svg>
                 <h1 class="brand-title">Arcana</h1>
                 <span class="brand-subtitle">Daily Tarot Companion</span>
             </div>
-
             <nav class="nav-container">
                 <button id="btn-single" onclick="setMode('single')" class="tarot-nav-btn active">
-                    <i class="fa-solid fa-compass"></i> Daily Card
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-daily"></use></svg>
+                    Daily Card
                 </button>
                 <button id="btn-triple" onclick="setMode('triple')" class="tarot-nav-btn">
-                    <i class="fa-solid fa-hamsa"></i> 3-Card Spread
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-triple"></use></svg>
+                    3-Card Spread
                 </button>
                 <button id="btn-archives" onclick="toggleArchivesModal(true)" class="tarot-nav-btn">
-                    <i class="fa-solid fa-landmark"></i> The Archives
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-archives"></use></svg>
+                    The Archives
                 </button>
             </nav>
         </div>
@@ -43,9 +45,9 @@
 
     <!-- Main Content Area -->
     <main class="site-main">
-
         <!-- Intro Greeting & Esoteric Subtitle -->
         <div class="intro-container">
+
             <h2 id="reading-title" class="intro-title">
                 Consult the Sacred Arcana
             </h2>
@@ -53,133 +55,119 @@
                 Clear your mind, focus upon your daily path, and draw from the ancient wisdom of the deck.
             </p>
         </div>
-
         <!-- Single Card Area -->
         <div id="single-card-view" class="single-card-view-container">
             <!-- Deck Stack Container -->
             <div id="deck-draw-area" class="deck-draw-area">
-                <div id="deck-card-container" class="card-container cursor-pointer deck-hover-group">
-                    <div class="deck-card-base">
-                        <!-- Filigree Card Back -->
-                        <div class="deck-filigree-outer">
-                            <div class="deck-filigree-inner"></div>
-                        </div>
-                        <div class="deck-card-text">✦ SACRED ARCANA ✦</div>
-                        <div class="deck-center-content">
-                            <i class="fa-solid fa-sun-plant-wilt deck-center-icon"></i>
-                            <p class="deck-tap-text">TAP TO DRAW</p>
-                        </div>
-                        <div class="deck-card-text">✦ INTUITION ✦</div>
-                    </div>
-                </div>
-                <button id="btn-draw-single" class="tarot-btn-draw-daily">
-                    <i class="fa-solid fa-sparkles"></i>✦ Draw Daily Card ✦
-                </button>
+              <div id="deck-card-container" class="card-container cursor-pointer deck-hover-group" role="button" tabindex="0" aria-label="Draw your daily card">
+                  <div class="deck-card-base">
+                      <!-- Double Filigree Border Frame -->
+                      <div class="deck-filigree-outer">
+                          <div class="deck-filigree-inner"></div>
+                      </div>
+                      <div data-card-back-slot></div>
+                  </div>
+              </div>
+              <button id="btn-draw-single" class="tarot-btn-draw-daily">
+                  <i class="fa-solid fa-sparkles mr-2"></i>✦ Draw Daily Card ✦
+              </button>
             </div>
             <!-- Single Drawn Card Reveal Area -->
             <div id="single-reveal-area" class="single-reveal-area hidden">
-                <!-- Interactive 3D Card -->
-                <div class="card-wrapper card-container single-slot-container">
-                    <div id="single-card-inner" class="card-inner tarot-card-inner cursor-pointer">
-                        <!-- Card Back -->
-                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
-                            <div class="deck-filigree-outer">
-                                <div class="deck-filigree-inner"></div>
+                <!-- Side-by-Side: Card + Always-Visible Details -->
+                <div class="single-card-content-row">
+                    <!-- Interactive 3D Card -->
+                    <div class="card-wrapper card-container single-slot-container">
+                        <div id="single-card-inner" class="card-inner tarot-card-inner cursor-pointer" role="button" tabindex="0" aria-label="Flip card">
+                            <!-- Card Back -->
+                            <div class="card-back deck-card-base">
+                                <div class="deck-filigree-outer">
+                                    <div class="deck-filigree-inner"></div>
+                                </div>
+                                <div data-card-back-slot></div>
                             </div>
-                            <div class="card-back-title">✦ SACRED ARCANA ✦</div>
-                            <div class="deck-center-content">
-                                <i class="fa-solid fa-sun-plant-wilt card-back-icon"></i>
-                                <p class="card-back-status">UNVEILING THE CARD...</p>
+                            <!-- Card Front -->
+                            <div id="single-card-front" class="card-front tarot-card-front-face">
+                                <!-- Visual Content rendered via JS -->
                             </div>
-                            <div class="deck-card-text">✦ INTUITION ✦</div>
-                        </div>
-                        <!-- Card Front -->
-                        <div id="single-card-front" class="card-front tarot-card-front-face box-glow-gold">
-                            <!-- Visual Content rendered via JS -->
                         </div>
                     </div>
-                    <div class="card-action-container">
-                        <button onclick="saveCurrentReading()" class="tarot-save-btn">
-                            <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
-                        </button>
-                        <button id="share-card-btn-single" class="tarot-share-btn">
-                          <i class="fa-solid fa-share-nodes"></i>
-                          <span>Share Card</span>
-                        </button>
-                        <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
-                    </div>
+
+                    <!-- Detailed Card Interpretations (Always Visible Once Drawn) -->
+                    <div id="single-card-details" class="tarot-details-card details-slide-enter">
+                        <div class="card-details-header">
+                            <h4 id="card-arcana" class="card-arcana-badge">Major Arcana</h4>
+                            <h3 id="card-title" class="card-title-main">The Fool</h3>
+                        </div>
+
+                        <!-- Keywords -->
+                        <div class="card-section-mb">
+                            <span class="card-section-label">RESONATING KEYWORDS</span>
+                            <div id="card-keywords" class="card-keywords-flex"></div>
+                        </div>
+
+                        <!-- Esoteric Significance -->
+                        <div class="card-section-mb">
+                            <h4 class="card-section-heading">
+                                <i class="fa-solid fa-compass card-heading-icon"></i> ESOTERIC SIGNIFICANCE
+                            </h4>
+                            <p id="card-desc" class="card-description-text"></p>
+                        </div>
+
+                        <!-- Light / Shadow -->
+                        <div class="card-aspects-grid">
+                            <div class="tarot-aspect-box tarot-aspect-light">
+                                <h5 class="card-aspect-title-light">
+                                    <i class="fa-solid fa-sun card-aspect-icon"></i> LIGHT / UPRIGHT
+                                </h5>
+                                <p id="card-light" class="card-aspect-text"></p>
+                            </div>
+                            <div class="tarot-aspect-box tarot-aspect-shadow">
+                                <h5 class="card-aspect-title-shadow">
+                                    <i class="fa-solid fa-moon card-aspect-icon"></i> SHADOW / REVERSED
+                                </h5>
+                                <p id="card-shadow" class="card-aspect-text"></p>
+                            </div>
+                        </div>
+
+                        <!-- Tab Guidance Panel -->
+                        <div id="tarot-insights-container" class="tarot-insights-container">
+                            <div class="insight-tabs-nav">
+                                <button class="insight-tab-btn active" id="btn-tab-wisdom">
+                                    <i class="fa-solid fa-scroll"></i> Arcanum Wisdom
+                                </button>
+                                <button class="insight-tab-btn" id="btn-tab-elemental">
+                                    <i class="fa-solid fa-fire-flame-curved"></i> Elemental Insight
+                                </button>
+                            </div>
+
+                            <div id="tab-content-wisdom" class="insight-tab-panel active">
+                                <div id="card-advice" class="tarot-guidance-quote esoteric">
+                                    <div class="esoteric-scroll-header">✦ ARCANUM WISDOM ✦</div>
+                                    <div class="esoteric-scroll-body" id="card-advice-text"></div>
+                                </div>
+                            </div>
+
+                            <div id="tab-content-elemental" class="insight-tab-panel">
+                                <div id="single-elemental-container"></div>
+                            </div>
+                        </div>
+                    </div> <!-- /#single-card-details -->
+                </div> <!-- /.single-card-content-row -->
+
+                <!-- Save & Share Action Bar -->
+                <div class="card-action-container">
+                    <button onclick="saveCurrentReading()" class="tarot-save-btn">
+                        <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
+                    </button>
+                    <button id="share-card-btn-single" class="tarot-share-btn">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>Share Card</span>
+                    </button>
+                    <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
                 </div>
-
-                <!-- Detailed Card Interpretations -->
-                <div id="single-card-details" class="tarot-details-card details-slide-enter box-glow-plum">
-                    <div class="card-details-header">
-                        <h4 id="card-arcana" class="card-arcana-badge">Major Arcana</h4>
-                        <h3 id="card-title" class="card-title-main">The Fool</h3>
-                    </div>
-
-                    <!-- Keywords -->
-                    <div class="card-section-mb">
-                        <span class="card-section-label">RESONATING KEYWORDS</span>
-                        <div id="card-keywords" class="card-keywords-flex">
-                            <!-- Populated via JS -->
-                        </div>
-                    </div>
-
-                    <!-- General Meaning -->
-                    <div class="card-section-mb">
-                        <h4 class="card-section-heading">
-                            <i class="fa-solid fa-compass card-heading-icon"></i> ESOTERIC SIGNIFICANCE
-                        </h4>
-                        <p id="card-desc" class="card-description-text">
-                            <!-- Description here -->
-                        </p>
-                    </div>
-
-                    <!-- Light vs Shadow breakdown -->
-                    <div class="card-aspects-grid">
-                        <div class="tarot-aspect-box tarot-aspect-light">
-                            <h5 class="card-aspect-title-light">
-                                <i class="fa-solid fa-sun card-aspect-icon"></i> LIGHT / UPRIGHT
-                            </h5>
-                            <p id="card-light" class="card-aspect-text">
-                                <!-- Upright aspect -->
-                            </p>
-                        </div>
-                        <div class="tarot-aspect-box tarot-aspect-shadow">
-                            <h5 class="card-aspect-title-shadow">
-                                <i class="fa-solid fa-moon card-aspect-icon"></i> SHADOW / REVERSED
-                            </h5>
-                            <p id="card-shadow" class="card-aspect-text">
-                                <!-- Reversed aspect -->
-                            </p>
-                        </div>
-                    </div>
-                    <div class="tarot-insights-container">
-                        <!-- Tab Navigation Headers -->
-                        <div class="insight-tabs-nav">
-                            <button class="insight-tab-btn active" id="btn-tab-wisdom">
-                                <i class="fa-solid fa-scroll"></i> Arcanum Wisdom
-                            </button>
-                            <button class="insight-tab-btn" id="btn-tab-elemental">
-                                <i class="fa-solid fa-fire-flame-curved"></i> Elemental Insight
-                            </button>
-                        </div>
-
-                        <!-- Tab Content Panels -->
-                        <div id="tab-content-wisdom" class="insight-tab-panel active">
-                          <div id="card-advice" class="tarot-guidance-quote esoteric">
-                              <div class="esoteric-scroll-header">✦ ARCANUM WISDOM ✦</div>
-                              <div class="esoteric-scroll-body" id="card-advice-text"></div>
-                          </div>
-                        </div>
-
-                        <div id="tab-content-elemental" class="insight-tab-panel">
-                            <div id="single-elemental-container"></div>
-                        </div>
-                    </div>
-                </div>
-              </div>
             </div>
+          </div>
 
             <!-- 3-Card Spread Area -->
             <div id="triple-card-view" class="triple-view-container hidden">
@@ -193,17 +181,12 @@
                   <!-- Slot 0: Past -->
                   <div class="triple-card-wrapper">
                     <span class="triple-slot-label">I. THE PAST</span>
-                    <div id="triple-card-inner-0" class="card-inner cursor-pointer">
-                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                    <div id="triple-card-inner-0" class="card-inner cursor-pointer" role="button" tabindex="0" aria-label="The Past card">
+                      <div class="card-back deck-card-base">
                         <div class="deck-filigree-outer">
                           <div class="deck-filigree-inner"></div>
                         </div>
-                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
-                        <div class="deck-center-content">
-                          <i class="fa-solid fa-hourglass-half card-back-icon"></i>
-                          <p class="card-back-status">PAST PORTAL</p>
-                        </div>
-                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                        <div data-card-back-slot></div>
                       </div>
                       <div id="triple-card-front-0" class="card-front"></div>
                     </div>
@@ -212,17 +195,12 @@
                   <!-- Slot 1: Present -->
                   <div class="triple-card-wrapper">
                     <span class="triple-slot-label">II. THE PRESENT</span>
-                    <div id="triple-card-inner-1" class="card-inner cursor-pointer">
-                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                    <div id="triple-card-inner-1" class="card-inner cursor-pointer" role="button" tabindex="0" aria-label="The Present card">
+                      <div class="card-back deck-card-base">
                         <div class="deck-filigree-outer">
                           <div class="deck-filigree-inner"></div>
                         </div>
-                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
-                        <div class="deck-center-content">
-                          <i class="fa-solid fa-compass card-back-icon"></i>
-                          <p class="card-back-status">PRESENT PORTAL</p>
-                        </div>
-                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                        <div data-card-back-slot></div>
                       </div>
                       <div id="triple-card-front-1" class="card-front"></div>
                     </div>
@@ -230,17 +208,12 @@
                   <!-- Slot 2: Future (Following the same pattern) -->
                   <div class="triple-card-wrapper">
                     <span class="triple-slot-label">III. THE FUTURE</span>
-                    <div id="triple-card-inner-2" class="card-inner cursor-pointer">
-                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                    <div id="triple-card-inner-2" class="card-inner cursor-pointer" role="button" tabindex="0" aria-label="The Future card">
+                      <div class="card-back deck-card-base">
                         <div class="deck-filigree-outer">
                           <div class="deck-filigree-inner"></div>
                         </div>
-                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
-                        <div class="deck-center-content">
-                          <i class="fa-solid fa-key card-back-icon"></i>
-                          <p class="card-back-status">FUTURE PORTAL</p>
-                        </div>
-                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                        <div data-card-back-slot></div>
                       </div>
                       <div id="triple-card-front-2" class="card-front"></div>
                     </div>
@@ -279,7 +252,7 @@
 
         <!-- Combined Utilities / Settings Menu -->
         <div class="footer-settings-wrapper">
-          <button id="utils-menu-btn" class="tarot-settings-btn">
+          <button id="utils-menu-btn" class="tarot-settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="utils-dropdown">
               <i class="fa-solid fa-sliders settings-icon"></i>
               <span>Settings</span>
               <i class="fa-solid fa-chevron-up settings-chevron"></i>
@@ -321,6 +294,25 @@
                 </button>
               </div>
             </div>
+            <!-- Section 3: Card Back Geometry Theme Picker -->
+            <div class="settings-section-card-theme" style="margin-top: 0.625rem; padding-top: 0.625rem; border-top: 1px solid rgb(var(--color-gold) / 0.2);">
+                <span class="settings-section-label">Card Back Motif</span>
+                <div class="card-theme-options-list">
+                    <button class="card-theme-btn active" data-card-style="octagram">
+                        <span>Solar Octagram</span>
+                        <i class="fa-solid fa-sun theme-icon"></i>
+                    </button>
+                    <button class="card-theme-btn" data-card-style="seed-of-life">
+                        <span>Seed of Life</span>
+                        <i class="fa-solid fa-moon theme-icon"></i>
+                    </button>
+                    <button class="card-theme-btn" data-card-style="metatron">
+                        <span>Metatron Vector</span>
+                        <i class="fa-solid fa-star theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -328,7 +320,7 @@
 
     <!-- Unified Archives Modal (Journal + Library Tabs) -->
     <div id="archives-modal" class="tarot-modal-overlay hidden">
-        <div class="tarot-modal-container box-glow-plum" role="dialog" aria-modal="true" aria-label="The Arcane Archives">
+        <div class="tarot-modal-container" role="dialog" aria-modal="true" aria-label="The Arcane Archives">
             <!-- Modal Header & Tab Navigation -->
             <div class="tarot-modal-header">
                 <div class="tarot-modal-title-row">
@@ -336,7 +328,7 @@
                         <i class="fa-solid fa-landmark"></i> The Arcane Archives
                     </h3>
                     <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn" aria-label="Close archives">
-                        <i class="fa-solid fa-xmark"></i>
+                        <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
 

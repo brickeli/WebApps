@@ -1,8 +1,8 @@
 import { fullTarotDeck, ELEMENTAL_LORE } from './js/cardLibrary.js';
-import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI } from './js/theme.js';
+import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI, initThemeController, renderAllCardBacks } from './js/theme.js';
 import { toggleAudio, playMysticChime } from './js/audio.js';
 import { initShareButton } from './js/share.js';
-import { safeGetItem, safeSetItem, safeRemoveItem, safeParse } from './js/storage.js';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeParse, checkURLState, updateURLMode } from './js/storage.js';
 
 let currentMode = 'single';
 let currentSingleCard = null;
@@ -117,13 +117,26 @@ Object.assign(window, {
    3. INITIALIZATION
    ========================================================================= */
 document.addEventListener('DOMContentLoaded', () => {
+// ==========================================================
+// URL STATE INITIALIZATION
+// ==========================================================
+    checkURLState(() => {
+        // Automatically trigger the triple spread view when ?mode=triple is present
+        if (typeof setMode === 'function') {
+            setMode('triple');
+        } else {
+            document.getElementById('btn-triple')?.click();
+        }
+    });
     initCanvasFX();
     updateHistoryBadge();
     initTheme();
+    initThemeController();
+    renderAllCardBacks();
 
     // Mode Navigation
-    document.getElementById('btn-single')?.addEventListener('click', () => setMode('single'));
-    document.getElementById('btn-triple')?.addEventListener('click', () => setMode('triple'));
+    document.getElementById('btn-single')?.addEventListener('click', () => { setMode('single'); updateURLMode('single'); });
+    document.getElementById('btn-triple')?.addEventListener('click', () => { setMode('triple'); updateURLMode('triple'); });
 
     // Single Card Draw & Flip
     document.getElementById('deck-card-container')?.addEventListener('click', drawSingleCard);
@@ -141,9 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const todayDate = new Date().toDateString();
                 const lastDate = safeGetItem('arcana_last_triple_date');
 
-                // If not drawn today yet, tapping Present (Center Card, i === 1) casts the spread
+                // If not drawn today yet, tapping Present (Center Card, i === 1) casts the spread.
+                // Keyboard activation (e.detail === 0) casts from any slot, since a keyboard
+                // user can land on Past or Future first.
                 if (lastDate !== todayDate) {
-                    if (i === 1) {
+                    if (i === 1 || e.detail === 0) {
                         e.stopPropagation();
                         drawTripleSpread();
                     }
@@ -164,7 +179,27 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-toggle-btn')?.addEventListener('click', toggleMobileFilters);
     document.getElementById('btn-archives')?.addEventListener('click', () => toggleArchivesModal(true));
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') toggleArchivesModal(false);
+        // Escape closes the Archives modal (no-op when it is already closed)
+        if (e.key === 'Escape') {
+            toggleArchivesModal(false);
+            return;
+        }
+
+        // Keep Tab / Shift+Tab inside the Archives modal while it is open
+        if (e.key === 'Tab') {
+            trapTabInArchives(e);
+            return;
+        }
+
+        // Enter / Space activate custom role="button" elements (deck, cards, library tiles).
+        // Real <button> elements already handle these keys natively.
+        if (e.key === 'Enter' || e.key === ' ') {
+            const el = e.target;
+            if (el instanceof HTMLElement && el.tagName !== 'BUTTON' && el.matches('[role="button"]')) {
+                e.preventDefault();          // stops Space from scrolling the page
+                if (!e.repeat) el.click();   // holding the key must not flip repeatedly
+            }
+        }
     });
 
     // ==========================================================
@@ -360,6 +395,8 @@ function drawSingleCard() {
    }
 
    setTimeout(() => {
+       const deckHadFocus = !!deckArea && deckArea.contains(document.activeElement);
+
        if (deckArea) {
            deckArea.classList.add('hidden');
            deckArea.style.transform = '';
@@ -368,6 +405,7 @@ function drawSingleCard() {
        }
 
        if (revealArea) revealArea.classList.remove('hidden');
+       if (deckHadFocus && cardInner) cardInner.focus({ preventScroll: true });
 
        setTimeout(() => {
            if (cardInner) {
@@ -393,8 +431,10 @@ function restoreSingleCardUI() {
     const cardFront = document.getElementById('single-card-front');
     const detailsBox = document.getElementById('single-card-details');
 
+    const deckHadFocus = !!deckArea && deckArea.contains(document.activeElement);
     if (deckArea) deckArea.classList.add('hidden');
     if (revealArea) revealArea.classList.remove('hidden');
+    if (deckHadFocus && cardInner) cardInner.focus({ preventScroll: true });
 
     renderCardFront(cardFront);
 
@@ -405,6 +445,8 @@ function restoreSingleCardUI() {
 
     if (detailsBox) detailsBox.classList.add('details-slide-active');
 }
+
+
 
 function renderCardFront(cardFront) {
     const card = getShownCard();
@@ -427,6 +469,7 @@ function renderCardFront(cardFront) {
 
     const artRotation = reversed ? 'rotate-180' : '';
 
+    // 1. Build the layout template with the icon slot container
     cardFront.innerHTML = `
         <div class="tarot-single-header">
             <span>${card.arcana || 'TAROT'}</span>
@@ -436,7 +479,7 @@ function renderCardFront(cardFront) {
         </div>
 
         <div class="tarot-single-body ${artRotation}">
-            <i class="fa-solid ${card.icon} tarot-single-icon"></i>
+            <div class="card-icon-slot tarot-single-icon"></div>
             <h3 class="tarot-single-title">${card.name}</h3>
             <p class="tarot-single-subtitle">(${card.originalName || card.name})</p>
         </div>
@@ -446,6 +489,18 @@ function renderCardFront(cardFront) {
             <span>✦ ${reversed ? 'REVERSED' : 'UPRIGHT'}</span>
         </div>
     `;
+
+    // 2. Generate the unique procedural sigil using salted card ID + advice
+        const adviceText = card.advice || card.meaning || card.desc || card.name;
+        const seedString = `${card.id || card.name}_${adviceText}`;
+        const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
+
+    // 3. Inject into the icon slot & trigger draw animation
+    const iconSlot = cardFront.querySelector('.card-icon-slot');
+    if (iconSlot) {
+        iconSlot.innerHTML = sigilMarkup;
+        animateSigilDraw(iconSlot);
+    }
 }
 
 function flipSingleCard() {
@@ -510,7 +565,7 @@ function populateSingleDetails() {
     if (elSingleElemental) {
         elSingleElemental.innerHTML = elementalBlurb ? `
             <div class="single-elemental-banner element-${elementKey.toLowerCase()}">
-                <div class="elemental-header">✦ GUIDED BY: <span class="uppercase font-semibold">${elementKey}</span> ✦</div>
+                <div class="elemental-header">✦ GUIDED BY: <span class="element-${elementKey.toLowerCase()}">${elementKey}</span> ✦</div>
                 <p class="elemental-lore-blurb">${elementalBlurb}</p>
             </div>
         ` : '';
@@ -701,6 +756,7 @@ function renderTripleFront(front, card, isReversed) {
     const meaningText = isReversed ? (deckMatch.shadow || card.shadow) : (deckMatch.light || card.light);
     const infoBoxClass = isReversed ? 'tarot-triple-info-box-reversed' : 'tarot-triple-info-box-upright';
 
+    // 1. Render layout with the icon slot
     front.innerHTML = `
         <div class="tarot-triple-header">
             <span>${deckMatch.arcana || card.arcana || 'TAROT'}</span>
@@ -709,7 +765,7 @@ function renderTripleFront(front, card, isReversed) {
             </span>
         </div>
         <div class="tarot-triple-body ${artRotation}">
-            <i class="fa-solid ${deckMatch.icon || card.icon} tarot-triple-icon"></i>
+            <div class="card-icon-slot tarot-triple-icon"></div>
             <h4 class="tarot-triple-title">${deckMatch.name || card.name}</h4>
             <p class="tarot-triple-subtitle">(${deckMatch.originalName || card.originalName || deckMatch.name})</p>
         </div>
@@ -721,6 +777,17 @@ function renderTripleFront(front, card, isReversed) {
             <p class="card-aspect-text">${meaningText}</p>
         </div>
     `;
+
+    // 2. Generate and inject sigil using salted card ID + advice
+    const adviceText = deckMatch.advice || card.advice || meaningText || card.name;
+    const seedString = `${deckMatch.id || card.id || deckMatch.name}_${adviceText}`;
+    const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
+
+    const iconSlot = front.querySelector('.card-icon-slot');
+    if (iconSlot) {
+        iconSlot.innerHTML = sigilMarkup;
+        animateSigilDraw(iconSlot);
+    }
 }
 
 function flipTripleCard(index) {
@@ -743,14 +810,12 @@ function flipTripleCard(index) {
     } else {
         // --- UNROLL SPREAD BACK INTO LINE ---
         tripleFlipped = [true, true, true];
-
         for (let i = 0; i < 3; i++) {
             const cardInner = document.getElementById(`triple-card-inner-${i}`);
             if (cardInner) {
                 cardInner.classList.add('flipped');
             }
         }
-
         container.classList.add('revealed');
     }
 }
@@ -866,17 +931,57 @@ function initCanvasFX() {
    8. Archives
    ========================================================================== */
 
+let lastFocusBeforeArchives = null;
+
 function toggleArchivesModal(open) {
    const modal = document.getElementById('archives-modal');
    if (!modal) return;
 
    if (open) {
+        if (modal.classList.contains('hidden')) lastFocusBeforeArchives = document.activeElement;
         modal.classList.remove('hidden');
         switchArchiveTab(activeArchiveTab);
         updateHistoryBadge();
+
+        // Move keyboard focus into the dialog (the Library tab already focuses its search box)
+        if (!modal.contains(document.activeElement)) {
+            document.getElementById(`tab-btn-${activeArchiveTab}`)?.focus();
+        }
    } else {
+        const wasOpen = !modal.classList.contains('hidden');
         modal.classList.add('hidden');
+
+        // Give focus back to whatever opened the dialog
+        if (wasOpen && lastFocusBeforeArchives && document.contains(lastFocusBeforeArchives)) {
+            lastFocusBeforeArchives.focus();
+        }
+        if (wasOpen) lastFocusBeforeArchives = null;
    }
+}
+
+// Wrap Tab / Shift+Tab inside the open Archives modal
+function trapTabInArchives(e) {
+    const modal = document.getElementById('archives-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    const focusable = [...modal.querySelectorAll('button, input, [href], [tabindex]:not([tabindex="-1"])')]
+        .filter(el => !el.disabled && el.getClientRects().length > 0);
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (!modal.contains(active)) {
+        e.preventDefault();
+        first.focus();
+    } else if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+    } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+    }
 }
 
 function switchArchiveTab(tab) {
@@ -958,18 +1063,11 @@ function renderJournalHistory() {
     }
 }
 
-function removeJournalEntry(id) {
-    const rawHistory = safeGetItem('arcana_tarot_history');
-    let history = safeParse(rawHistory, []);
+function removeJournalEntry(index) {
+    if (index < 0 || index >= readingHistory.length) return;
 
-    if (typeof id === 'number' && id >= 0 && id < history.length && !history.some(e => e.id === id)) {
-        history.splice(id, 1);
-    } else {
-        history = history.filter(entry => String(entry.id) !== String(id));
-    }
-
-    readingHistory = history;
-    safeSetItem('arcana_tarot_history', JSON.stringify(history));
+    readingHistory.splice(index, 1);
+    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
 
     renderJournalHistory();
     updateHistoryBadge();
@@ -984,11 +1082,12 @@ function renderLibraryGrid(cards) {
         return;
     }
 
+    // 1. Build the HTML template for all cards in the grid
     grid.innerHTML = cards.map(card => `
-        <div onclick="inspectCardFromLibrary('${card.id}')" class="tarot-library-card box-glow-gold">
+        <div role="button" tabindex="0" aria-label="${card.name} (${card.originalName})" onclick="inspectCardFromLibrary('${card.id}')" class="tarot-library-card box-glow-gold">
             <div class="tarot-element-badge">${card.element || 'spirit'}</div>
             <div class="tarot-library-card-content">
-                <i class="fa-solid ${card.icon} tarot-library-card-icon"></i>
+                <div class="library-card-icon-slot tarot-library-card-icon" data-card-id="${card.id}"></div>
                 <h4 class="tarot-library-card-title">${card.name}</h4>
                 <p class="tarot-library-card-subtitle">(${card.originalName})</p>
             </div>
@@ -997,6 +1096,19 @@ function renderLibraryGrid(cards) {
             </div>
         </div>
     `).join('');
+
+    // 2. Iterate through each card tile and populate its salted advice-seeded sigil
+    cards.forEach(card => {
+        const iconSlot = grid.querySelector(`.library-card-icon-slot[data-card-id="${card.id}"]`);
+        if (iconSlot) {
+            const adviceText = card.advice || card.meaning || card.desc || card.name;
+            const seedString = `${card.id || card.name}_${adviceText}`;
+            const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
+            iconSlot.innerHTML = sigilMarkup;
+
+            animateSigilDraw(iconSlot);
+        }
+    });
 }
 
 function filterLibrary(filterType) {
@@ -1063,6 +1175,8 @@ function inspectCardFromLibrary(cardId) {
    if (cardInner) cardInner.classList.add('flipped');
    populateSingleDetails();
    if (detailsBox) detailsBox.classList.add('details-slide-active');
+
+   if (cardInner) cardInner.focus({ preventScroll: true });
 
    showToast('Previewing from the Library. Tap "Daily Card" to return.');
 }
@@ -1142,7 +1256,7 @@ function calculateElementalBalance(drawnCards) {
 
 function renderElementalAnalyzer(drawnCards) {
     const balance = calculateElementalBalance(drawnCards);
-    if (!balance) return '<div class="elemental-balance-container tarot-guidance-quote esoteric text-xs text-gold/60 text-center">✦ Awaiting Elemental Alignment ✦</div>';
+    if (!balance) return '<div class="elemental-balance-container tarot-guidance-quote esoteric">✦ Awaiting Elemental Alignment ✦</div>';
 
     const { percentages, headline, lore, cssElement } = balance;
     const dominantClass = cssElement ? `element-${cssElement}` : 'element-balanced';
@@ -1180,3 +1294,178 @@ function renderElementalAnalyzer(drawnCards) {
         </div>
     `;
 }
+
+
+
+
+function hashString(str) {
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619); // 32-bit prime multiplier
+  }
+  return hash >>> 0; // Convert to unsigned 32-bit int
+}
+
+// Generates an SVG string for a minimalist alchemical sigil. */
+function generateSigilFromAdvice({ advice = '', size = 24, strokeWidth = 1.25, fillOpacity = 0.2 } = {}) {
+  const seed = typeof advice === 'string' ? hashString(advice) : advice;
+
+  const prng = (s) => {
+    let t = (s += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  let s = seed;
+  const random = () => (s = Math.floor(prng(s) * 100000), prng(s));
+  const randomChoice = (arr) => arr[Math.floor(random() * arr.length)];
+  const center = size / 2; // 12
+
+  // -------------------------------------------------------------------------
+  // 1. Core Fill Shape & Inner Geometry
+  // -------------------------------------------------------------------------
+  const createCoreShape = () => {
+    const r = 2.5 + random() * 2.5; // Radius 2.5 to 5
+    const type = randomChoice(['circle', 'diamond', 'up-triangle', 'down-triangle', 'hexagram', 'dot-cluster']);
+
+    if (type === 'circle') {
+      const d = `M ${center - r} ${center} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 -${r * 2} 0`;
+      return { fillPath: d, strokePath: d };
+    } else if (type === 'diamond') {
+      const d = `M ${center} ${center - r} L ${center + r} ${center} L ${center} ${center + r} L ${center - r} ${center} Z`;
+      return { fillPath: d, strokePath: d };
+    } else if (type === 'up-triangle') {
+      const d = `M ${center} ${center - r} L ${center + r * 1.1} ${center + r * 0.8} L ${center - r * 1.1} ${center + r * 0.8} Z`;
+      return { fillPath: d, strokePath: d };
+    } else if (type === 'down-triangle') {
+      const d = `M ${center} ${center + r} L ${center + r * 1.1} ${center - r * 0.8} L ${center - r * 1.1} ${center - r * 0.8} Z`;
+      return { fillPath: d, strokePath: d };
+    } else if (type === 'hexagram') {
+      const d1 = `M ${center} ${center - r} L ${center + r} ${center + r * 0.7} L ${center - r} ${center + r * 0.7} Z`;
+      const d2 = `M ${center} ${center + r} L ${center + r} ${center - r * 0.7} L ${center - r} ${center - r * 0.7} Z`;
+      return { fillPath: d1, strokePath: `${d1} ${d2}` };
+    } else { // Quad Dot Cluster
+      const dotR = 1.2;
+      const offset = 2.2;
+      const d = `M ${center - offset} ${center} a ${dotR} ${dotR} 0 1 0 ${dotR * 2} 0 a ${dotR} ${dotR} 0 1 0 -${dotR * 2} 0 ` +
+                `M ${center + offset - dotR * 2} ${center} a ${dotR} ${dotR} 0 1 0 ${dotR * 2} 0 a ${dotR} ${dotR} 0 1 0 -${dotR * 2} 0`;
+      return { fillPath: d, strokePath: d };
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // 2. Linear Rays & Alchemical Stave Constructs
+  // -------------------------------------------------------------------------
+  const createLinework = () => {
+    const style = randomChoice(['cross', 'octagram', 'chevrons', 'vertical-stave', 'horizontal-stave', 'diagonal-x']);
+    const len = 6 + Math.floor(random() * 4); // 6 to 9 px
+
+    if (style === 'cross') {
+      return `M ${center} ${center - len} V ${center + len} M ${center - len} ${center} H ${center + len}`;
+    } else if (style === 'octagram') {
+      const off = Math.round(len * 0.707);
+      return `M ${center} ${center - len} V ${center + len} M ${center - len} ${center} H ${center + len} ` +
+             `M ${center - off} ${center - off} L ${center + off} ${center + off} ` +
+             `M ${center + off} ${center - off} L ${center - off} ${center + off}`;
+    } else if (style === 'chevrons') {
+      return `M ${center} ${center - len} V ${center + len} ` +
+             `M ${center - 4} ${center - 3} L ${center} ${center - 7} L ${center + 4} ${center - 3} ` +
+             `M ${center - 4} ${center + 3} L ${center} ${center + 7} L ${center + 4} ${center + 3}`;
+    } else if (style === 'vertical-stave') {
+      return `M ${center} 3 V 21 M ${center - 4} 7 H ${center + 4} M ${center - 4} 17 H ${center + 4}`;
+    } else if (style === 'horizontal-stave') {
+      return `M 3 ${center} H 21 M 7 ${center - 4} V ${center + 4} M 17 ${center - 4} V ${center + 4}`;
+    } else { // Diagonal X
+      return `M 5 5 L 19 19 M 19 5 L 5 19`;
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // 3. Outer Frame & Orbital Accents
+  // -------------------------------------------------------------------------
+  const createOuterFrame = () => {
+    const frameType = randomChoice(['double-ring', 'crescents', 'end-caps', 'corner-bounds', 'orbital-dots']);
+
+    if (frameType === 'double-ring') {
+      const r1 = 9, r2 = 7;
+      return `M ${center - r1} ${center} a ${r1} ${r1} 0 1 0 ${r1 * 2} 0 a ${r1} ${r1} 0 1 0 -${r1 * 2} 0 ` +
+             `M ${center - r2} ${center} a ${r2} ${r2} 0 1 0 ${r2 * 2} 0 a ${r2} ${r2} 0 1 0 -${r2 * 2} 0`;
+    } else if (frameType === 'crescents') {
+      return `M ${center - 9} ${center - 5} A 10 10 0 0 1 ${center - 9} ${center + 5} ` +
+             `M ${center + 9} ${center - 5} A 10 10 0 0 0 ${center + 9} ${center + 5}`;
+    } else if (frameType === 'end-caps') {
+      return `M 4 4 H 20 M 4 20 H 20 M ${center} 2 V 4 M ${center} 20 V 22`;
+    } else if (frameType === 'corner-bounds') {
+      return `M 4 8 V 4 H 8 M 16 4 H 20 V 8 M 4 16 V 20 H 8 M 16 20 H 20 V 16`;
+    } else { // Orbital Satellite Dots
+      const r = 9;
+      return `M ${center - r} ${center} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 -${r * 2} 0 ` +
+             `M ${center - 1} 3 a 1 1 0 1 0 2 0 a 1 1 0 1 0 -2 0 ` +
+             `M ${center - 1} 21 a 1 1 0 1 0 2 0 a 1 1 0 1 0 -2 0`;
+    }
+  };
+
+  // Assemble
+  const core = createCoreShape();
+  const linework = createLinework();
+  const frame = createOuterFrame();
+  const strokePathData = `${linework} ${frame} ${core.strokePath}`.trim();
+
+  return `
+<svg viewBox="0 0 ${size} ${size}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+  <path d="${core.fillPath}" fill="currentColor" opacity="${fillOpacity}" stroke="none" />
+  <path d="${strokePathData}" />
+</svg>
+`.trim();
+}
+
+ /**
+ * Triggers a self-drawing line motion on a sigil's SVG path elements.
+ */
+ function animateSigilDraw(containerElement) {
+     if (!containerElement) return;
+
+     // Wait 1 frame so the SVG is fully rendered in the DOM tree before calculating path length
+     requestAnimationFrame(() => {
+         const svg = containerElement.querySelector('svg');
+         const paths = containerElement.querySelectorAll('svg path');
+         if (!svg || paths.length < 2) return;
+
+         const fillPath = paths[0];   // Core fill layer
+         const strokePath = paths[1]; // Linework layer
+
+         // Ensure stroke styling is explicitly forced
+         strokePath.setAttribute('stroke', 'currentColor');
+         strokePath.style.vectorEffect = 'non-scaling-stroke';
+
+         try {
+             const length = strokePath.getTotalLength();
+             if (!length || isNaN(length)) return;
+
+             // Set initial hidden stroke state
+             strokePath.style.strokeDasharray = `${length} ${length}`;
+             strokePath.style.strokeDashoffset = `${length}`;
+             strokePath.style.transition = 'none';
+
+             if (fillPath) {
+                 fillPath.style.opacity = '0';
+                 fillPath.style.transition = 'opacity 0.4s ease-in 0.8s';
+             }
+
+             // Force browser reflow to commit initial offset before animating
+             void strokePath.getBoundingClientRect();
+
+             // Trigger smooth line-draw animation
+             strokePath.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1)';
+             strokePath.style.strokeDashoffset = '0';
+
+             if (fillPath) {
+                 fillPath.style.opacity = '0.2';
+             }
+         } catch (err) {
+             console.warn('Sigil animation fallback triggered:', err);
+         }
+     });
+ }

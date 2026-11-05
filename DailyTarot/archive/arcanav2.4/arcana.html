@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <title>Arcana - Daily Tarot Companion</title>
+    <!-- Base Custom Design System Stylesheet -->
+    <link rel="stylesheet" href="./css/styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Cinzel + Cinzel Decorative (Headers) & Atkinson Hyperlegible (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="site-body">
+    <!-- FX Canvas for celestial starlight and dust -->
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-group">
+                <i class="fa-solid fa-eye brand-icon"></i>
+                <h1 class="brand-title">Arcana</h1>
+                <span class="brand-subtitle">Daily Tarot Companion</span>
+            </div>
+
+            <nav class="nav-container">
+                <button id="btn-single" onclick="setMode('single')" class="tarot-nav-btn active">
+                    <i class="fa-solid fa-compass"></i> Daily Card
+                </button>
+                <button id="btn-triple" onclick="setMode('triple')" class="tarot-nav-btn">
+                    <i class="fa-solid fa-hamsa"></i> 3-Card Spread
+                </button>
+                <button id="btn-archives" onclick="toggleArchivesModal(true)" class="tarot-nav-btn">
+                    <i class="fa-solid fa-landmark"></i> The Archives
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="site-main">
+
+        <!-- Intro Greeting & Esoteric Subtitle -->
+        <div class="intro-container">
+            <h2 id="reading-title" class="intro-title">
+                Consult the Sacred Arcana
+            </h2>
+            <p id="reading-desc" class="intro-description">
+                Clear your mind, focus upon your daily path, and draw from the ancient wisdom of the deck.
+            </p>
+        </div>
+
+        <!-- Single Card Area -->
+        <div id="single-card-view" class="single-card-view-container">
+            <!-- Deck Stack Container -->
+            <div id="deck-draw-area" class="deck-draw-area">
+                <div id="deck-card-container" class="card-container cursor-pointer deck-hover-group">
+                    <div class="deck-card-base">
+                        <!-- Filigree Card Back -->
+                        <div class="deck-filigree-outer">
+                            <div class="deck-filigree-inner"></div>
+                        </div>
+                        <div class="deck-card-text">✦ SACRED ARCANA ✦</div>
+                        <div class="deck-center-content">
+                            <i class="fa-solid fa-sun-plant-wilt deck-center-icon"></i>
+                            <p class="deck-tap-text">TAP TO DRAW</p>
+                        </div>
+                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                    </div>
+                </div>
+                <button id="btn-draw-single" class="tarot-btn-draw-daily">
+                    <i class="fa-solid fa-sparkles"></i>✦ Draw Daily Card ✦
+                </button>
+            </div>
+            <!-- Single Drawn Card Reveal Area -->
+            <div id="single-reveal-area" class="single-reveal-area hidden">
+                <!-- Interactive 3D Card -->
+                <div class="card-wrapper card-container single-slot-container">
+                    <div id="single-card-inner" class="card-inner tarot-card-inner cursor-pointer">
+                        <!-- Card Back -->
+                        <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                            <div class="deck-filigree-outer">
+                                <div class="deck-filigree-inner"></div>
+                            </div>
+                            <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                            <div class="deck-center-content">
+                                <i class="fa-solid fa-sun-plant-wilt card-back-icon"></i>
+                                <p class="card-back-status">UNVEILING THE CARD...</p>
+                            </div>
+                            <div class="deck-card-text">✦ INTUITION ✦</div>
+                        </div>
+                        <!-- Card Front -->
+                        <div id="single-card-front" class="card-front tarot-card-front-face box-glow-gold">
+                            <!-- Visual Content rendered via JS -->
+                        </div>
+                    </div>
+                    <div class="card-action-container">
+                        <button onclick="saveCurrentReading()" class="tarot-save-btn">
+                            <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
+                        </button>
+                        <button id="share-card-btn-single" class="tarot-share-btn">
+                          <i class="fa-solid fa-share-nodes"></i>
+                          <span>Share Card</span>
+                        </button>
+                        <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
+                    </div>
+                </div>
+
+                <!-- Detailed Card Interpretations -->
+                <div id="single-card-details" class="tarot-details-card details-slide-enter box-glow-plum">
+                    <div class="card-details-header">
+                        <h4 id="card-arcana" class="card-arcana-badge">Major Arcana</h4>
+                        <h3 id="card-title" class="card-title-main">The Fool</h3>
+                    </div>
+
+                    <!-- Keywords -->
+                    <div class="card-section-mb">
+                        <span class="card-section-label">RESONATING KEYWORDS</span>
+                        <div id="card-keywords" class="card-keywords-flex">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- General Meaning -->
+                    <div class="card-section-mb">
+                        <h4 class="card-section-heading">
+                            <i class="fa-solid fa-compass card-heading-icon"></i> ESOTERIC SIGNIFICANCE
+                        </h4>
+                        <p id="card-desc" class="card-description-text">
+                            <!-- Description here -->
+                        </p>
+                    </div>
+
+                    <!-- Light vs Shadow breakdown -->
+                    <div class="card-aspects-grid">
+                        <div class="tarot-aspect-box tarot-aspect-light">
+                            <h5 class="card-aspect-title-light">
+                                <i class="fa-solid fa-sun card-aspect-icon"></i> LIGHT / UPRIGHT
+                            </h5>
+                            <p id="card-light" class="card-aspect-text">
+                                <!-- Upright aspect -->
+                            </p>
+                        </div>
+                        <div class="tarot-aspect-box tarot-aspect-shadow">
+                            <h5 class="card-aspect-title-shadow">
+                                <i class="fa-solid fa-moon card-aspect-icon"></i> SHADOW / REVERSED
+                            </h5>
+                            <p id="card-shadow" class="card-aspect-text">
+                                <!-- Reversed aspect -->
+                            </p>
+                        </div>
+                    </div>
+                    <div class="tarot-insights-container">
+                        <!-- Tab Navigation Headers -->
+                        <div class="insight-tabs-nav">
+                            <button class="insight-tab-btn active" id="btn-tab-wisdom">
+                                <i class="fa-solid fa-scroll"></i> Arcanum Wisdom
+                            </button>
+                            <button class="insight-tab-btn" id="btn-tab-elemental">
+                                <i class="fa-solid fa-fire-flame-curved"></i> Elemental Insight
+                            </button>
+                        </div>
+
+                        <!-- Tab Content Panels -->
+                        <div id="tab-content-wisdom" class="insight-tab-panel active">
+                          <div id="card-advice" class="tarot-guidance-quote esoteric">
+                              <div class="esoteric-scroll-header">✦ ARCANUM WISDOM ✦</div>
+                              <div class="esoteric-scroll-body" id="card-advice-text"></div>
+                          </div>
+                        </div>
+
+                        <div id="tab-content-elemental" class="insight-tab-panel">
+                            <div id="single-elemental-container"></div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3-Card Spread Area -->
+            <div id="triple-card-view" class="triple-view-container hidden">
+                <div class="triple-btn-wrapper">
+                    <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
+                        <i class="fa-solid fa-hamsa triple-btn-icon"></i> Cast 3-Card Spread (Past • Present • Future)
+                    </button>
+                </div>
+
+                <div class="triple-spread-container">
+                  <!-- Slot 0: Past -->
+                  <div class="triple-card-wrapper">
+                    <span class="triple-slot-label">I. THE PAST</span>
+                    <div id="triple-card-inner-0" class="card-inner cursor-pointer">
+                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                        <div class="deck-filigree-outer">
+                          <div class="deck-filigree-inner"></div>
+                        </div>
+                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                        <div class="deck-center-content">
+                          <i class="fa-solid fa-hourglass-half card-back-icon"></i>
+                          <p class="card-back-status">PAST PORTAL</p>
+                        </div>
+                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                      </div>
+                      <div id="triple-card-front-0" class="card-front"></div>
+                    </div>
+                  </div>
+
+                  <!-- Slot 1: Present -->
+                  <div class="triple-card-wrapper">
+                    <span class="triple-slot-label">II. THE PRESENT</span>
+                    <div id="triple-card-inner-1" class="card-inner cursor-pointer">
+                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                        <div class="deck-filigree-outer">
+                          <div class="deck-filigree-inner"></div>
+                        </div>
+                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                        <div class="deck-center-content">
+                          <i class="fa-solid fa-compass card-back-icon"></i>
+                          <p class="card-back-status">PRESENT PORTAL</p>
+                        </div>
+                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                      </div>
+                      <div id="triple-card-front-1" class="card-front"></div>
+                    </div>
+                  </div>
+                  <!-- Slot 2: Future (Following the same pattern) -->
+                  <div class="triple-card-wrapper">
+                    <span class="triple-slot-label">III. THE FUTURE</span>
+                    <div id="triple-card-inner-2" class="card-inner cursor-pointer">
+                      <div class="card-back deck-card-base tarot-card-back box-glow-gold">
+                        <div class="deck-filigree-outer">
+                          <div class="deck-filigree-inner"></div>
+                        </div>
+                        <div class="card-back-title">✦ SACRED ARCANA ✦</div>
+                        <div class="deck-center-content">
+                          <i class="fa-solid fa-key card-back-icon"></i>
+                          <p class="card-back-status">FUTURE PORTAL</p>
+                        </div>
+                        <div class="deck-card-text">✦ INTUITION ✦</div>
+                      </div>
+                      <div id="triple-card-front-2" class="card-front"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Elemental Analyzer Target -->
+                <div id="triple-elemental-container"></div>
+
+                <!-- Save Spread Button -->
+                <div id="triple-actions" class="triple-actions-container hidden">
+                    <button onclick="saveTripleReading()" class="tarot-save-btn">
+                        <i class="fa-solid fa-book-bookmark save-icon"></i> Save Spread to Journal
+                    </button>
+                    <div class="triple-share-group">
+                        <button id="share-card-btn-triple" class="tarot-share-btn">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>Share Spread</span>
+                        </button>
+                        <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
+                    </div>
+                </div>
+            </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="tarot-toast">
+        <i class="fa-solid fa-star-of-david toast-star-icon"></i>
+        <span id="toast-msg">Reading saved to your journal!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="tarot-footer">
+      <div class="footer-inner">
+        <p class="footer-copyright">✦ Arcana Tarot Companion • Seek Wisdom within the Stars ✦</p>
+
+        <!-- Combined Utilities / Settings Menu -->
+        <div class="footer-settings-wrapper">
+          <button id="utils-menu-btn" class="tarot-settings-btn">
+              <i class="fa-solid fa-sliders settings-icon"></i>
+              <span>Settings</span>
+              <i class="fa-solid fa-chevron-up settings-chevron"></i>
+          </button>
+
+          <!-- Upward Opening Utilities Popup Menu -->
+          <div id="utils-dropdown" class="tarot-settings-dropdown hidden">
+            <!-- Section 1: Ambient Audio Toggle -->
+            <div class="settings-section-audio">
+              <span class="settings-section-label">Audio</span>
+              <button id="menu-audio-btn" class="tarot-audio-toggle-btn">
+                <div class="settings-audio-info">
+                  <i id="audio-icon" class="fa-solid fa-volume-xmark settings-audio-icon"></i>
+                  <span id="audio-status-text" class="settings-audio-text">Sound Muted</span>
+                </div>
+                <span id="audio-toggle-badge" class="settings-audio-badge">OFF</span>
+              </button>
+            </div>
+
+            <!-- Section 2: Color Theme Selector -->
+            <div>
+              <span class="settings-section-label">Aesthetic Palette</span>
+              <div class="settings-themes-list">
+                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="theme-option-btn">
+                  <span>Gothic Plum</span>
+                  <span class="theme-dot theme-dot-plum"></span>
+                </button>
+                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="theme-option-btn">
+                  <span>Crimson Alchemist</span>
+                  <span class="theme-dot theme-dot-crimson"></span>
+                </button>
+                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn">
+                  <span>Nocturnal Cosmic</span>
+                  <span class="theme-dot theme-dot-cosmic"></span>
+                </button>
+                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="theme-option-btn">
+                  <span>Modern Astral</span>
+                  <span class="theme-dot theme-dot-astral"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Unified Archives Modal (Journal + Library Tabs) -->
+    <div id="archives-modal" class="tarot-modal-overlay hidden">
+        <div class="tarot-modal-container box-glow-plum" role="dialog" aria-modal="true" aria-label="The Arcane Archives">
+            <!-- Modal Header & Tab Navigation -->
+            <div class="tarot-modal-header">
+                <div class="tarot-modal-title-row">
+                    <h3 class="tarot-modal-title">
+                        <i class="fa-solid fa-landmark"></i> The Arcane Archives
+                    </h3>
+                    <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn" aria-label="Close archives">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Search Bar & Mobile Filter Toggle Header -->
+                <div class="tarot-modal-controls-row">
+                    <!-- Tab Buttons -->
+                    <div class="tarot-tabs-group">
+                        <button id="tab-btn-journal" onclick="switchArchiveTab('journal')" class="tarot-tab-btn active">
+                            <i class="fa-solid fa-book-bookmark tab-icon"></i> Journal (<span id="tab-journal-count">0</span>)
+                        </button>
+                        <button id="tab-btn-library" onclick="switchArchiveTab('library')" class="tarot-tab-btn">
+                            <i class="fa-solid fa-book-atlas tab-icon"></i> Card Library
+                        </button>
+                    </div>
+
+                    <!-- Contextual Search Bar & Filter Toggle (Visible in Library Tab) -->
+                    <div id="archive-search-container" class="tarot-search-group hidden">
+                        <div class="tarot-search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass tarot-search-icon"></i>
+                            <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input">
+                        </div>
+                        <!-- Mobile Filter Toggle Button -->
+                        <button onclick="toggleMobileFilters()" id="filter-toggle-btn" class="tarot-filter-toggle-btn">
+                            <i class="fa-solid fa-filter"></i> Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Element & Arcana Filter Chips -->
+                <div id="archive-filters" class="tarot-filters-collapse hidden">
+                    <button onclick="filterLibrary('all')" class="lib-filter-btn active">All</button>
+                    <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><i class="fa-solid fa-crown filter-icon"></i>Major</button>
+                    <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><i class="fa-solid fa-star filter-icon"></i>Minor</button>
+                    <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><i class="fa-solid fa-wand-magic-sparkles filter-icon"></i> Wands</button>
+                    <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><i class="fa-solid fa-mug-saucer filter-icon"></i> Cups</button>
+                    <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><i class="fa-solid fa-wind filter-icon"></i> Swords</button>
+                    <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><i class="fa-solid fa-coins filter-icon"></i> Pentacles</button>
+                </div>
+            </div>
+
+            <!-- Tab Content Views -->
+            <div class="tarot-modal-body">
+                <!-- Journal View Pane -->
+                <div id="archive-view-journal" class="tarot-journal-pane">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Library View Pane (Grid) -->
+                <div id="archive-view-library" class="tarot-library-grid">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="tarot-modal-footer">
+                <span id="archives-footer-status">Stored in local browser memory</span>
+                <button id="archive-footer-action" onclick="clearHistory()" class="tarot-clear-journal-btn">Clear Journal Readings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript Logic -->
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
