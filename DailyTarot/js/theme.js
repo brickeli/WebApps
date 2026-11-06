@@ -6,7 +6,7 @@ export const THEME_NAMES = {
     'obsidian-plum': 'Gothic Plum',
     'crimson-alchemist': 'Crimson Alchemist',
     'nocturnal-cosmic': 'Nocturnal Cosmic',
-    'modern-astral': 'Modern Astral'
+    'solar-radiance': 'Modern Astral'
 };
 
 /**
@@ -45,7 +45,7 @@ export function getCardBackGeometryHTML() {
 
             <!-- Motif 1: 8-Node Solar Octagram -->
             <div class="theme-geom-octagram">
-                <svg class="sacred-octagram-svg solar-octagram-svg" viewBox="0 0 100 100" aria-hidden="true">
+                <svg class="sacred-octagram-svg celestial-octagram-svg" viewBox="0 0 100 100" aria-hidden="true">
                     <g fill="none">
                         <!-- Interlocking Primary Squares (Gold & Mystic Purple Accent) -->
                         <g stroke-width="1.2">
@@ -254,7 +254,9 @@ export function updateAudioUI(audioActive) {
     const audioBadge = document.getElementById('audio-toggle-badge');
 
     if (audioIcon && audioText && audioBadge) {
-        audioIcon.className = `fa-solid ${audioActive ? 'fa-volume-high is-active' : 'fa-volume-xmark is-muted'} settings-audio-icon`;
+        // audioIcon is an <svg>, so set the class attribute (className is read-only on SVG) and point <use> at the right symbol
+        audioIcon.setAttribute('class', `icon settings-audio-icon ${audioActive ? 'is-active' : 'is-muted'}`);
+        audioIcon.querySelector('use')?.setAttribute('href', `./assets/icons.svg#icon-${audioActive ? 'volume-on' : 'volume-off'}`);
         audioText.textContent = audioActive ? 'Ambient Active' : 'Sound Muted';
         audioBadge.className = `settings-audio-badge ${audioActive ? 'is-on' : 'is-off'}`;
         audioBadge.textContent = audioActive ? 'ON' : 'OFF';
