@@ -17,12 +17,6 @@
 /* --------------------------------------------------------------------------
    1. 3D CARD CONTAINER & STACK ARCHITECTURE
    -------------------------------------------------------------------------- */
-.card-wrapper,
-.card-container,
-.single-slot-container {
-    perspective: 1200px; /* Perspective MUST stay on the parent container */
-}
-
 .card-wrapper {
     display: flex;
     flex-direction: column;
@@ -31,7 +25,9 @@
     flex-shrink: 0;
 }
 
-.card-container {
+.card-container,
+.tarot-card-inner {
+    perspective: 1200px;
     width: 16rem;
     max-width: 90vw;
     position: relative;
@@ -43,66 +39,11 @@
     height: 26rem;
     transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform-style: preserve-3d;
-    -webkit-transform-style: preserve-3d;
     cursor: pointer;
     border-radius: 16px;
 }
 
 .card-inner.flipped { transform: rotateY(180deg); }
-
-#single-card-view {
-    position: relative;
-    min-height: 440px;
-    width: 100%;
-    margin-top: 1rem;
-}
-
-.single-card-view-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-}
-
-.deck-draw-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    margin: 1rem 0;
-    width: 100%;
-    transition: opacity 0.5s ease;
-}
-
-.single-slot-container {
-    transition: transform 0.80s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
-}
-
-.single-slot-container.card-slide-enter {
-    transform: translateX(40px);
-    opacity: 0;
-}
-
-.single-slot-container.card-slide-active {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-/* Details pane entry slide */
-#single-card-details {
-    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
-}
-
-#single-card-details.details-slide-enter {
-    transform: translateX(30px);
-    opacity: 0;
-}
-
-#single-card-details.details-slide-active {
-    transform: translateX(0);
-    opacity: 1;
-}
 
 /* Unified 3D Card Faces (Front & Back Shells) */
 .card-front,
@@ -113,15 +54,19 @@
     height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
     border-radius: 1rem;
+    overflow: hidden;
 }
 
 .card-back {
-    transform: rotateY(0deg) translateZ(1px);
+    transform: rotateY(0deg);
+    z-index: 2;
 }
 
 .card-front {
-    transform: rotateY(180deg) translateZ(1px);
+    transform: rotateY(180deg);
+    z-index: 2;
 }
 
 /* Faux Deck Stack Depth Shadows */
@@ -287,7 +232,7 @@
     z-index: 2;
 }
 
-.celestial-octagram-svg,
+.solar-octagram-svg,
 .seed-of-life-svg,
 .merkaba-svg {
     position: absolute;
@@ -297,7 +242,7 @@
     pointer-events: none;
 }
 
-.celestial-octagram-svg {
+.solar-octagram-svg {
     width: 104px;
     height: 104px;
     filter: drop-shadow(0 0 8px rgb(var(--color-gold) / 0.45));
