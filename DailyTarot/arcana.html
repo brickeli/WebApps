@@ -8,12 +8,10 @@
     <!-- Base Custom Design System Stylesheet -->
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/card-styles.css">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Cinzel + Cinzel Decorative (Headers) & Atkinson Hyperlegible (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="site-body">
     <!-- FX Canvas for celestial starlight and dust -->
@@ -69,7 +67,7 @@
                   </div>
               </div>
               <button id="btn-draw-single" class="tarot-btn-draw-daily">
-                  <i class="fa-solid fa-sparkles mr-2"></i>✦ Draw Daily Card ✦
+                  ✦ Draw Daily Card ✦
               </button>
             </div>
             <!-- Single Drawn Card Reveal Area -->
@@ -109,7 +107,7 @@
                         <!-- Esoteric Significance -->
                         <div class="card-section-mb">
                             <h4 class="card-section-heading">
-                                <i class="fa-solid fa-compass card-heading-icon"></i> ESOTERIC SIGNIFICANCE
+                                <svg class="icon card-heading-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-compass"></use></svg> ESOTERIC SIGNIFICANCE
                             </h4>
                             <p id="card-desc" class="card-description-text"></p>
                         </div>
@@ -118,13 +116,13 @@
                         <div class="card-aspects-grid">
                             <div class="tarot-aspect-box tarot-aspect-light">
                                 <h5 class="card-aspect-title-light">
-                                    <i class="fa-solid fa-sun card-aspect-icon"></i> LIGHT / UPRIGHT
+                                    <svg class="icon card-aspect-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sun"></use></svg> LIGHT / UPRIGHT
                                 </h5>
                                 <p id="card-light" class="card-aspect-text"></p>
                             </div>
                             <div class="tarot-aspect-box tarot-aspect-shadow">
                                 <h5 class="card-aspect-title-shadow">
-                                    <i class="fa-solid fa-moon card-aspect-icon"></i> SHADOW / REVERSED
+                                    <svg class="icon card-aspect-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-cresent-moon"></use></svg> SHADOW / REVERSED
                                 </h5>
                                 <p id="card-shadow" class="card-aspect-text"></p>
                             </div>
@@ -134,10 +132,10 @@
                         <div id="tarot-insights-container" class="tarot-insights-container">
                             <div class="insight-tabs-nav">
                                 <button class="insight-tab-btn active" id="btn-tab-wisdom">
-                                    <i class="fa-solid fa-scroll"></i> Arcanum Wisdom
+                                    <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-scroll"></use></svg> Arcanum Wisdom
                                 </button>
                                 <button class="insight-tab-btn" id="btn-tab-elemental">
-                                    <i class="fa-solid fa-fire-flame-curved"></i> Elemental Insight
+                                    <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-flame"></use></svg> Elemental Insight
                                 </button>
                             </div>
 
@@ -152,16 +150,16 @@
                                 <div id="single-elemental-container"></div>
                             </div>
                         </div>
-                    </div> <!-- /#single-card-details -->
-                </div> <!-- /.single-card-content-row -->
+                    </div>
+                </div>
 
                 <!-- Save & Share Action Bar -->
                 <div class="card-action-container">
                     <button onclick="saveCurrentReading()" class="tarot-save-btn">
-                        <i class="fa-regular fa-bookmark save-icon"></i> Save Card To Journal
+                        <svg class="icon save-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-bookmark"></use></svg> Save Card To Journal
                     </button>
                     <button id="share-card-btn-single" class="tarot-share-btn">
-                        <i class="fa-solid fa-share-nodes"></i>
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-share"></use></svg>
                         <span>Share Card</span>
                     </button>
                     <span id="share-feedback-single" class="card-share-feedback hidden">Copied to clipboard!</span>
@@ -173,7 +171,7 @@
             <div id="triple-card-view" class="triple-view-container hidden">
                 <div class="triple-btn-wrapper">
                     <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
-                        <i class="fa-solid fa-hamsa triple-btn-icon"></i> Cast 3-Card Spread (Past • Present • Future)
+                        ✦ Cast 3-Card Spread (Past • Present • Future) ✦
                     </button>
                 </div>
 
@@ -226,11 +224,11 @@
                 <!-- Save Spread Button -->
                 <div id="triple-actions" class="triple-actions-container hidden">
                     <button onclick="saveTripleReading()" class="tarot-save-btn">
-                        <i class="fa-solid fa-book-bookmark save-icon"></i> Save Spread to Journal
+                        <svg class="icon save-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Save Spread to Journal
                     </button>
                     <div class="triple-share-group">
                         <button id="share-card-btn-triple" class="tarot-share-btn">
-                            <i class="fa-solid fa-share-nodes"></i>
+                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-share"></use></svg>
                             <span>Share Spread</span>
                         </button>
                         <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
@@ -241,7 +239,7 @@
 
     <!-- Notification Toast -->
     <div id="toast" class="tarot-toast">
-        <i class="fa-solid fa-star-of-david toast-star-icon"></i>
+        <svg class="icon toast-star-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-hexagram"></use></svg>
         <span id="toast-msg">Reading saved to your journal!</span>
     </div>
 
@@ -253,9 +251,9 @@
         <!-- Combined Utilities / Settings Menu -->
         <div class="footer-settings-wrapper">
           <button id="utils-menu-btn" class="tarot-settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="utils-dropdown">
-              <i class="fa-solid fa-sliders settings-icon"></i>
+              <svg class="icon settings-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sliders"></use></svg>
               <span>Settings</span>
-              <i class="fa-solid fa-chevron-up settings-chevron"></i>
+              <svg class="icon settings-chevron" aria-hidden="true"><use href="./assets/icons.svg#icon-chevron-up"></use></svg>
           </button>
 
           <!-- Upward Opening Utilities Popup Menu -->
@@ -265,7 +263,7 @@
               <span class="settings-section-label">Audio</span>
               <button id="menu-audio-btn" class="tarot-audio-toggle-btn">
                 <div class="settings-audio-info">
-                  <i id="audio-icon" class="fa-solid fa-volume-xmark settings-audio-icon"></i>
+                  <svg id="audio-icon" class="icon settings-audio-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-volume-off"></use></svg>
                   <span id="audio-status-text" class="settings-audio-text">Sound Muted</span>
                 </div>
                 <span id="audio-toggle-badge" class="settings-audio-badge">OFF</span>
@@ -284,13 +282,17 @@
                   <span>Crimson Alchemist</span>
                   <span class="theme-dot theme-dot-crimson"></span>
                 </button>
+                <button onclick="selectTheme('solar-radiance', 'Modern Astral')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
+                  <span>Solar Radiance</span>
+                  <span class="theme-dot theme-dot-amber"></span>
+                </button>
+                <button onclick="selectTheme('emerald-sanctuary', 'Emerald Sanctuary')" class="theme-option-btn" data-theme-id="emerald-sanctuary" aria-pressed="false">
+                  <span>Emerald Sanctuary</span>
+                  <span class="theme-dot theme-dot-emerald"></span>
+                </button>
                 <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn" data-theme-id="nocturnal-cosmic" aria-pressed="false">
                   <span>Nocturnal Cosmic</span>
                   <span class="theme-dot theme-dot-cosmic"></span>
-                </button>
-                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="theme-option-btn" data-theme-id="modern-astral" aria-pressed="false">
-                  <span>Modern Astral</span>
-                  <span class="theme-dot theme-dot-astral"></span>
                 </button>
               </div>
             </div>
@@ -299,16 +301,16 @@
                 <span class="settings-section-label">Card Back Motif</span>
                 <div class="card-theme-options-list">
                     <button class="card-theme-btn active" data-card-style="octagram" aria-pressed="true">
-                        <span>Solar Octagram</span>
-                        <i class="fa-solid fa-sun theme-icon"></i>
+                        <span>Celestial Octagram</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-celestial-octagram"></use></svg>
                     </button>
                     <button class="card-theme-btn" data-card-style="seed-of-life" aria-pressed="false">
                         <span>Seed of Life</span>
-                        <i class="fa-solid fa-moon theme-icon"></i>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-seed-of-life"></use></svg>
                     </button>
                     <button class="card-theme-btn" data-card-style="metatron" aria-pressed="false">
-                        <span>Metatron Vector</span>
-                        <i class="fa-solid fa-star theme-icon"></i>
+                        <span>Prismatic Lattice</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-lattice"></use></svg>
                     </button>
                 </div>
             </div>
@@ -325,10 +327,10 @@
             <div class="tarot-modal-header">
                 <div class="tarot-modal-title-row">
                     <h3 class="tarot-modal-title">
-                        <i class="fa-solid fa-landmark"></i> The Arcane Archives
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-archives"></use></svg> The Arcane Archives
                     </h3>
                     <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn" aria-label="Close archives">
-                        <i class="fa-solid fa-xmark text-xl"></i>
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-close"></use></svg>
                     </button>
                 </div>
 
@@ -337,22 +339,22 @@
                     <!-- Tab Buttons -->
                     <div class="tarot-tabs-group">
                         <button id="tab-btn-journal" onclick="switchArchiveTab('journal')" class="tarot-tab-btn active">
-                            <i class="fa-solid fa-book-bookmark tab-icon"></i> Journal (<span id="tab-journal-count">0</span>)
+                            <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Journal (<span id="tab-journal-count">0</span>)
                         </button>
                         <button id="tab-btn-library" onclick="switchArchiveTab('library')" class="tarot-tab-btn">
-                            <i class="fa-solid fa-book-atlas tab-icon"></i> Card Library
+                            <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-library"></use></svg> Card Library
                         </button>
                     </div>
 
                     <!-- Contextual Search Bar & Filter Toggle (Visible in Library Tab) -->
                     <div id="archive-search-container" class="tarot-search-group hidden">
                         <div class="tarot-search-input-wrapper">
-                            <i class="fa-solid fa-magnifying-glass tarot-search-icon"></i>
+                            <svg class="icon tarot-search-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-search"></use></svg>
                             <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input">
                         </div>
                         <!-- Mobile Filter Toggle Button -->
-                        <button onclick="toggleMobileFilters()" id="filter-toggle-btn" class="tarot-filter-toggle-btn">
-                            <i class="fa-solid fa-filter"></i> Filters
+                        <button id="filter-toggle-btn" class="tarot-filter-toggle-btn">
+                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-filter"></use></svg> Filters
                         </button>
                     </div>
                 </div>
@@ -360,12 +362,12 @@
                 <!-- Collapsible Element & Arcana Filter Chips -->
                 <div id="archive-filters" class="tarot-filters-collapse hidden">
                     <button onclick="filterLibrary('all')" class="lib-filter-btn active">All</button>
-                    <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><i class="fa-solid fa-crown filter-icon"></i>Major</button>
-                    <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><i class="fa-solid fa-star filter-icon"></i>Minor</button>
-                    <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><i class="fa-solid fa-wand-magic-sparkles filter-icon"></i> Wands</button>
-                    <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><i class="fa-solid fa-mug-saucer filter-icon"></i> Cups</button>
-                    <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><i class="fa-solid fa-wind filter-icon"></i> Swords</button>
-                    <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><i class="fa-solid fa-coins filter-icon"></i> Pentacles</button>
+                    <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-crown"></use></svg>Major</button>
+                    <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-star"></use></svg>Minor</button>
+                    <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-wand"></use></svg> Wands</button>
+                    <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-chalice"></use></svg> Cups</button>
+                    <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sword"></use></svg> Swords</button>
+                    <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-pentacle"></use></svg> Pentacles</button>
                 </div>
             </div>
 
