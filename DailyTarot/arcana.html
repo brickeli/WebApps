@@ -276,19 +276,19 @@
             <div>
               <span class="settings-section-label">Aesthetic Palette</span>
               <div class="settings-themes-list">
-                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="theme-option-btn">
+                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="theme-option-btn" data-theme-id="obsidian-plum" aria-pressed="false">
                   <span>Gothic Plum</span>
                   <span class="theme-dot theme-dot-plum"></span>
                 </button>
-                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="theme-option-btn">
+                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="theme-option-btn" data-theme-id="crimson-alchemist" aria-pressed="false">
                   <span>Crimson Alchemist</span>
                   <span class="theme-dot theme-dot-crimson"></span>
                 </button>
-                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn">
+                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn" data-theme-id="nocturnal-cosmic" aria-pressed="false">
                   <span>Nocturnal Cosmic</span>
                   <span class="theme-dot theme-dot-cosmic"></span>
                 </button>
-                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="theme-option-btn">
+                <button onclick="selectTheme('modern-astral', 'Modern Astral')" class="theme-option-btn" data-theme-id="modern-astral" aria-pressed="false">
                   <span>Modern Astral</span>
                   <span class="theme-dot theme-dot-astral"></span>
                 </button>
@@ -298,15 +298,15 @@
             <div class="settings-section-card-theme" style="margin-top: 0.625rem; padding-top: 0.625rem; border-top: 1px solid rgb(var(--color-gold) / 0.2);">
                 <span class="settings-section-label">Card Back Motif</span>
                 <div class="card-theme-options-list">
-                    <button class="card-theme-btn active" data-card-style="octagram">
+                    <button class="card-theme-btn active" data-card-style="octagram" aria-pressed="true">
                         <span>Solar Octagram</span>
                         <i class="fa-solid fa-sun theme-icon"></i>
                     </button>
-                    <button class="card-theme-btn" data-card-style="seed-of-life">
+                    <button class="card-theme-btn" data-card-style="seed-of-life" aria-pressed="false">
                         <span>Seed of Life</span>
                         <i class="fa-solid fa-moon theme-icon"></i>
                     </button>
-                    <button class="card-theme-btn" data-card-style="metatron">
+                    <button class="card-theme-btn" data-card-style="metatron" aria-pressed="false">
                         <span>Metatron Vector</span>
                         <i class="fa-solid fa-star theme-icon"></i>
                     </button>

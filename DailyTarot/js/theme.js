@@ -232,10 +232,20 @@ export function toggleUtilsMenu(event) {
 export function selectTheme(themeId, displayName) {
     document.documentElement.setAttribute('data-theme', themeId);
     safeSetItem('arcana_active_theme', themeId);
+    updateThemeUI(themeId);
 
     // Picking a theme closes the popup; keyboard users land back on the Settings button.
     // (At startup the popup is already closed, so this does nothing to focus.)
     setUtilsMenuOpen(false, { returnFocus: true });
+}
+
+// Mark the applied palette button as .active (mirrors updateCardThemeUI for the card-back motifs)
+function updateThemeUI(activeId) {
+    document.querySelectorAll('.theme-option-btn').forEach(btn => {
+        const isActive = btn.getAttribute('data-theme-id') === activeId;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+    });
 }
 
 export function updateAudioUI(audioActive) {
@@ -283,13 +293,11 @@ export function initTheme() {
    ========================================================================== */
 
 const STORAGE_KEYS = {
-    SITE_THEME: 'arcana_site_theme',
     CARD_THEME: 'arcana_card_theme'
 };
 
 // Default fallbacks
 const DEFAULTS = {
-    SITE_THEME: 'obsidian-plum',
     CARD_THEME: 'octagram'
 };
 
@@ -297,32 +305,7 @@ const DEFAULTS = {
  * Initialize all site and card back theme listeners and local storage bindings
  */
 export function initThemeController() {
-    initSiteThemePicker();
     initCardThemePicker();
-}
-
-/**
- * 1. Global UI Color Palette Controller
- */
-function initSiteThemePicker() {
-    const siteThemeBtns = document.querySelectorAll('.theme-option-btn');
-    const savedSiteTheme = localStorage.getItem(STORAGE_KEYS.SITE_THEME) || DEFAULTS.SITE_THEME;
-
-    applySiteTheme(savedSiteTheme);
-
-    siteThemeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const theme = btn.getAttribute('data-theme-val');
-            if (theme) {
-                applySiteTheme(theme);
-            }
-        });
-    });
-}
-
-function applySiteTheme(themeName) {
-    document.documentElement.setAttribute('data-theme', themeName);
-    localStorage.setItem(STORAGE_KEYS.SITE_THEME, themeName);
 }
 
 /**
@@ -330,7 +313,7 @@ function applySiteTheme(themeName) {
  */
 function initCardThemePicker() {
     const cardThemeBtns = document.querySelectorAll('.card-theme-btn');
-    const savedCardTheme = localStorage.getItem(STORAGE_KEYS.CARD_THEME) || DEFAULTS.CARD_THEME;
+    const savedCardTheme = safeGetItem(STORAGE_KEYS.CARD_THEME) || DEFAULTS.CARD_THEME;
 
     applyCardTheme(savedCardTheme);
 
@@ -346,17 +329,15 @@ function initCardThemePicker() {
 
 function applyCardTheme(cardStyle) {
     document.documentElement.setAttribute('data-card-theme', cardStyle);
-    localStorage.setItem(STORAGE_KEYS.CARD_THEME, cardStyle);
+    safeSetItem(STORAGE_KEYS.CARD_THEME, cardStyle);
     updateCardThemeUI(cardStyle);
 }
 
 function updateCardThemeUI(activeStyle) {
     const cardThemeBtns = document.querySelectorAll('.card-theme-btn');
     cardThemeBtns.forEach(btn => {
-        if (btn.getAttribute('data-card-style') === activeStyle) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        const isActive = btn.getAttribute('data-card-style') === activeStyle;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
     });
 }

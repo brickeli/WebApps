@@ -128,6 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btn-triple')?.click();
         }
     });
+    // Keep the view in step with the browser Back / Forward buttons
+    window.addEventListener('popstate', () => {
+        setMode(new URLSearchParams(window.location.search).get('mode') === 'triple' ? 'triple' : 'single');
+    });
+
     initCanvasFX();
     updateHistoryBadge();
     initTheme();
@@ -175,7 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-audio-btn')?.addEventListener('click', handleToggleAudio);
 
     // Library Search & Mobile Filters
-    document.getElementById('archive-search-input')?.addEventListener('input', applyLibrarySearch);
+    let librarySearchTimer;
+    document.getElementById('archive-search-input')?.addEventListener('input', () => {
+        clearTimeout(librarySearchTimer);
+        librarySearchTimer = setTimeout(applyLibrarySearch, 120);
+    });
     document.getElementById('filter-toggle-btn')?.addEventListener('click', toggleMobileFilters);
     document.getElementById('btn-archives')?.addEventListener('click', () => toggleArchivesModal(true));
     document.addEventListener('keydown', (e) => {
@@ -1033,7 +1042,7 @@ function switchArchiveTab(tab) {
         if (footerStatus) footerStatus.textContent = "Complete Sacred Deck Index";
         if (footerAction) footerAction.style.display = "none";
 
-        renderLibraryGrid(fullTarotDeck);
+        renderLibraryGrid(fullTarotDeck, { animate: true });
         document.getElementById('archive-search-input')?.focus();
     }
 }
@@ -1073,7 +1082,22 @@ function removeJournalEntry(index) {
     updateHistoryBadge();
 }
 
-function renderLibraryGrid(cards) {
+// Sigil markup is deterministic per card, so generate it once and reuse it
+const sigilMarkupCache = new Map();
+function getCardSigilMarkup(card) {
+    const key = card.id || card.name;
+    let markup = sigilMarkupCache.get(key);
+    if (!markup) {
+        const adviceText = card.advice || card.meaning || card.desc || card.name;
+        markup = generateSigilFromAdvice({ advice: `${key}_${adviceText}` });
+        sigilMarkupCache.set(key, markup);
+    }
+    return markup;
+}
+
+// animate: true plays the line-draw intro (used when the Library opens).
+// Searching / filtering re-renders the grid with the finished sigils instead.
+function renderLibraryGrid(cards, { animate = false } = {}) {
     const grid = document.getElementById('archive-view-library');
     if (!grid) return;
 
@@ -1082,12 +1106,11 @@ function renderLibraryGrid(cards) {
         return;
     }
 
-    // 1. Build the HTML template for all cards in the grid
     grid.innerHTML = cards.map(card => `
         <div role="button" tabindex="0" aria-label="${card.name} (${card.originalName})" onclick="inspectCardFromLibrary('${card.id}')" class="tarot-library-card box-glow-gold">
             <div class="tarot-element-badge">${card.element || 'spirit'}</div>
             <div class="tarot-library-card-content">
-                <div class="library-card-icon-slot tarot-library-card-icon" data-card-id="${card.id}"></div>
+                <div class="library-card-icon-slot tarot-library-card-icon" data-card-id="${card.id}">${getCardSigilMarkup(card)}</div>
                 <h4 class="tarot-library-card-title">${card.name}</h4>
                 <p class="tarot-library-card-subtitle">(${card.originalName})</p>
             </div>
@@ -1097,18 +1120,9 @@ function renderLibraryGrid(cards) {
         </div>
     `).join('');
 
-    // 2. Iterate through each card tile and populate its salted advice-seeded sigil
-    cards.forEach(card => {
-        const iconSlot = grid.querySelector(`.library-card-icon-slot[data-card-id="${card.id}"]`);
-        if (iconSlot) {
-            const adviceText = card.advice || card.meaning || card.desc || card.name;
-            const seedString = `${card.id || card.name}_${adviceText}`;
-            const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
-            iconSlot.innerHTML = sigilMarkup;
-
-            animateSigilDraw(iconSlot);
-        }
-    });
+    if (animate) {
+        grid.querySelectorAll('.library-card-icon-slot').forEach(animateSigilDraw);
+    }
 }
 
 function filterLibrary(filterType) {
@@ -1424,48 +1438,48 @@ function generateSigilFromAdvice({ advice = '', size = 24, strokeWidth = 1.25, f
  /**
  * Triggers a self-drawing line motion on a sigil's SVG path elements.
  */
- function animateSigilDraw(containerElement) {
-     if (!containerElement) return;
+function animateSigilDraw(containerElement) {
+   if (!containerElement) return;
 
-     // Wait 1 frame so the SVG is fully rendered in the DOM tree before calculating path length
-     requestAnimationFrame(() => {
-         const svg = containerElement.querySelector('svg');
-         const paths = containerElement.querySelectorAll('svg path');
-         if (!svg || paths.length < 2) return;
+   // Wait 1 frame so the SVG is fully rendered in the DOM tree before calculating path length
+   requestAnimationFrame(() => {
+       const svg = containerElement.querySelector('svg');
+       const paths = containerElement.querySelectorAll('svg path');
+       if (!svg || paths.length < 2) return;
 
-         const fillPath = paths[0];   // Core fill layer
-         const strokePath = paths[1]; // Linework layer
+       const fillPath = paths[0];   // Core fill layer
+       const strokePath = paths[1]; // Linework layer
 
-         // Ensure stroke styling is explicitly forced
-         strokePath.setAttribute('stroke', 'currentColor');
-         strokePath.style.vectorEffect = 'non-scaling-stroke';
+       // Ensure stroke styling is explicitly forced
+       strokePath.setAttribute('stroke', 'currentColor');
+       strokePath.style.vectorEffect = 'non-scaling-stroke';
 
-         try {
-             const length = strokePath.getTotalLength();
-             if (!length || isNaN(length)) return;
+       try {
+           const length = strokePath.getTotalLength();
+           if (!length || isNaN(length)) return;
 
-             // Set initial hidden stroke state
-             strokePath.style.strokeDasharray = `${length} ${length}`;
-             strokePath.style.strokeDashoffset = `${length}`;
-             strokePath.style.transition = 'none';
+           // Set initial hidden stroke state
+           strokePath.style.strokeDasharray = `${length} ${length}`;
+           strokePath.style.strokeDashoffset = `${length}`;
+           strokePath.style.transition = 'none';
 
-             if (fillPath) {
-                 fillPath.style.opacity = '0';
-                 fillPath.style.transition = 'opacity 0.4s ease-in 0.8s';
-             }
+           if (fillPath) {
+               fillPath.style.opacity = '0';
+               fillPath.style.transition = 'opacity 0.4s ease-in 0.8s';
+           }
 
-             // Force browser reflow to commit initial offset before animating
-             void strokePath.getBoundingClientRect();
+           // Force browser reflow to commit initial offset before animating
+           void strokePath.getBoundingClientRect();
 
-             // Trigger smooth line-draw animation
-             strokePath.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1)';
-             strokePath.style.strokeDashoffset = '0';
+           // Trigger smooth line-draw animation
+           strokePath.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.4, 0, 0.2, 1)';
+           strokePath.style.strokeDashoffset = '0';
 
-             if (fillPath) {
-                 fillPath.style.opacity = '0.2';
-             }
-         } catch (err) {
-             console.warn('Sigil animation fallback triggered:', err);
-         }
-     });
- }
+           if (fillPath) {
+               fillPath.style.opacity = '0.2';
+           }
+       } catch (err) {
+           console.warn('Sigil animation fallback triggered:', err);
+       }
+   });
+}

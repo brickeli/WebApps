@@ -52,5 +52,6 @@ export function updateURLMode(mode) {
     } else {
         url.searchParams.delete('mode');
     }
+    if (url.toString() === window.location.href) return;   // already there: no duplicate history entry
     window.history.pushState({ path: url.toString() }, '', url.toString());
 }

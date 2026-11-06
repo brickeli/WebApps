@@ -1462,10 +1462,17 @@ p {
     gap: 0.25rem;
 }
 
-.theme-option-btn {
+.card-theme-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+
+.theme-option-btn, .card-theme-btn {
     width: 100%;
     text-align: left;
-    padding: 0.625rem 0;
+    padding: 0.625rem 0.5rem;
     font-size: 0.8rem;
     font-family: var(--font-cinzel, 'Cinzel', serif);
     color: rgb(var(--color-starlight));
@@ -1479,9 +1486,17 @@ p {
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.theme-option-btn:hover {
+.theme-option-btn:hover, .card-theme-btn:hover {
     background-color: rgb(var(--color-plum) / 0.6);
     color: rgb(var(--color-gold));
+}
+
+/* Currently applied palette (same treatment as the active card-back motif) */
+.theme-option-btn.active, .card-theme-btn.active {
+    background-color: rgb(var(--color-gold) / 0.15);
+    border-color: rgb(var(--color-gold) / 0.4);
+    color: rgb(var(--color-gold));
+    font-weight: 600;
 }
 
 .theme-dot {
