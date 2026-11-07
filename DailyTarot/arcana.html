@@ -169,11 +169,6 @@
 
             <!-- 3-Card Spread Area -->
             <div id="triple-card-view" class="triple-view-container hidden">
-                <div class="triple-btn-wrapper">
-                    <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
-                        ✦ Cast 3-Card Spread (Past • Present • Future) ✦
-                    </button>
-                </div>
 
                 <div class="triple-spread-container">
                   <!-- Slot 0: Past -->
@@ -234,6 +229,11 @@
                         <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
                     </div>
                 </div>
+                <div class="triple-btn-wrapper">
+                    <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
+                        ✦ Cast 3-Card Spread (Past • Present • Future) ✦
+                    </button>
+                </div>
             </div>
     </main>
 
@@ -282,7 +282,7 @@
                   <span>Crimson Alchemist</span>
                   <span class="theme-dot theme-dot-crimson"></span>
                 </button>
-                <button onclick="selectTheme('solar-radiance', 'Modern Astral')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
+                <button onclick="selectTheme('solar-radiance', 'Solar Radiance')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
                   <span>Solar Radiance</span>
                   <span class="theme-dot theme-dot-amber"></span>
                 </button>

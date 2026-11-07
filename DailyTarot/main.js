@@ -2,7 +2,7 @@ import { fullTarotDeck, ELEMENTAL_LORE } from './js/cardLibrary.js';
 import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI, initThemeController, renderAllCardBacks } from './js/theme.js';
 import { toggleAudio, playMysticChime } from './js/audio.js';
 import { initShareButton } from './js/share.js';
-import { safeGetItem, safeSetItem, safeRemoveItem, safeParse, checkURLState, updateURLMode } from './js/storage.js';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeParse, checkURLState, updateURLMode, readURLMode } from './js/storage.js';
 
 let currentMode = 'single';
 let currentSingleCard = null;
@@ -31,14 +31,16 @@ function updateHistoryBadge() {
     if (tabCountEl) tabCountEl.textContent = readingHistory.length;
 }
 
-function showToast(message) {
+let toastTimer;
+function showToast(message, duration = 3000) {
     const toast = document.getElementById('toast');
     if (!toast) return;
     const msgEl = document.getElementById('toast-msg');
     if (msgEl) msgEl.textContent = message;
     else toast.textContent = message;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
 }
 
 /* ==========================================================================
@@ -88,7 +90,30 @@ function canDrawToday(drawType) {
 
 function recordDrawToday(drawType) {
     const today = new Date().toDateString();
-    safeSetItem(`arcana_last_${drawType}_date`, today);
+    return safeSetItem(`arcana_last_${drawType}_date`, today);
+}
+
+// Storage can be blocked (private windows, strict settings) or full. Say so instead of pretending a save worked.
+const SAVE_FAILED_MSG = "Couldn't save: your browser is blocking storage or it is full.";
+
+function persistHistory() {
+    return safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
+}
+
+let storageWarningShown = false;
+function warnDrawNotRemembered() {
+    if (storageWarningShown) return;
+    storageWarningShown = true;
+    showToast("Your browser is blocking storage, so today's draw won't be remembered after you leave this page.", 6000);
+}
+
+// Archive deep links use the card's traditional name: "King of Wands" -> "king-of-wands"
+function cardSlug(card) {
+    return card.id;
+}
+
+function findCardBySlug(slug) {
+    return fullTarotDeck.find(c => c.id === slug) || null;
 }
 
 /* ==========================================================================
@@ -126,7 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('popstate', () => {
-        setMode(new URLSearchParams(window.location.search).get('mode') === 'triple' ? 'triple' : 'single');
+        const { mode, slug } = readURLMode();
+        const card = mode === 'archive' ? findCardBySlug(slug) : null;
+        if (card) {
+            inspectCardFromLibrary(card.id, { updateUrl: false, announce: false });
+        } else {
+            setMode(mode === 'triple' ? 'triple' : 'single');
+        }
     });
 
     initCanvasFX();
@@ -276,6 +307,17 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
     });
+
+    // Deep link: ?mode=archive-king-of-wands opens that card's preview straight away
+    const initialState = readURLMode();
+    if (initialState.mode === 'archive') {
+        const linkedCard = findCardBySlug(initialState.slug);
+        if (linkedCard) {
+            inspectCardFromLibrary(linkedCard.id, { updateUrl: false, announce: false });
+        } else {
+            updateURLMode('single', null, { replace: true });   // unknown card: tidy the address bar
+        }
+    }
 });
 
 function setMode(mode) {
@@ -360,9 +402,12 @@ function drawSingleCard() {
     browseCard = null;
     setSingleActionsVisible(true);
 
-    recordDrawToday('single');
-    safeSetItem('arcana_saved_single_card', JSON.stringify(currentSingleCard));
-    safeSetItem('arcana_saved_single_reversed', isSingleReversed);
+    const singlePersisted = [
+        recordDrawToday('single'),
+        safeSetItem('arcana_saved_single_card', JSON.stringify(currentSingleCard)),
+        safeSetItem('arcana_saved_single_reversed', isSingleReversed)
+    ].every(Boolean);
+    if (!singlePersisted) warnDrawNotRemembered();
 
     const deckArea = document.getElementById('deck-draw-area');
     const revealArea = document.getElementById('single-reveal-area');
@@ -673,7 +718,7 @@ function drawTripleSpread() {
         }
     }
 
-    recordDrawToday('triple');
+    const tripleDateSaved = recordDrawToday('triple');
 
     if (castTripleBtn) {
         castTripleBtn.innerHTML = `${iconHTML('hourglass', 'triple-btn-icon')} Return tomorrow for another reading`;
@@ -690,8 +735,12 @@ function drawTripleSpread() {
         Math.random() < REVERSAL_CHANCE
     ];
 
-    safeSetItem('arcana_saved_triple_cards', JSON.stringify(tripleCards));
-    safeSetItem('arcana_saved_triple_reversed', JSON.stringify(tripleReversed));
+    const triplePersisted = [
+        tripleDateSaved,
+        safeSetItem('arcana_saved_triple_cards', JSON.stringify(tripleCards)),
+        safeSetItem('arcana_saved_triple_reversed', JSON.stringify(tripleReversed))
+    ].every(Boolean);
+    if (!triplePersisted) warnDrawNotRemembered();
 
     const actionsDiv = document.getElementById('triple-actions');
     if (actionsDiv) actionsDiv.classList.add('hidden');
@@ -838,7 +887,11 @@ function saveCurrentReading() {
     };
 
     readingHistory.unshift(entry);
-    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
+    if (!persistHistory()) {
+        readingHistory.shift();
+        showToast(SAVE_FAILED_MSG, 5000);
+        return;
+    }
     updateHistoryBadge();
     showToast("Single card reading saved to journal!");
 }
@@ -858,15 +911,24 @@ function saveTripleReading() {
     };
 
     readingHistory.unshift(entry);
-    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
+    if (!persistHistory()) {
+        readingHistory.shift();
+        showToast(SAVE_FAILED_MSG, 5000);
+        return;
+    }
     updateHistoryBadge();
     showToast("3-Card Spread saved to journal!");
 }
 
 function clearHistory() {
     if (readingHistory.length > 0 && !confirm('Clear all saved readings from your journal? This cannot be undone.')) return;
+    const previousHistory = readingHistory;
     readingHistory = [];
-    safeRemoveItem('arcana_tarot_history');
+    if (!safeRemoveItem('arcana_tarot_history')) {
+        readingHistory = previousHistory;
+        showToast("Couldn't clear the journal: your browser is blocking storage.", 5000);
+        return;
+    }
     updateHistoryBadge();
     showToast("Journal cleared.");
     renderJournalHistory();
@@ -879,52 +941,137 @@ function initCanvasFX() {
     const canvas = document.getElementById('fx-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    const PARTICLE_COUNT = 50;
+    const FRAME_MS = 1000 / 30;     // draw at ~30fps; the drift is slow enough that nobody can tell
+    const GLOW_BLUR = 6;
+    const GLOW_PAD = GLOW_BLUR * 2; // room around each dot for the glow
+    const COLORS = [
+        { rgb: '212, 175, 55' },   // gold
+        { rgb: '226, 217, 243' }   // lavender
+    ];
+    const RADIUS_STEPS = 6;        // dot sizes are rounded to a few buckets so each one can be pre-rendered
+    const MIN_R = 0.3, MAX_R = 2.1;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Pre-render each (color, size) glowing dot once. Per-frame shadowBlur is what made the old loop expensive.
+    let sprites = null;
+    function buildSprites() {
+        sprites = COLORS.map(({ rgb }) => Array.from({ length: RADIUS_STEPS }, (_, step) => {
+            const r = MIN_R + ((MAX_R - MIN_R) * step) / (RADIUS_STEPS - 1);
+            const size = Math.ceil(r + GLOW_PAD) * 2;   // even, so the dot centre sits on a pixel boundary
+            const c = document.createElement('canvas');
+            c.width = c.height = size;
+            const g = c.getContext('2d');
+            g.shadowBlur = GLOW_BLUR;
+            g.shadowColor = `rgba(${rgb}, 0.7)`;
+            g.fillStyle = `rgb(${rgb})`;
+            g.beginPath();
+            g.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+            g.fill();
+            return { img: c, half: size / 2 };
+        }));
     }
-    resize();
-    window.addEventListener('resize', resize);
 
-    const particles = [];
-    const particleCount = 50;
-
-    for (let i = 0; i < particleCount; i++) {
-        particles.push({
+    let particles = [];
+    function seedParticles() {
+        particles = Array.from({ length: PARTICLE_COUNT }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            radius: Math.random() * 1.8 + 0.3,
-            color: Math.random() > 0.4 ? 'rgba(212, 175, 55, ' : 'rgba(226, 217, 243, ',
+            color: Math.random() > 0.4 ? 0 : 1,
+            size: Math.floor(Math.random() * RADIUS_STEPS),
             alpha: Math.random() * 0.5 + 0.15,
             speedY: -Math.random() * 0.25 - 0.05,
             speedX: Math.sin(Math.random() * Math.PI) * 0.15
-        });
+        }));
     }
 
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function sizeCanvas() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (canvas.width === w && canvas.height === h) return;
+        const sx = canvas.width ? w / canvas.width : 1;
+        const sy = canvas.height ? h / canvas.height : 1;
+        canvas.width = w;   // resizing also clears the canvas
+        canvas.height = h;
+        // keep particles in view after a resize instead of stranding them off-screen
+        particles.forEach(p => { p.x *= sx; p.y *= sy; });
+    }
 
-        particles.forEach(p => {
-            p.y += p.speedY;
-            p.x += p.speedX;
+    sizeCanvas();
+    seedParticles();
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(sizeCanvas, 150);
+    });
+
+    function draw(steps) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of particles) {
+            p.y += p.speedY * steps;
+            p.x += p.speedX * steps;
 
             if (p.y < 0) {
                 p.y = canvas.height + 10;
                 p.x = Math.random() * canvas.width;
             }
 
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fillStyle = p.color + p.alpha + ')';
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = p.color + '0.7)';
-            ctx.fill();
-        });
-
-        requestAnimationFrame(animate);
+            const s = sprites[p.color][p.size];
+            ctx.globalAlpha = p.alpha;
+            ctx.drawImage(s.img, p.x - s.half, p.y - s.half);
+        }
+        ctx.globalAlpha = 1;
     }
-    animate();
+
+    // Run only while the tab is visible, the visitor has not asked for reduced motion, and no modal covers the page
+    let rafId = 0;
+    let lastTime = 0;
+
+    function frame(now) {
+        rafId = requestAnimationFrame(frame);
+        const elapsed = now - lastTime;
+        if (elapsed < FRAME_MS - 4) return;   // small tolerance so 60/120Hz displays land on 30fps
+        lastTime = now;
+        // movement is tuned per 60fps frame; scale by elapsed time and cap it after a stall
+        draw(Math.min(elapsed, 100) / (1000 / 60));
+    }
+
+    function start() {
+        if (rafId) return;
+        if (!sprites) buildSprites();
+        lastTime = performance.now();
+        rafId = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+        if (!rafId) return;
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+    }
+
+    const root = document.documentElement;
+
+    function sync() {
+        if (document.hidden || reducedMotion.matches || root.classList.contains('modal-open')) {
+            stop();
+            if (reducedMotion.matches) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+            start();
+        }
+    }
+
+    document.addEventListener('visibilitychange', sync);
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['class'] });
+    if (reducedMotion.addEventListener) {
+        reducedMotion.addEventListener('change', sync);
+    } else if (reducedMotion.addListener) {
+        reducedMotion.addListener(sync);   // older Safari
+    }
+    sync();
 }
 
 /* ==========================================================================
@@ -939,6 +1086,8 @@ function toggleArchivesModal(open) {
    if (open) {
         if (modal.classList.contains('hidden')) lastFocusBeforeArchives = document.activeElement;
         modal.classList.remove('hidden');
+        // lets the CSS and the particle canvas pause while the overlay covers them
+        document.documentElement.classList.add('modal-open');
         switchArchiveTab(activeArchiveTab);
         updateHistoryBadge();
 
@@ -948,6 +1097,7 @@ function toggleArchivesModal(open) {
    } else {
         const wasOpen = !modal.classList.contains('hidden');
         modal.classList.add('hidden');
+        document.documentElement.classList.remove('modal-open');
 
         if (wasOpen && lastFocusBeforeArchives && document.contains(lastFocusBeforeArchives)) {
             lastFocusBeforeArchives.focus();
@@ -1062,8 +1212,12 @@ function renderJournalHistory() {
 function removeJournalEntry(index) {
     if (index < 0 || index >= readingHistory.length) return;
 
-    readingHistory.splice(index, 1);
-    safeSetItem('arcana_tarot_history', JSON.stringify(readingHistory));
+    const [removed] = readingHistory.splice(index, 1);
+    if (!persistHistory()) {
+        readingHistory.splice(index, 0, removed);
+        showToast("Couldn't delete that entry: your browser is blocking storage.", 5000);
+        return;
+    }
 
     renderJournalHistory();
     updateHistoryBadge();
@@ -1148,7 +1302,9 @@ function applyLibrarySearch() {
     renderLibraryGrid(filtered);
 }
 
-function inspectCardFromLibrary(cardId) {
+// updateUrl: add ?mode=archive-<card> to the address bar (off when we are responding to the URL itself)
+// announce:  show the "Previewing from the Library" toast (off for deep links and Back/Forward)
+function inspectCardFromLibrary(cardId, { updateUrl = true, announce = true } = {}) {
     const card = fullTarotDeck.find(c => c.id === cardId);
     if (!card) return;
 
@@ -1175,7 +1331,8 @@ function inspectCardFromLibrary(cardId) {
 
     if (cardInner) cardInner.focus({ preventScroll: true });
 
-    showToast('Previewing from the Library. Tap "Daily Card" to return.');
+    if (updateUrl) updateURLMode('archive', cardSlug(card));
+    if (announce) showToast('Previewing from the Library. Tap "Daily Card" to return.');
 }
 
 function toggleMobileFilters() {

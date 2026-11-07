@@ -23,7 +23,10 @@ export function safeSetItem(key, value) {
 export function safeRemoveItem(key) {
     try {
         localStorage.removeItem(key);
-    } catch (e) {}
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
 export function safeParse(text, fallback = null) {
@@ -36,22 +39,37 @@ export function safeParse(text, fallback = null) {
 }
 
 
+const ARCHIVE_MODE_PREFIX = 'archive-';
+
+// Reads ?mode= into { mode: 'single' | 'triple' | 'archive', slug }.
+// ?mode=triple            -> the 3-card spread
+// ?mode=archive-<card>    -> a card previewed from the Archives, e.g. ?mode=archive-king_wands
+export function readURLMode() {
+    const raw = (new URLSearchParams(window.location.search).get('mode') || '').toLowerCase();
+    if (raw === 'triple') return { mode: 'triple', slug: null };
+    if (raw.startsWith(ARCHIVE_MODE_PREFIX) && raw.length > ARCHIVE_MODE_PREFIX.length) {
+        return { mode: 'archive', slug: raw.slice(ARCHIVE_MODE_PREFIX.length) };
+    }
+    return { mode: 'single', slug: null };
+}
+
 export function checkURLState(onTripleSpread) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('mode') === 'triple') {
-        if (typeof onTripleSpread === 'function') {
-            onTripleSpread();
-        }
+    if (readURLMode().mode === 'triple' && typeof onTripleSpread === 'function') {
+        onTripleSpread();
     }
 }
 
-export function updateURLMode(mode) {
+// Writes the mode into the address bar. Each change is a history entry so Back/Forward walk through them;
+// pass { replace: true } to tidy the URL without adding one.
+export function updateURLMode(mode, cardSlug = null, { replace = false } = {}) {
     const url = new URL(window.location);
     if (mode === 'triple') {
         url.searchParams.set('mode', 'triple');
+    } else if (mode === 'archive' && cardSlug) {
+        url.searchParams.set('mode', ARCHIVE_MODE_PREFIX + cardSlug);
     } else {
         url.searchParams.delete('mode');
     }
     if (url.toString() === window.location.href) return;   // already there: no duplicate history entry
-    window.history.pushState({ path: url.toString() }, '', url.toString());
+    window.history[replace ? 'replaceState' : 'pushState']({ path: url.toString() }, '', url.toString());
 }

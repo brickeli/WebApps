@@ -44,45 +44,33 @@ Utility Icons
 
 <!-- Solar Octagram: Two overlapping, rotated squares (0° and 45°) with a central sun node -->
 <symbol id="icon-celestial-octagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
- <!-- Outer Square (Aligned) -->
- <rect x="5" y="5" width="14" height="14" rx="1" opacity="0.4"></rect>
- <!-- Rotated Square (45 degrees) -->
- <rect x="5" y="5" width="14" height="14" rx="1" transform="rotate(45 12 12)" opacity="0.7"></rect>
- <!-- Central Solar Core -->
- <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
- <!-- Solar Rays -->
- <path d="M12 7V8.5M12 15.5V17M7 12H8.5M15.5 12H17" stroke-width="1.2"></path>
+     <rect x="5" y="5" width="14" height="14" rx="1" opacity="0.4"></rect>
+     <rect x="5" y="5" width="14" height="14" rx="1" transform="rotate(45 12 12)" opacity="0.7"></rect>
+     <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+     <path d="M12 7V8.5M12 15.5V17M7 12H8.5M15.5 12H17" stroke-width="1.2"></path>
 </symbol>
 
 <!-- Seed of Life: 6-fold flower/circle motif enclosed in a boundary ring -->
 <symbol id="icon-seed-of-life" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
- <!-- Outer Boundary Ring -->
- <circle cx="12" cy="12" r="9.5" stroke-width="1.5"></circle>
- <!-- Center Core Circle -->
- <circle cx="12" cy="12" r="4.2" opacity="0.6"></circle>
- <!-- 6 Overlapping Petal Circles -->
- <circle cx="12" cy="7.8" r="4.2" opacity="0.5"></circle>
- <circle cx="15.6" cy="9.9" r="4.2" opacity="0.5"></circle>
- <circle cx="15.6" cy="14.1" r="4.2" opacity="0.5"></circle>
- <circle cx="12" cy="16.2" r="4.2" opacity="0.5"></circle>
- <circle cx="8.4" cy="14.1" r="4.2" opacity="0.5"></circle>
- <circle cx="8.4" cy="9.9" r="4.2" opacity="0.5"></circle>
+     <circle cx="12" cy="12" r="9.5" stroke-width="1.5"></circle>
+     <circle cx="12" cy="12" r="4.2" opacity="0.6"></circle>
+     <circle cx="12" cy="7.8" r="4.2" opacity="0.5"></circle>
+     <circle cx="15.6" cy="9.9" r="4.2" opacity="0.5"></circle>
+     <circle cx="15.6" cy="14.1" r="4.2" opacity="0.5"></circle>
+     <circle cx="12" cy="16.2" r="4.2" opacity="0.5"></circle>
+     <circle cx="8.4" cy="14.1" r="4.2" opacity="0.5"></circle>
+     <circle cx="8.4" cy="9.9" r="4.2" opacity="0.5"></circle>
 </symbol>
 
 <!-- Prismatic Lattice: Interlocking inverted triangles (Hexagram/Merkaba vector matrix) -->
 <symbol id="icon-prismatic-lattice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
- <!-- Upward Triangle -->
- <path d="M12 3.5L20.5 18H3.5L12 3.5z" opacity="0.4"></path>
- <!-- Downward Triangle -->
- <path d="M12 20.5L3.5 6h17L12 20.5z" opacity="0.7"></path>
- <!-- Central Axis Vectors -->
- <path d="M12 3.5v17M3.5 6l17 12M20.5 6L3.5 18" stroke-width="0.9" opacity="0.4"></path>
- <!-- Key Metatron Node Points -->
- <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
- <circle cx="12" cy="3.5" r="1" fill="currentColor"></circle>
- <circle cx="12" cy="20.5" r="1" fill="currentColor"></circle>
+     <path d="M12 3.5L20.5 18H3.5L12 3.5z" opacity="0.4"></path>
+     <path d="M12 20.5L3.5 6h17L12 20.5z" opacity="0.7"></path>
+     <path d="M12 3.5v17M3.5 6l17 12M20.5 6L3.5 18" stroke-width="0.9" opacity="0.4"></path>
+     <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+     <circle cx="12" cy="3.5" r="1" fill="currentColor"></circle>
+     <circle cx="12" cy="20.5" r="1" fill="currentColor"></circle>
 </symbol>
-
 
 <symbol id="icon-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
     <path d="M5 22h14"></path>
@@ -93,15 +81,10 @@ Utility Icons
 </symbol>
 
 <symbol id="icon-hourglass2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Top Glass Chamber (Depleting) with Opacity Fill -->
     <path d="M6 3h12l-6 8z" fill="currentColor" opacity="0.2"></path>
     <path d="M6 3h12l-6 8z"></path>
-
-    <!-- Bottom Glass Chamber (Accumulating) with Opacity Fill -->
     <path d="M6 21h12l-6-8z" fill="currentColor" opacity="0.2"></path>
     <path d="M6 21h12l-6-8z"></path>
-
-    <!-- Outer Frame & Caps -->
     <path d="M4 3h16"></path>
     <path d="M4 21h16"></path>
 </symbol>

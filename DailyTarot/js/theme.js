@@ -2,13 +2,6 @@
 
 import { safeGetItem, safeSetItem } from './storage.js';
 
-export const THEME_NAMES = {
-    'obsidian-plum': 'Gothic Plum',
-    'crimson-alchemist': 'Crimson Alchemist',
-    'nocturnal-cosmic': 'Nocturnal Cosmic',
-    'solar-radiance': 'Modern Astral'
-};
-
 /**
  * Generates the complete sacred geometry card back markup
  */
@@ -266,6 +259,8 @@ export function updateAudioUI(audioActive) {
 export function initTheme() {
     const savedTheme = safeGetItem('arcana_active_theme') || 'obsidian-plum';
     selectTheme(savedTheme);
+
+    const saved = safeGetItem('arcana_active_theme'); const id = saved === 'modern-astral' ? 'solar-radiance' : saved || 'obsidian-plum';
 
     // Close menu on outside click
     document.addEventListener('click', (event) => {

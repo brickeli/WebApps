@@ -564,7 +564,7 @@
     align-items: center;
 }
 
-.triple-btn-wrapper { margin-bottom: 2rem; }
+.triple-btn-wrapper { margin-top: 1rem; }
 .triple-btn-icon { margin-right: 0.5rem; }
 
 .triple-card-slot {
@@ -700,6 +700,8 @@
 }
 /* --------------------------------------------------------------------------
    7. KEYFRAME ANIMATION LOOPS
+   Keyframes animate transform/opacity only. Animating `filter` repaints every frame, so the glow is the
+   static drop-shadow on each element above instead of a breathing one.
    -------------------------------------------------------------------------- */
 @keyframes geom-spin-clockwise {
     from { transform: translate(-50%, -50%) rotate(0deg); }
@@ -726,60 +728,48 @@
     0% {
         transform: translate(-50%, -50%) scale(0.92) rotate(0deg);
         opacity: 0.65;
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.4));
     }
     50% {
         opacity: 1;
-        filter: drop-shadow(0 0 12px rgb(var(--color-gold) / 0.8)) drop-shadow(0 0 24px rgb(var(--color-mystic-purple) / 0.5));
     }
     100% {
         transform: translate(-50%, -50%) scale(1.08) rotate(90deg);
         opacity: 0.65;
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.4));
     }
 }
 
 @keyframes octagram-stellar-breath {
     0% {
         transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
     50% {
         transform: translate(-50%, -50%) rotate(-180deg) scale(1.05);
-        filter: drop-shadow(0 0 14px rgb(var(--color-mystic-purple) / 0.65));
     }
     100% {
         transform: translate(-50%, -50%) rotate(-360deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
 }
 
 @keyframes seed-pulse-breath {
     0% {
         transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
     50% {
         transform: translate(-50%, -50%) rotate(180deg) scale(1.05);
-        filter: drop-shadow(0 0 14px rgb(var(--color-mystic-purple) / 0.65));
     }
     100% {
         transform: translate(-50%, -50%) rotate(360deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
 }
 
 @keyframes merkaba-stellar-breath {
     0% {
         transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
     50% {
         transform: translate(-50%, -50%) rotate(180deg) scale(1.05);
-        filter: drop-shadow(0 0 14px rgb(var(--color-mystic-purple) / 0.65));
     }
     100% {
         transform: translate(-50%, -50%) rotate(360deg) scale(0.92);
-        filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.35));
     }
 }
