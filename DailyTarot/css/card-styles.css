@@ -72,7 +72,10 @@
     gap: 1.5rem;
     margin: 1rem 0;
     width: 100%;
-    transition: opacity 0.5s ease;
+}
+
+.deck-draw-area.card-slide-travel {
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
 }
 
 .single-slot-container {
