@@ -23,7 +23,7 @@
 /* Alternate Theme: Crimson Alchemist */
 [data-theme="crimson-alchemist"] {
     --color-obsidian: 11 9 10;
-    --color-abyss: 26 15 18;
+    --color-abyss: 18 9 9;
     --color-velvet: 45 18 22;
     --color-plum: 74 21 28;
     --color-gold: 243 195 116;
@@ -58,20 +58,20 @@
 
 /* Alternate Theme: Modern Astral Minimalist */
 [data-theme="solar-radiance"] {
-    --color-obsidian: 12 9 8;           /* Deep Warm Charcoal */
-    --color-abyss: 20 12 9;            /* Dark Burnt Umber */
-    --color-velvet: 35 15 10;           /* Deep Rust */
-    --color-plum: 68 30 14;             /* Dark Spiced Ember */
-    --color-gold: 245 180 80;           /* Radiant Amber Gold */
-    --color-antique-gold: 180 125 50;   /* Muted Ochre Gold */
-    --color-dark-gold: 130 85 30;       /* Deep Bronze Gold */
-    --color-ivory: 247 241 232;         /* Warm Parchment */
-    --color-starlight: 242 220 195;     /* Amber Mist Starlight */
-    --color-mystic-purple: 234 88 12;   /* Vivid Fire Orange */
-    --color-element-fire: 249 115 22;   /* Solar Orange */
-    --color-element-earth: 34 197 94;   /* Warm Forest Green */
-    --color-element-air: 254 243 199;   /* Warm Topaz White */
-    --color-element-water: 14 165 233;  /* Celestial Teal Blue */
+    --color-obsidian: 5 4 3;             /* Near-Black Warm Charcoal (Higher Contrast BG) */
+    --color-abyss: 20 12 9;               /* Pitch Burnt Umber */
+    --color-velvet: 25 10 6;             /* Deep High-Contrast Rust */
+    --color-plum: 85 35 15;              /* Vivid Spiced Ember */
+    --color-gold: 255 195 90;            /* High-Luminance Radiant Gold */
+    --color-antique-gold: 210 145 55;    /* Brightened Ochre Gold */
+    --color-dark-gold: 155 100 35;       /* Clarified Bronze Gold */
+    --color-ivory: 255 252 248;          /* High-Contrast Warm White */
+    --color-starlight: 250 232 210;      /* Bright Amber Mist */
+    --color-mystic-purple: 255 95 15;    /* High-Vibrancy Fire Red-Orange */
+    --color-element-fire: 255 30 30;    /* High-Contrast Solar Orange */
+    --color-element-earth: 40 215 105;   /* High-Luminance Forest Green */
+    --color-element-air: 255 248 220;    /* Pure Warm Topaz White */
+    --color-element-water: 38 185 245;   /* Vibrant Celestial Blue */
 }
 
 /* Alternate Theme: Emerald Sanctuary */
@@ -136,6 +136,7 @@ body, .site-body {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
+    opacity: 0.5;
     z-index: 1;
 }
 
@@ -171,11 +172,6 @@ html.modal-open .sacred-geometry-container * { animation-play-state: paused !imp
     transition: transform 0.2s ease;
     animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     filter: drop-shadow(0 0 6px rgb(var(--color-gold) / 0.8));
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
 }
 
 .nav-icon-svg {
@@ -252,8 +248,9 @@ h5 {
 }
 
 p {
-    font-size: 0.75rem;
-    line-height: 1.625;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgb(var(--color-ivory) / 0.9);
     font-family: var(--font-atkinson, 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, sans-serif);
     margin: 0;
 }
@@ -407,7 +404,6 @@ p {
 }
 
 .tarot-details-card {
-    width: 100%;
     max-width: 36rem;
     background-color: rgb(var(--color-abyss) / 0.94);
     border: 1px solid rgb(var(--color-gold) / 0.3);
@@ -475,109 +471,79 @@ p {
    7. TABBED INSIGHTS SECTION STYLING
    ========================================================================== */
 .tarot-insights-container {
-    margin: 1.5rem 0 0 0;
-    text-align: left;
+   margin: 1.5rem 0 0 0;
+   text-align: left;
 }
 
 .insight-tabs-nav {
-    display: flex;
-    width: 100%;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    position: relative;
-    z-index: 2;
+   display: flex;
+   width: 100%;
+   margin-bottom: 0;
+   padding-bottom: 0;
+   position: relative;
+   z-index: 2;
 }
 
 .insight-tab-btn {
-    flex: 1;
-    position: relative;
-    background: linear-gradient(135deg, rgb(var(--color-plum) / 0.35), rgb(var(--color-abyss) / 0.95));
-    border: 1px solid rgb(var(--color-gold) / 0.3);
-    color: rgb(var(--color-gold));
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem 0.5rem 0 0;
-    font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-size: 0.825rem;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    text-align: center;
+   flex: 1;
+   position: relative;
+   background: linear-gradient(135deg, rgb(var(--color-plum) / 0.35), rgb(var(--color-abyss) / 0.95));
+   border: 1px solid rgb(var(--color-gold) / 0.1);
+   color: rgb(var(--color-gold));
+   padding: 0.9rem 1rem;
+   border-radius: 0.5rem 0.5rem 0 0;
+   font-family: var(--font-cinzel, 'Cinzel', serif);
+   font-size: 0.825rem;
+   letter-spacing: 0.05em;
+   cursor: pointer;
+   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 0.2rem;
+   text-align: center;
 }
 
 .insight-tab-btn:hover {
-    color: rgb(var(--color-gold));
-    border-color: rgb(var(--color-gold) / 0.6);
-    background: linear-gradient(135deg, rgb(var(--color-plum) / 0.6), rgb(var(--color-abyss) / 0.95));
+   color: rgb(var(--color-gold));
+   border-color: rgb(var(--color-gold) / 0.6);
+   background: linear-gradient(135deg, rgb(var(--color-plum) / 0.6), rgb(var(--color-abyss) / 0.95));
 }
 
 .insight-tab-btn.active {
-    /* Uses theme-plum with 95% opacity blending into your active velvet accent variable */
-    background: linear-gradient(135deg, rgb(var(--color-plum) / 0.15), rgb(var(--color-abyss) / 0.95));
-    color: rgb(var(--color-starlight));
-    border-color: rgb(var(--color-gold) / 0.8);
-    border-bottom: 2px solid rgb(var(--color-velvet));
-    font-weight: 600;
+   /* Uses theme-plum with 95% opacity blending into your active velvet accent variable */
+   background: linear-gradient(135deg, rgb(var(--color-plum) / 0.15), rgb(var(--color-abyss) / 0.95));
+   color: rgb(var(--color-starlight));
+   border-color: rgb(var(--color-gold) / 0.3);
+   border-bottom: 2px solid rgb(var(--color-velvet));
+   font-weight: 600;
 }
 
-.insight-tab-btn.active::before {
-    content: '✦';
-    display: inline-block;
-    font-size: 0.6rem;
-    color: rgb(var(--color-gold));
-    animation: pulseRune 2s infinite ease-in-out;
+.insight-tab-btn.active::before,
+.insight-tab-btn.active::after {
+   content: '✦';
+   display: inline-block;
+   font-size: 0.6rem;
+   color: rgb(var(--color-gold));
+   animation: pulseRune 2s infinite ease-in-out;
 }
 
 .insight-tab-panel {
-    display: none;
-    position: relative;
-    z-index: 1;
-    margin-top: -1px;
+   display: none;
+   position: relative;
+   z-index: 1;
+   margin-top: -1px;
 }
 
 .insight-tab-panel.active {
-    display: block;
-    animation: fadeInTab 0.3s ease;
+   display: block;
+   animation: fadeInTab 0.3s ease;
 }
+
 
 /* ==========================================================================
    8. SINGLE DRAW ELEMENTAL BANNER STYLING
    ========================================================================== */
-.single-elemental-banner.elemental-balance-container {
-    background: rgb(var(--color-abyss, 15 15 20) / 0.6);
-    border: 1px solid rgb(var(--color-gold) / 0.2);
-    border-radius: 0 0 0.5rem 0.5rem;
-    padding: 1rem;
-    text-align: left;
-    transition: all 0.3s ease;
-}
-
-.elemental-balance-container.element-fire {
-    border-color: rgb(var(--color-element-fire) / 0.4);
-    background-color: rgb(var(--color-element-fire) / 0.05);
-    box-shadow: 0 0 15px rgb(var(--color-element-fire) / 0.15);
-}
-
-.elemental-balance-container.element-earth {
-    border-color: rgb(var(--color-element-earth) / 0.4);
-    background-color: rgb(var(--color-element-earth) / 0.05);
-    box-shadow: 0 0 15px rgb(var(--color-element-earth) / 0.15);
-}
-
-.elemental-balance-container.element-air {
-    border-color: rgb(var(--color-element-air) / 0.4);
-    background-color: rgb(var(--color-element-air) / 0.05);
-    box-shadow: 0 0 15px rgb(var(--color-element-air) / 0.15);
-}
-
-.elemental-balance-container.element-water {
-    border-color: rgb(var(--color-element-water) / 0.4);
-    background-color: rgb(var(--color-element-water) / 0.05);
-    box-shadow: 0 0 15px rgb(var(--color-element-water) / 0.15);
-}
 
 .elemental-balance-container.element-fire .elemental-header span,
 .single-elemental-banner.element-fire .elemental-header span { color: rgb(var(--color-element-fire)); }
@@ -594,9 +560,8 @@ p {
 /* ==========================================================================
    9. ESOTERIC SCROLL CONTAINER STYLING
    ========================================================================== */
-.tarot-guidance-quote.esoteric,
-.single-elemental-banner,
-.elemental-balance-container.esoteric {
+.tarot-guidance-quote,
+.single-elemental-banner {
     position: relative;
     font-family: var(--font-cinzel, 'Cinzel', serif);
     font-style: normal;
@@ -605,14 +570,14 @@ p {
     text-align: center;
     color: rgb(var(--color-starlight));
     background: linear-gradient(135deg, rgb(var(--color-plum) / 0.15), rgb(var(--color-abyss) / 0.95));
-    border: 1px solid rgb(var(--color-gold) / 0.8);
+    border: 1px solid rgb(var(--color-gold) / 0.3);
     border-radius: 0 0 0.5rem 0.5rem;
     padding: 1.25rem;
     height: 100%;
 }
 
 .card-details-header {
-    border-bottom: 1px solid rgb(var(--color-gold) / 0.25);
+    border-bottom: 1px dotted rgb(var(--color-gold) / 0.2);
     margin-bottom: 1em;
 }
 
@@ -625,13 +590,6 @@ p {
     display: block;
     margin-bottom: 0.375rem;
     letter-spacing: 0.05em;
-}
-
-.card-description-text {
-    font-size: 0.75rem;
-    color: rgb(var(--color-ivory) / 0.9);
-    line-height: 1.625;
-    font-weight: 300;
 }
 
 .card-keywords-flex {
@@ -692,7 +650,7 @@ p {
     box-shadow: none;
 }
 
-.card-action-container {
+.card-action-container, .triple-actions-container {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -706,40 +664,27 @@ p {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    width: 100%;
     padding: 0.8rem 1.5rem;
     border-radius: 0.5rem;
-    background-color: rgb(var(--color-gold));
+    background-color: rgb(var(--color-gold) / 0.8);
     color: rgb(var(--color-obsidian));
     font-size: 0.85rem;
     font-family: var(--font-cinzel, 'Cinzel', serif);
     font-weight: 700;
     cursor: pointer;
-    border: 1px solid transparent;
+    border: 1px solid rgb(var(--color-gold) / 0.8);
     transition: background-color 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .tarot-share-btn:hover {
-    background-color: rgb(var(--color-gold) / 0.8);
-    box-shadow: 0 0 15px rgb(var(--color-gold) / 0.3);
-}
-
-.triple-actions-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-top: 2rem;
-    width: 100%;
+    background-color: rgb(var(--color-gold));
 }
 
 .tarot-save-btn {
-    width: 100%;
     padding: 0.8rem 1.5rem;
     border-radius: 0.5rem;
-    background-color: rgb(var(--color-velvet));
+    background-color: rgb(var(--color-velvet) / 0.4);
     border: 1px solid rgb(var(--color-gold) / 0.4);
     color: rgb(var(--color-gold));
     font-family: var(--font-cinzel, 'Cinzel', serif);
@@ -751,8 +696,7 @@ p {
 }
 
 .tarot-save-btn:hover {
-    background-color: rgb(var(--color-gold));
-    color: rgb(var(--color-obsidian));
+    background-color: rgb(var(--color-velvet) / 0.8);
 }
 
 .save-icon { margin-right: 0.375rem; }
@@ -805,7 +749,7 @@ p {
 .tarot-modal-title-row, .tarot-history-item-top, .tarot-modal-footer {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
 }
 
 .tarot-modal-title {
@@ -824,7 +768,6 @@ p {
     border: 1px solid rgb(var(--color-gold) / 0.4);
     border-radius: 50%;
     padding: 0.35rem;
-    font-size: 1.2rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1080,6 +1023,15 @@ p {
     transform: scale(1.1);
 }
 
+.tarot-history-item-headline {
+    margin-top: 0.35rem;
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.8);
+}
+
 .tarot-empty-history {
     text-align: center;
     color: rgb(var(--color-starlight) / 0.4);
@@ -1249,42 +1201,40 @@ p {
 /* ==========================================================================
    12. ELEMENTAL BALANCE ANALYZER
    ========================================================================== */
-.elemental-balance-container {
-    animation: fadeIn 0.5s ease-out forwards;
+.elemental-balance-container, .spread-reading {
+    animation: fadeInTab 0.5s ease-out forwards;
     border-radius: 0.5rem;
-    background: rgb(var(--color-abyss, 15 15 20) / 0.6);
-    border: 1px solid rgb(var(--color-gold) / 0.2);
-    padding: 1rem 1.5rem;
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    background: linear-gradient(135deg, rgb(var(--color-plum) / 0.15), rgb(var(--color-abyss) / 0.95));
+    border: 1px solid rgb(var(--color-gold) / 0.3);
+    padding: 1.5rem;
     margin-top: 1rem;
     max-width: 480px;
 }
 
 .elemental-header, .esoteric-scroll-header {
     font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-size: 0.85rem;
+    font-size: 1rem;
     letter-spacing: 0.1em;
     text-align: center;
     text-transform: uppercase;
     color: rgb(var(--color-gold) / 0.8);
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgb(var(--color-gold) / 0.2);
-}
-
-.elemental-header span {
-    color: rgb(var(--color-starlight));
-    font-weight: 600;
+    border-bottom: 1px dotted rgb(var(--color-gold) / 0.2);
 }
 
 .elemental-balance-container.element-balanced .elemental-header span {
-    color: rgb(var(--color-gold));
+    color: rgb(var(--color-starlight));
 }
 
 .elemental-bars-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-top: 0.75rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dotted rgb(var(--color-gold) / 0.2);
 }
 
 .elemental-bar-row { width: 100%; }
@@ -1301,9 +1251,8 @@ p {
 .elemental-track {
     width: 100%;
     background-color: rgb(var(--color-obsidian) / 0.6);
-    border: 1px solid rgb(var(--color-gold) / 0.2);
     border-radius: 9999px;
-    height: 0.5rem;
+    height: 0.75rem;
     overflow: hidden;
 }
 
@@ -1320,20 +1269,114 @@ p {
 }
 
 .elemental-lore-blurb {
-    margin-top: 1rem;
-    padding-top: 1rem;
     font-family: var(--font-cinzel, 'Cinzel', serif);
     font-size: 0.9rem;
     line-height: 1.65;
-    border-top: 1px solid rgb(var(--color-gold) / 0.2);
     color: rgb(var(--color-starlight) / 0.85);
     text-align: center;
 }
 
 .elemental-fill-fire { background: linear-gradient(90deg, #d97706, #dc2626); }
 .elemental-fill-water { background: linear-gradient(90deg, #2563eb, #06b6d4); }
-.elemental-fill-air { background: linear-gradient(90deg, #38bdf8, #818cf8); }
+.elemental-fill-air { background: linear-gradient(90deg, #92deff, #818cf8); }
 .elemental-fill-earth { background: linear-gradient(90deg, #059669, #16a34a); }
+
+.triple-insights {
+    max-width: 40rem;
+    margin: 1rem auto;
+}
+
+.triple-insights .elemental-balance-container,
+.triple-insights .spread-reading {
+    margin-top: 0;
+    max-width: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.spread-reading-points {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    text-align: left;
+}
+
+.spread-reading-points li {
+    position: relative;
+    padding-left: 1.4rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgb(var(--color-starlight) / 0.9);
+}
+
+.spread-reading-points li::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    top: 0.3em;
+    font-size: 0.6rem;
+    color: rgb(var(--color-gold));
+}
+
+.spread-reading-thread {
+    border-top: 1px dotted rgb(var(--color-gold) / 0.2);
+    padding-top: 1.25rem;
+    text-align: center;
+}
+
+.spread-reading-thread-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.8);
+}
+
+.spread-reading-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.5rem 1.5rem;
+}
+
+.spread-reading-step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.spread-reading-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -1.1rem;
+    top: 55%;
+    transform: translateY(-50%);
+    color: rgb(var(--color-gold) / 0.6);
+}
+
+.spread-reading-step-pos {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.8);
+}
+
+.spread-reading-step-word {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: rgb(var(--color-starlight));
+    overflow-wrap: anywhere;
+}
+
 
 /* ==========================================================================
    13. SETTINGS, THEME SELECTOR & TOAST NOTIFICATION
@@ -1589,9 +1632,7 @@ p {
     }
     .brand-subtitle { display: inline-block; }
     .nav-container { gap: 1rem; }
-    .tarot-save-btn, .tarot-share-btn, .triple-share-group { width: auto; }
-    .triple-actions-container { flex-direction: row; }
-    .card-description-text { font-size: 0.875rem; }
+    .tarot-save-btn, .tarot-share-btn { width: auto; }
     .card-aspects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tarot-details-card { padding: 1.25rem; }
     .tarot-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1602,8 +1643,13 @@ p {
     }
 }
 
+@media (max-width: 550px) {
+    .card-action-container, .triple-actions-container { flex-direction: column; width: 100%; }
+    .card-action-container button, .triple-actions-container button { width: 100%; }
+}
+
 @media (min-width: 768px) {
-    .elemental-bars-list { flex-direction: row; }
+    .elemental-bars-list { flex-direction: row; gap: 1.25rem; }
     .tarot-library-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .tarot-settings-dropdown {
         left: auto;
@@ -1617,15 +1663,6 @@ p {
         grid-template-columns: 1fr;
         gap: 1.5rem;
         justify-items: center;
-    }
-
-    .card-action-container {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .card-action-container button {
-        width: 100%;
     }
 }
 
@@ -1641,4 +1678,21 @@ p {
         scroll-behavior: auto !important;
     }
     #fx-canvas { display: none; }
+}
+
+/* ==========================================================================
+   15. ANIMATION QUERIES
+   ========================================================================== */
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+@keyframes pulseRune {
+   0%, 100% { opacity: 0.5; transform: scale(1); }
+   50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }

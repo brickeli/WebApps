@@ -107,7 +107,7 @@
                         <!-- Esoteric Significance -->
                         <div class="card-section-mb">
                             <h4 class="card-section-heading">
-                                <svg class="icon card-heading-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-compass"></use></svg> ESOTERIC SIGNIFICANCE
+                                ESOTERIC SIGNIFICANCE
                             </h4>
                             <p id="card-desc" class="card-description-text"></p>
                         </div>
@@ -141,7 +141,7 @@
 
                             <div id="tab-content-wisdom" class="insight-tab-panel active">
                                 <div id="card-advice" class="tarot-guidance-quote esoteric">
-                                    <div class="esoteric-scroll-header">✦ ARCANUM WISDOM ✦</div>
+                                    <div class="esoteric-scroll-header">✦ Voices of the Arcana ✦</div>
                                     <div class="esoteric-scroll-body" id="card-advice-text"></div>
                                 </div>
                             </div>
@@ -169,7 +169,6 @@
 
             <!-- 3-Card Spread Area -->
             <div id="triple-card-view" class="triple-view-container hidden">
-
                 <div class="triple-spread-container">
                   <!-- Slot 0: Past -->
                   <div class="triple-card-wrapper">
@@ -213,21 +212,43 @@
                   </div>
                 </div>
 
-                <!-- Elemental Analyzer Target -->
-                <div id="triple-elemental-container"></div>
+                <!-- Position pills: only visible when the spread is revealed on narrow screens, where the cards become a swipeable row -->
+                <div class="triple-carousel-nav" role="group" aria-label="Choose a card in the spread">
+                    <button type="button" class="triple-dot active" data-index="0" aria-label="Show the Past card" aria-current="true">Past</button>
+                    <button type="button" class="triple-dot" data-index="1" aria-label="Show the Present card">Present</button>
+                    <button type="button" class="triple-dot" data-index="2" aria-label="Show the Future card">Future</button>
+                </div>
+
+                <!-- Spread insights: tabbed like the single-card view. Hidden until a spread is revealed. -->
+                <div id="triple-insights-container" class="tarot-insights-container triple-insights hidden">
+                    <div class="insight-tabs-nav" role="tablist" aria-label="Spread insights">
+                        <button type="button" class="insight-tab-btn active" id="btn-triple-tab-overall" role="tab" aria-selected="true" aria-controls="triple-tab-overall" tabindex="0">
+                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-scroll"></use></svg> Arcanum Wisdom
+                        </button>
+                        <button type="button" class="insight-tab-btn" id="btn-triple-tab-elemental" role="tab" aria-selected="false" aria-controls="triple-tab-elemental" tabindex="-1">
+                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-flame"></use></svg> Elemental Insight
+                        </button>
+                    </div>
+
+                    <div id="triple-tab-overall" class="insight-tab-panel active" role="tabpanel" aria-labelledby="btn-triple-tab-overall">
+                        <div id="triple-overall-container"></div>
+                    </div>
+
+                    <div id="triple-tab-elemental" class="insight-tab-panel" role="tabpanel" aria-labelledby="btn-triple-tab-elemental">
+                        <div id="triple-elemental-container"></div>
+                    </div>
+                </div>
 
                 <!-- Save Spread Button -->
                 <div id="triple-actions" class="triple-actions-container hidden">
                     <button onclick="saveTripleReading()" class="tarot-save-btn">
                         <svg class="icon save-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Save Spread to Journal
                     </button>
-                    <div class="triple-share-group">
-                        <button id="share-card-btn-triple" class="tarot-share-btn">
-                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-share"></use></svg>
-                            <span>Share Spread</span>
-                        </button>
-                        <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
-                    </div>
+                    <button id="share-card-btn-triple" class="tarot-share-btn">
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-share"></use></svg>
+                        <span>Share Spread</span>
+                    </button>
+                    <span id="share-feedback-triple" class="triple-share-feedback hidden">Copied!</span>
                 </div>
                 <div class="triple-btn-wrapper">
                     <button onclick="drawTripleSpread()" class="tarot-btn-cast-triple">
@@ -282,7 +303,7 @@
                   <span>Crimson Alchemist</span>
                   <span class="theme-dot theme-dot-crimson"></span>
                 </button>
-                <button onclick="selectTheme('solar-radiance', 'Solar Radiance')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
+                <button onclick="selectTheme('solar-radiance', 'Modern Astral')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
                   <span>Solar Radiance</span>
                   <span class="theme-dot theme-dot-amber"></span>
                 </button>

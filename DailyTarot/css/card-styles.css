@@ -382,7 +382,6 @@
 /* --------------------------------------------------------------------------
    5. CARD FRONT SURFACE & ELEMENTAL OVERLAYS
    -------------------------------------------------------------------------- */
-
 .card-icon-slot,
 .tarot-single-icon,
 .tarot-triple-icon {
@@ -675,16 +674,79 @@
     overflow-y: auto;
 }
 
-@media (max-width: 768px) {
+/* Narrow screens: keep the three cards in one horizontal row, but let the row swipe.
+   Three 16rem cards plus gaps stop fitting side by side below roughly 900px, so the carousel starts there. */
+@media (max-width: 900px) {
     .triple-spread-container.revealed {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        gap: 2rem;
-        padding: 0 1rem;
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 1.25rem;
+        max-width: 100%;
+        margin: 1rem auto 0.5rem;
+        /* side padding centres the first and last card (half the container minus half a 16rem card) */
+        padding: 0.5rem max(1rem, calc(50% - 8rem)) 1rem;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;      /* a horizontal swipe here should not trigger browser back/forward */
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        scrollbar-color: rgb(var(--color-plum)) transparent;
     }
+
     .triple-spread-container.revealed .triple-card-wrapper {
-        max-width: 280px;
+        flex: 0 0 16rem;
+        width: 16rem;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;            /* a hard flick lands on the next card instead of skipping two */
     }
+
+    .triple-spread-container.revealed + .triple-carousel-nav {
+        display: flex;
+    }
+}
+
+/* Past / Present / Future pills that go with the swipeable row */
+.triple-carousel-nav {
+    display: none;
+    justify-content: center;
+    gap: 0.25rem;
+    margin: 0 0 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--color-gold) / 0.3);
+    background-color: rgb(var(--color-obsidian) / 0.6);
+}
+
+.triple-dot {
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: 9999px;
+    border: none;
+    background-color: rgb(var(--color-obsidian) / 0.6);
+    color: rgb(var(--color-starlight) / 0.7);
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.triple-dot:hover { color: rgb(var(--color-gold)); border-color: rgb(var(--color-gold) / 0.6); }
+
+.triple-dot.active {
+    background-color: rgb(var(--color-gold) / 0.1);
+    border-color: rgb(var(--color-gold) / 0.6);
+    color: rgb(var(--color-gold));
+    font-weight: 700;
+}
+
+.triple-dot.active::before,
+.triple-dot.active::after {
+  content: '✦';
+  display: inline-block;
+  font-size: 0.6rem;
+  color: rgb(var(--color-gold));
+  margin: 0 5px;
+  animation: pulse 2s infinite ease-in-out;
 }
 
 @media (max-width: 640px) {
@@ -714,62 +776,30 @@
 }
 
 @keyframes geom-spin-counter-breath {
-    0% {
-        transform: translate(-50%, -50%) rotate(360deg) scale(0.95);
-        opacity: 0.7;
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(1.05);
-        opacity: 1;
-    }
+    0% { transform: translate(-50%, -50%) rotate(360deg) scale(0.95); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) rotate(0deg) scale(1.05); opacity: 1; }
 }
 
 @keyframes star-beam-pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0.92) rotate(0deg);
-        opacity: 0.65;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1.08) rotate(90deg);
-        opacity: 0.65;
-    }
+    0% { transform: translate(-50%, -50%) scale(0.92) rotate(0deg); opacity: 0.65; }
+    50% { opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.08) rotate(90deg); opacity: 0.65; }
 }
 
 @keyframes octagram-stellar-breath {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-    }
-    50% {
-        transform: translate(-50%, -50%) rotate(-180deg) scale(1.05);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(-360deg) scale(0.92);
-    }
+    0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.92); }
+    50% { transform: translate(-50%, -50%) rotate(-180deg) scale(1.05); }
+    100% { transform: translate(-50%, -50%) rotate(-360deg) scale(0.92); }
 }
 
 @keyframes seed-pulse-breath {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-    }
-    50% {
-        transform: translate(-50%, -50%) rotate(180deg) scale(1.05);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg) scale(0.92);
-    }
+    0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.92); }
+    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.05); }
+    100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.92); }
 }
 
 @keyframes merkaba-stellar-breath {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg) scale(0.92);
-    }
-    50% {
-        transform: translate(-50%, -50%) rotate(180deg) scale(1.05);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg) scale(0.92);
-    }
+    0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.92); }
+    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.05); }
+    100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.92); }
 }

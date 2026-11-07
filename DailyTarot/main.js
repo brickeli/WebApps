@@ -2,6 +2,7 @@ import { fullTarotDeck, ELEMENTAL_LORE } from './js/cardLibrary.js';
 import { initTheme, selectTheme, toggleUtilsMenu, updateAudioUI, initThemeController, renderAllCardBacks } from './js/theme.js';
 import { toggleAudio, playMysticChime } from './js/audio.js';
 import { initShareButton } from './js/share.js';
+import { analyzeSpread } from './js/spreadReading.js';
 import { safeGetItem, safeSetItem, safeRemoveItem, safeParse, checkURLState, updateURLMode, readURLMode } from './js/storage.js';
 
 let currentMode = 'single';
@@ -107,7 +108,8 @@ function warnDrawNotRemembered() {
     showToast("Your browser is blocking storage, so today's draw won't be remembered after you leave this page.", 6000);
 }
 
-// Archive deep links use the card's traditional name: "King of Wands" -> "king-of-wands"
+// Archive deep links use the card's id as-is (king_wands -> ?mode=archive-king_wands).
+// Ids are lowercase letters, digits and underscores, which is why readURLMode() can safely lowercase the URL value.
 function cardSlug(card) {
     return card.id;
 }
@@ -161,6 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initCanvasFX();
+    initTripleCarousel();
+    initTripleInsightTabs();
     updateHistoryBadge();
     initTheme();
     initThemeController();
@@ -249,8 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (safeGetItem('arcana_last_triple_date') === today) {
         const tripleBtn = document.querySelector('.tarot-btn-cast-triple');
         if (tripleBtn) {
-            tripleBtn.innerHTML = `${iconHTML('hourglass', 'triple-btn-icon')} Return tomorrow for another reading`;
-            tripleBtn.classList.add('is-locked');
+            tripleBtn.style.display = 'none';
         }
         const savedTriple = loadSavedTriple();
         if (savedTriple) {
@@ -269,10 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTripleFront(front, tripleCards[i], tripleReversed[i]);
             }
 
-            const elementalContainer = document.getElementById('triple-elemental-container');
-            if (elementalContainer) {
-                elementalContainer.innerHTML = renderElementalAnalyzer(tripleCards);
-            }
+            renderTripleInsights();
         }
     }
 
@@ -291,11 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMode === 'triple') {
             if (!tripleCards || !tripleCards[0]) return null;
             const balance = typeof calculateElementalBalance === 'function' ? calculateElementalBalance(tripleCards) : null;
+            const overall = analyzeSpread(tripleCards, tripleReversed);
             return {
                 isTripleSpread: true,
                 title: 'My 3-Card Arcana Spread',
                 cards: tripleCards,
                 dominantElement: balance ? balance.dominant : 'Cosmic',
+                overallHeadline: overall ? overall.headline : '',
                 loreBlurb: balance ? balance.lore : "A harmonious equilibrium of cosmic forces flowing through the timeline.",
                 description: `Past: ${tripleCards[0].name} | Present: ${tripleCards[1].name} | Future: ${tripleCards[2].name}`
             };
@@ -308,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Deep link: ?mode=archive-king-of-wands opens that card's preview straight away
+    // Deep link: ?mode=archive-king_wands opens that card's preview straight away
     const initialState = readURLMode();
     if (initialState.mode === 'archive') {
         const linkedCard = findCardBySlug(initialState.slug);
@@ -319,6 +321,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+/* On narrow screens the revealed spread is a horizontal scroll-snap row (see card-styles.css).
+   This keeps the Past / Present / Future pills in step with it and lets them jump to a card. */
+function initTripleCarousel() {
+    const scroller = document.querySelector('.triple-spread-container');
+    const pills = Array.from(document.querySelectorAll('.triple-dot'));
+    const cards = scroller ? Array.from(scroller.querySelectorAll('.triple-card-wrapper')) : [];
+    if (!scroller || pills.length !== cards.length || cards.length === 0) return;
+
+    // distance from the middle of the scroller to the middle of a card
+    const offsetToCentre = (card) => {
+        const s = scroller.getBoundingClientRect();
+        const c = card.getBoundingClientRect();
+        return (c.left + c.width / 2) - (s.left + s.width / 2);
+    };
+
+    function syncPills() {
+        let nearest = 0;
+        cards.forEach((card, i) => {
+            if (Math.abs(offsetToCentre(card)) < Math.abs(offsetToCentre(cards[nearest]))) nearest = i;
+        });
+        pills.forEach((pill, i) => {
+            pill.classList.toggle('active', i === nearest);
+            if (i === nearest) pill.setAttribute('aria-current', 'true');
+            else pill.removeAttribute('aria-current');
+        });
+    }
+
+    let frame = 0;
+    scroller.addEventListener('scroll', () => {
+        if (frame) return;
+        frame = requestAnimationFrame(() => { frame = 0; syncPills(); });
+    }, { passive: true });
+
+    pills.forEach((pill, i) => {
+        pill.addEventListener('click', () => {
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            scroller.scrollTo({ left: scroller.scrollLeft + offsetToCentre(cards[i]), behavior: reduce ? 'auto' : 'smooth' });
+        });
+    });
+
+    // every time the spread is (re)revealed, start from the Past card again
+    let wasRevealed = scroller.classList.contains('revealed');
+    new MutationObserver(() => {
+        const isRevealed = scroller.classList.contains('revealed');
+        if (isRevealed && !wasRevealed) {
+            scroller.scrollLeft = 0;
+            syncPills();
+        }
+        wasRevealed = isRevealed;
+    }).observe(scroller, { attributes: true, attributeFilter: ['class'] });
+
+    // cards slide into the row with a transition; measure again once it has settled
+    scroller.addEventListener('transitionend', () => {
+        if (frame) return;
+        frame = requestAnimationFrame(() => { frame = 0; syncPills(); });
+    });
+
+    window.addEventListener('resize', syncPills);
+    syncPills();
+}
 
 function setMode(mode) {
     currentMode = mode;
@@ -645,8 +708,8 @@ function populateSingleDetails() {
 }
 
 function switchInsightTab(tabName) {
-    const wisdomBtn = document.querySelector('.insight-tab-btn:nth-child(1)');
-    const elementalBtn = document.querySelector('.insight-tab-btn:nth-child(2)');
+    const wisdomBtn = document.querySelector('#tarot-insights-container .insight-tab-btn:nth-child(1)');
+    const elementalBtn = document.querySelector('#tarot-insights-container .insight-tab-btn:nth-child(2)');
     const wisdomPanel = document.getElementById('tab-content-wisdom');
     const elementalPanel = document.getElementById('tab-content-elemental');
 
@@ -684,13 +747,13 @@ function drawTripleSpread() {
     }
 
     if (lastDate === today) {
-        if (castTripleBtn) {
-            castTripleBtn.innerHTML = `${iconHTML('hourglass', 'triple-btn-icon')} Return tomorrow for another reading`;
-            castTripleBtn.classList.add('is-locked');
-        }
-
         const savedTriple = loadSavedTriple();
         if (savedTriple) {
+            // Hide the draw button completely if today's reading is loaded
+            if (castTripleBtn) {
+                castTripleBtn.style.display = 'none';
+            }
+
             tripleCards = savedTriple.cards;
             tripleReversed = savedTriple.reversed;
             tripleFlipped = [true, true, true];
@@ -709,21 +772,13 @@ function drawTripleSpread() {
 
             if (container) container.classList.add('revealed');
 
-            const elementalContainer = document.getElementById('triple-elemental-container');
-            if (elementalContainer) {
-                elementalContainer.innerHTML = renderElementalAnalyzer(tripleCards);
-            }
+            renderTripleInsights();
 
             return;
         }
     }
 
     const tripleDateSaved = recordDrawToday('triple');
-
-    if (castTripleBtn) {
-        castTripleBtn.innerHTML = `${iconHTML('hourglass', 'triple-btn-icon')} Return tomorrow for another reading`;
-        castTripleBtn.classList.add('is-locked');
-    }
 
     const shuffled = shuffle([...fullTarotDeck]);
     tripleCards = shuffled.slice(0, 3);
@@ -776,10 +831,12 @@ function drawTripleSpread() {
     setTimeout(() => {
         if (actionsDiv) actionsDiv.classList.remove('hidden');
 
-        const elementalContainer = document.getElementById('triple-elemental-container');
-        if (elementalContainer) {
-            elementalContainer.innerHTML = renderElementalAnalyzer(tripleCards);
+        // Hide the button once the final card flip finishes and actions display
+        if (castTripleBtn) {
+            castTripleBtn.style.display = 'none';
         }
+
+        renderTripleInsights();
     }, 1200);
 
     playMysticChime();
@@ -903,10 +960,13 @@ function saveTripleReading() {
         tripleReversed[i] ? `${card.name} (Reversed)` : card.name
     );
 
+    const overall = analyzeSpread(tripleCards, tripleReversed);
+
     const entry = {
         type: '3-Card Celestial Spread',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         cards: formattedCards,
+        headline: overall ? overall.headline : '',
         summary: `Past: ${formattedCards[0]} | Present: ${formattedCards[1]} | Future: ${formattedCards[2]}`
     };
 
@@ -1203,6 +1263,7 @@ function renderJournalHistory() {
                     </div>
                 </div>
                 <div class="tarot-history-item-cards">${item.cards.join(' • ')}</div>
+                ${item.headline ? `<div class="tarot-history-item-headline">✦ ${escapeHTML(item.headline)} ✦</div>` : ''}
                 <p class="tarot-history-item-summary">"${item.summary}"</p>
             </div>
         `).join('');
@@ -1409,7 +1470,7 @@ function calculateElementalBalance(drawnCards) {
 
 function renderElementalAnalyzer(drawnCards) {
     const balance = calculateElementalBalance(drawnCards);
-    if (!balance) return '<div class="elemental-balance-container tarot-guidance-quote esoteric">✦ Awaiting Elemental Alignment ✦</div>';
+    if (!balance) return '<div class="elemental-balance-container tarot-guidance-quote">✦ Awaiting Elemental Alignment ✦</div>';
 
     const { percentages, headline, lore, cssElement } = balance;
     const dominantClass = cssElement ? `element-${cssElement}` : 'element-balanced';
@@ -1426,7 +1487,7 @@ function renderElementalAnalyzer(drawnCards) {
             <div class="elemental-header">
                 ✦ Elemental Resonance: <span>${headline}</span> ✦
             </div>
-
+<p class="elemental-lore-blurb">${lore}</p>
             <div class="elemental-bars-list">
                 ${Object.entries(percentages).map(([elem, pct]) => `
                     <div class="elemental-bar-row">
@@ -1440,9 +1501,86 @@ function renderElementalAnalyzer(drawnCards) {
                     </div>
                 `).join('')}
             </div>
-            <p class="elemental-lore-blurb">${lore}</p>
         </div>
     `;
+}
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, ch => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+    ));
+}
+
+function renderSpreadReading(drawnCards, reversedFlags) {
+    const reading = analyzeSpread(drawnCards, reversedFlags);
+    if (!reading) return '<div class="spread-reading">✦ Awaiting Your Spread ✦</div>';
+
+    return `
+        <div class="spread-reading">
+            <div class="elemental-header">
+                ✦ <span>${escapeHTML(reading.headline)}</span> ✦
+            </div>
+            <ul class="spread-reading-points">
+                ${reading.points.map(text => `<li>${escapeHTML(text)}</li>`).join('')}
+            </ul>
+            <div class="spread-reading-thread">
+                <ol class="spread-reading-steps">
+                    ${reading.thread.map(step => `
+                        <li class="spread-reading-step">
+                            <span class="spread-reading-step-pos">${escapeHTML(step.position)}</span>
+                            <span class="spread-reading-step-word">${escapeHTML(step.keyword)}</span>
+                        </li>
+                    `).join('')}
+                </ol>
+            </div>
+        </div>
+    `;
+}
+
+/** Fills both tabs under the triple spread and reveals the container. */
+function renderTripleInsights() {
+    const root = document.getElementById('triple-insights-container');
+    const overall = document.getElementById('triple-overall-container');
+    const elemental = document.getElementById('triple-elemental-container');
+    if (!root || !overall || !elemental) return;
+
+    overall.innerHTML = renderSpreadReading(tripleCards, tripleReversed);
+    elemental.innerHTML = renderElementalAnalyzer(tripleCards);
+    root.classList.remove('hidden');
+}
+
+/** Tab behaviour for the triple insights (click + arrow keys), scoped to its own container. */
+function initTripleInsightTabs() {
+    const root = document.getElementById('triple-insights-container');
+    if (!root) return;
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+
+    const select = (tab, { focus = false } = {}) => {
+        tabs.forEach(t => {
+            const on = t === tab;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', String(on));
+            t.tabIndex = on ? 0 : -1;
+            const panel = document.getElementById(t.getAttribute('aria-controls'));
+            if (panel) panel.classList.toggle('active', on);
+        });
+        if (focus) tab.focus();
+    };
+
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab));
+        tab.addEventListener('keydown', event => {
+            let next = null;
+            if (event.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+            else if (event.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+            else if (event.key === 'Home') next = tabs[0];
+            else if (event.key === 'End') next = tabs[tabs.length - 1];
+            if (next) {
+                event.preventDefault();
+                select(next, { focus: true });
+            }
+        });
+    });
 }
 
 function hashString(str) {

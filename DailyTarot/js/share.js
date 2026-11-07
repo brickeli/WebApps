@@ -14,8 +14,10 @@ export function generateTarotShareText(cardData) {
         const cardNames = cardData.cards ? cardData.cards.map(c => c.name).join(' • ') : (cardData.description || '');
         const dominant = cardData.dominantElement || 'Cosmic';
         const loreBlurb = cardData.loreBlurb || "A harmonious equilibrium of cosmic forces flowing through the timeline.";
+        const overallLine = cardData.overallHeadline ? `🧭 Overall: ${cardData.overallHeadline}\n` : '';
         return `✦ Arcana Tarot 3-Card Spread ✦\n` +
                `🔮 ${cardNames}\n` +
+               overallLine +
                `🌌 Dominant Energy: ${dominant}\n` +
                `📜 ${loreBlurb}\n\n` +
                `✨ Explore your path: ${shareUrl}`;
@@ -27,7 +29,7 @@ export function generateTarotShareText(cardData) {
         const advice = cardData.advice || cardData.description || 'Embracing the energy of the archetypes.';
 
         return `✦ Arcana Tarot Daily Pull ✦\n` +
-               `🎴 ${cardName} (${orientation})\n` +
+               `🔮 ${cardName} (${orientation})\n` +
                `🌌 Element: ${element}\n` +
                `📜 ${advice}\n\n` +
                `✨ Consult the stars: ${shareUrl}`;
