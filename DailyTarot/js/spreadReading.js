@@ -191,23 +191,17 @@ function sequencePatterns(facts, out) {
  */
 const CARD_PAIRS = [
     { ids: ['tower', 'star'],
-      forward:  { headline: 'Hope After the Fall', meaning: 'a collapse that clears the ground for healing' },
-      backward: { headline: 'Hope Disrupted', meaning: 'a hopeful stretch is about to be shaken, so keep your footing' } },
+      forward:  { headline: 'Hope After the Fall', meaning: 'a collapse that clears the ground for healing' }, backward: { headline: 'Hope Disrupted', meaning: 'a hopeful stretch is about to be shaken, so keep your footing' } },
     { ids: ['death', 'sun'],
-      forward:  { headline: 'An Ending That Frees', meaning: 'an ending that opens into joy and clarity' },
-      backward: { headline: 'A Bright Chapter Closing', meaning: 'a bright chapter is closing and a transformation is on its way' } },
+      forward:  { headline: 'An Ending That Frees', meaning: 'an ending that opens into joy and clarity' }, backward: { headline: 'A Bright Chapter Closing', meaning: 'a bright chapter is closing and a transformation is on its way' } },
     { ids: ['fool', 'world'],
-      forward:  { headline: 'A Short Road to Completion', meaning: 'the first step and its fulfilment sit close together' },
-      backward: { headline: 'A Cycle Renews', meaning: 'one cycle closes and the next begins at once' } },
+      forward:  { headline: 'A Short Road to Completion', meaning: 'the first step and its fulfilment sit close together' }, backward: { headline: 'A Cycle Renews', meaning: 'one cycle closes and the next begins at once' } },
     { ids: ['hanged_man', 'death'],
-      forward:  { headline: 'Surrender, Then Change', meaning: 'a pause or surrender that ripens into real transformation' },
-      backward: { headline: 'Change, Then Stillness', meaning: 'a transformation followed by a necessary pause to take it in' } },
+      forward:  { headline: 'Surrender, Then Change', meaning: 'a pause or surrender that ripens into real transformation' }, backward: { headline: 'Change, Then Stillness', meaning: 'a transformation followed by a necessary pause to take it in' } },
     { ids: ['judgement', 'world'],
-      forward:  { headline: 'Reckoning to Completion', meaning: 'a reckoning that carries you to completion' },
-      backward: { headline: 'Completion Calls Again', meaning: 'a finished chapter is calling you to answer a deeper question' } },
+      forward:  { headline: 'Reckoning to Completion', meaning: 'a reckoning that carries you to completion' }, backward: { headline: 'Completion Calls Again', meaning: 'a finished chapter is calling you to answer a deeper question' } },
     { ids: ['moon', 'sun'],
-      forward:  { headline: 'Fog Lifting', meaning: 'uncertainty gives way to clarity' },
-      backward: { headline: 'Clarity Clouding', meaning: 'clarity gives way to doubt, so trust what you already know' } },
+      forward:  { headline: 'Fog Lifting', meaning: 'uncertainty gives way to clarity' }, backward: { headline: 'Clarity Clouding', meaning: 'clarity gives way to doubt, so trust what you already know' } },
     { ids: ['star', 'moon'],
       neutral: { headline: 'Hope in the Dark', meaning: 'hope and uncertainty travel together, so keep faith while the path is unclear' } },
     { ids: ['tower', 'death'],
@@ -229,8 +223,35 @@ const CARD_PAIRS = [
     { ids: ['lovers', 'two_cups'],
       neutral: { headline: 'A Meeting of Hearts', meaning: 'a strong partnership theme where connection and choice reinforce each other' } },
     { ids: ['three_swords', 'ten_swords'],
-      neutral: { headline: 'The Lowest Point', meaning: 'pain and endings stack up, which usually means the worst is behind you' } }
+      neutral: { headline: 'The Lowest Point', meaning: 'pain and endings stack up, which usually means the worst is behind you' } },
+    { ids: ['fool', 'magician'],
+      neutral: { headline: 'Spark Meets Skill', meaning: 'raw potential and focused skill: begin, and bring your craft with you' } },
+    { ids: ['hierophant', 'lovers'],
+      neutral: { headline: 'Vows and Values', meaning: 'tradition and personal choice meet: commit to what genuinely reflects your values' } },
+    { ids: ['high_priestess', 'moon'],
+      neutral: { headline: 'Deep Waters', meaning: 'intuition at its strongest and its murkiest: trust the feeling, question the story' } },
+    { ids: ['empress', 'death'],
+      neutral: { headline: 'The Cycle of Growth', meaning: 'endings and fertility belong to one cycle: what is cleared makes room to grow' } },
+    { ids: ['justice', 'judgement'],
+      neutral: { headline: 'The Final Account', meaning: 'an honest evaluation: you are asked to own the consequences and answer for them' } },
+    { ids: ['sun', 'star'],
+      neutral: { headline: 'Clear Skies', meaning: 'warmth and hope together: a genuinely bright stretch' } },
+    { ids: ['temperance', 'star'],
+      neutral: { headline: 'Gentle Recovery', meaning: 'balance and hope: steady, unhurried healing' } },
+    { ids: ['devil', 'tower'],
+      forward:  { headline: 'Chains Break', meaning: 'a bondage that cracks open suddenly, painful and freeing at once' },
+      backward: { headline: 'Watch What You Cling To', meaning: 'a collapse followed by a new trap, so notice what you reach for after the fall' } },
+    { ids: ['ace_cups', 'ten_cups'],
+      forward:  { headline: 'Love\'s Full Arc', meaning: 'a new feeling that grows into lasting fulfilment' },
+      backward: { headline: 'Joy Renewing', meaning: 'a settled happiness that opens into something new' } },
+    { ids: ['eight_pentacles', 'ten_pentacles'],
+      forward:  { headline: 'Craft Becomes Legacy', meaning: 'patient work builds lasting security' },
+      backward: { headline: 'Security Frees the Craft', meaning: 'stability that lets you deepen your work without pressure' } }
 ];
+
+// Above "Weighty Currents" (two Major Arcana, 70): most pairs are two Majors, and a specific pairing
+// says more than the generic headline. Still below all-Major, all-reversed, same-suit and sequence signals.
+const PAIR_PRIORITY = 72;
 
 export const CARD_PAIR_IDS = CARD_PAIRS.map(p => p.ids);
 
@@ -252,7 +273,7 @@ function pairPatterns(facts, out) {
         const caveat = anyReversed ? ' With reversed energy here, this is still unfolding or being resisted.' : '';
 
         out.push({
-            priority: 65,
+            priority: PAIR_PRIORITY,
             headline: variant.headline,
             text: `${shortName(facts[first].card)} (${POSITIONS[first]}) and ${shortName(facts[second].card)} (${POSITIONS[second]}): ${variant.meaning}.${caveat}`
         });

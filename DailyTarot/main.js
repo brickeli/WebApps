@@ -86,6 +86,23 @@ function getShownReversed() {
     return browseCard ? false : isSingleReversed;
 }
 
+function setNavActive(id, on) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('active', on);
+    if (on) btn.setAttribute('aria-current', 'page');
+    else btn.removeAttribute('aria-current');
+}
+
+// Highlights the nav button for what is on screen. Previewing a card from the Library
+// counts as "The Archives", not "Daily Card".
+function updateNav() {
+    const previewing = currentMode === 'single' && !!browseCard;
+    setNavActive('btn-single', currentMode === 'single' && !previewing);
+    setNavActive('btn-triple', currentMode === 'triple');
+    setNavActive('btn-archives', previewing);
+}
+
 function setSingleActionsVisible(visible) {
     document.querySelector('#single-reveal-area .card-action-container')?.classList.toggle('hidden', !visible);
 }
@@ -172,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCanvasFX();
     initTripleCarousel();
     initTripleInsightTabs();
+    updateNav();
     updateHistoryBadge();
     initTheme();
     initThemeController();
@@ -391,8 +409,6 @@ function initTripleCarousel() {
 
 function setMode(mode) {
     currentMode = mode;
-    const btnSingle = document.getElementById('btn-single');
-    const btnTriple = document.getElementById('btn-triple');
     const singleView = document.getElementById('single-card-view');
     const tripleView = document.getElementById('triple-card-view');
     const titleEl = document.getElementById('reading-title');
@@ -403,8 +419,6 @@ function setMode(mode) {
     const detailsBox = document.getElementById('single-card-details');
 
     if (mode === 'single') {
-        if (btnSingle) btnSingle.classList.add('active');
-        if (btnTriple) btnTriple.classList.remove('active');
         if (singleView) singleView.classList.remove('hidden');
         if (tripleView) tripleView.classList.add('hidden');
         if (titleEl) titleEl.textContent = "Consult the Sacred Arcana";
@@ -430,13 +444,13 @@ function setMode(mode) {
             if (detailsBox) detailsBox.classList.remove('details-slide-active', 'details-slide-enter');
         }
     } else {
-        if (btnTriple) btnTriple.classList.add('active');
-        if (btnSingle) btnSingle.classList.remove('active');
         if (tripleView) tripleView.classList.remove('hidden');
         if (singleView) singleView.classList.add('hidden');
         if (titleEl) titleEl.textContent = "The Three Temporal Pillars";
         if (descEl) descEl.textContent = "Cast a spread to illuminate the foundation of your Past, the focus of your Present, and the promise of Future.";
     }
+
+    updateNav();
 }
 
 /* ==========================================================================
@@ -469,6 +483,7 @@ function drawSingleCard() {
     isSingleFlipped = false;
     isSingleReversed = Math.random() < REVERSAL_CHANCE;
     browseCard = null;
+    updateNav();
     setSingleActionsVisible(true);
 
     const singlePersisted = [
@@ -555,6 +570,7 @@ function drawSingleCard() {
 
 function restoreSingleCardUI() {
     browseCard = null;
+    updateNav();
     setSingleActionsVisible(true);
     const deckArea = document.getElementById('deck-draw-area');
     const revealArea = document.getElementById('single-reveal-area');
@@ -617,7 +633,7 @@ function renderCardFront(cardFront) {
 
         <div class="tarot-single-footer">
             <span>ARCANA TAROT</span>
-            <span>✦ ${reversed ? 'REVERSED' : 'UPRIGHT'}</span>
+            <span>✦ ${browseCard ? 'ARCHIVE' : (reversed ? 'REVERSED' : 'UPRIGHT')}</span>
         </div>
     `;
 
@@ -665,7 +681,12 @@ function populateSingleDetails() {
     const elAdvice = document.getElementById('card-advice-text');
     const elSingleElemental = document.getElementById('single-elemental-container');
 
-    if (elArcana) elArcana.textContent = `${card.arcana || 'TAROT'} ${reversed ? '• Reversed' : '• Upright'}`;
+    // A Library preview has no orientation: it shows the card itself, with both aspects on equal footing
+    const previewing = !!browseCard;
+
+    if (elArcana) elArcana.textContent = previewing
+        ? `${card.arcana || 'TAROT'}`
+        : `${card.arcana || 'TAROT'} ${reversed ? '• Reversed' : '• Upright'}`;
     if (elTitle) elTitle.textContent = titleText;
     if (elDesc) elDesc.textContent = card.desc || '';
     if (elLight) elLight.textContent = card.light || '';
@@ -697,7 +718,10 @@ function populateSingleDetails() {
     const lightBox = elLight ? elLight.closest('div') : null;
     const shadowBox = elShadow ? elShadow.closest('div') : null;
 
-    if (reversed) {
+    if (previewing) {
+        if (lightBox) lightBox.className = "tarot-aspect-box tarot-aspect-highlight-light";
+        if (shadowBox) shadowBox.className = "tarot-aspect-box tarot-aspect-highlight-shadow";
+    } else if (reversed) {
         if (lightBox) lightBox.className = "tarot-aspect-box tarot-aspect-dim";
         if (shadowBox) shadowBox.className = "tarot-aspect-box tarot-aspect-highlight-shadow";
     } else {
@@ -1383,6 +1407,7 @@ function inspectCardFromLibrary(cardId, { updateUrl = true, announce = true } = 
     toggleArchivesModal(false);
 
     browseCard = card;
+    updateNav();
 
     const deckArea = document.getElementById('deck-draw-area');
     const revealArea = document.getElementById('single-reveal-area');
