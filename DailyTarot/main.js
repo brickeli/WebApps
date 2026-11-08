@@ -6,6 +6,7 @@ import { analyzeSpread } from './js/spreadReading.js';
 import { safeGetItem, safeSetItem, safeRemoveItem, safeParse, checkURLState, updateURLMode, readURLMode } from './js/storage.js';
 
 let currentMode = 'single';
+let tripleCasting = false;   // true while the cast animation runs, so extra taps can't interrupt it
 let currentSingleCard = null;
 let isSingleFlipped = false;
 let tripleCards = [null, null, null];
@@ -61,6 +62,12 @@ function loadSavedTriple() {
         cards: cards.map(c => fullTarotDeck.find(d => d.id === c.id) || c),
         reversed: Array.isArray(rev) && rev.length === 3 ? rev : [false, false, false]
     };
+}
+
+// True only when today's spread can actually be shown. The saved date alone is not enough:
+// if the cards failed to save, the visitor must still be able to cast.
+function hasTripleToday() {
+    return safeGetItem('arcana_last_triple_date') === new Date().toDateString() && loadSavedTriple() !== null;
 }
 
 function shuffle(list) {
@@ -186,14 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const cardInner = document.getElementById(`triple-card-inner-${i}`);
         if (cardInner) {
             cardInner.addEventListener('click', (e) => {
-                const todayDate = new Date().toDateString();
-                const lastDate = safeGetItem('arcana_last_triple_date');
+                if (tripleCasting) return;
 
-                if (lastDate !== todayDate) {
-                    if (i === 1 || e.detail === 0) {
-                        e.stopPropagation();
-                        drawTripleSpread();
-                    }
+                if (!hasTripleToday()) {
+                    // Nothing cast yet: tapping any of the three card backs casts the spread
+                    e.stopPropagation();
+                    drawTripleSpread();
                 } else {
                     flipTripleCard(i);
                 }
@@ -251,12 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Restore Today's Triple Spread
     if (safeGetItem('arcana_last_triple_date') === today) {
-        const tripleBtn = document.querySelector('.tarot-btn-cast-triple');
-        if (tripleBtn) {
-            tripleBtn.style.display = 'none';
-        }
         const savedTriple = loadSavedTriple();
         if (savedTriple) {
+            // Only hide the Cast button when there is a saved reading to show instead
+            const tripleBtn = document.querySelector('.tarot-btn-cast-triple');
+            if (tripleBtn) {
+                tripleBtn.style.display = 'none';
+            }
             tripleCards = savedTriple.cards;
             tripleReversed = savedTriple.reversed;
             tripleFlipped = [true, true, true];
@@ -736,6 +742,8 @@ window.switchInsightTab = switchInsightTab;
 let tripleReversed = [false, false, false];
 
 function drawTripleSpread() {
+    if (tripleCasting) return;
+
     const today = new Date().toDateString();
     const lastDate = safeGetItem('arcana_last_triple_date');
     const castTripleBtn = document.querySelector('.tarot-btn-cast-triple');
@@ -778,6 +786,7 @@ function drawTripleSpread() {
         }
     }
 
+    tripleCasting = true;
     const tripleDateSaved = recordDrawToday('triple');
 
     const shuffled = shuffle([...fullTarotDeck]);
@@ -837,6 +846,7 @@ function drawTripleSpread() {
         }
 
         renderTripleInsights();
+        tripleCasting = false;
     }, 1200);
 
     playMysticChime();

@@ -257,10 +257,8 @@ export function updateAudioUI(audioActive) {
 }
 
 export function initTheme() {
-    const savedTheme = safeGetItem('arcana_active_theme') || 'obsidian-plum';
-    selectTheme(savedTheme);
-
-    const saved = safeGetItem('arcana_active_theme'); const id = saved === 'modern-astral' ? 'solar-radiance' : saved || 'obsidian-plum';
+    const saved = safeGetItem('arcana_active_theme');
+    selectTheme(saved === 'modern-astral' ? 'solar-radiance' : saved || 'obsidian-plum');
 
     // Close menu on outside click
     document.addEventListener('click', (event) => {
