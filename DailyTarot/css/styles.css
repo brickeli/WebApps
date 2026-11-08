@@ -511,21 +511,12 @@ p {
 }
 
 .insight-tab-btn.active {
-   /* Uses theme-plum with 95% opacity blending into your active velvet accent variable */
-   background: linear-gradient(180deg, rgb(var(--color-gold) / 0.15), rgb(var(--color-abyss) / 0.95));
+   background: linear-gradient(to bottom, rgb(var(--color-gold) / 0.15), rgb(var(--color-abyss) / 0.95) 25%);
    color: rgb(var(--color-starlight));
+   border-top: 3px solid rgb(var(--color-gold) / .7) !important;
    border-color: rgb(var(--color-gold) / 0.3);
    border-bottom: 2px solid rgb(var(--color-abyss));
    font-weight: 600;
-}
-
-.insight-tab-btn.active::before,
-.insight-tab-btn.active::after {
-   content: '✦';
-   display: inline-block;
-   font-size: 0.6rem;
-   color: rgb(var(--color-gold));
-   animation: pulseRune 2s infinite ease-in-out;
 }
 
 .insight-tab-panel {
