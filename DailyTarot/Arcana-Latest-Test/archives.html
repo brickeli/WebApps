@@ -45,40 +45,38 @@
         </div>
 
         <section class="archives-panel" aria-label="Archives">
-            <div class="archives-toolbar">
-                <div class="tarot-tabs-group" role="tablist" aria-label="Archive sections">
-                    <button id="tab-btn-journal" class="tarot-tab-btn active" role="tab" aria-selected="true" aria-controls="archive-view-journal" data-tab="journal">
-                        <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Journal (<span id="tab-journal-count">0</span>)
-                    </button>
-                    <button id="tab-btn-library" class="tarot-tab-btn" role="tab" aria-selected="false" aria-controls="archive-view-library" data-tab="library" tabindex="-1">
-                        <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-library"></use></svg> Card Library
-                    </button>
-                </div>
-
-                <div id="archive-search-container" class="tarot-search-group hidden">
-                    <div class="tarot-search-input-wrapper">
-                        <svg class="icon tarot-search-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-search"></use></svg>
-                        <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input" aria-label="Search deck cards" autocomplete="off">
-                    </div>
-                    <button id="filter-toggle-btn" class="tarot-filter-toggle-btn" aria-expanded="false" aria-controls="archive-filters">
-                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-filter"></use></svg> Filters
-                    </button>
-                </div>
-            </div>
-
-            <div id="archive-filters" class="tarot-filters-collapse hidden" role="group" aria-label="Filter cards">
-                <button data-filter="all" class="lib-filter-btn active" aria-pressed="true">All</button>
-                <button data-filter="Major Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-crown"></use></svg><span class="filter-text">Major</span></button>
-                <button data-filter="Minor Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-star"></use></svg><span class="filter-text">Minor</span></button>
-                <button data-filter="Wands" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-wand"></use></svg><span class="filter-text">Wands</span></button>
-                <button data-filter="Cups" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-chalice"></use></svg><span class="filter-text">Cups</span></button>
-                <button data-filter="Swords" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sword"></use></svg><span class="filter-text">Swords</span></button>
-                <button data-filter="Pentacles" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-pentacle"></use></svg><span class="filter-text">Pentacles</span></button>
+            <div class="tarot-tabs-group" role="tablist" aria-label="Archive sections">
+                <button id="tab-btn-journal" class="tarot-tab-btn active" role="tab" aria-selected="true" aria-controls="archive-view-journal" data-tab="journal">
+                    <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Journal (<span id="tab-journal-count">0</span>)
+                </button>
+                <button id="tab-btn-library" class="tarot-tab-btn" role="tab" aria-selected="false" aria-controls="archive-view-library" data-tab="library" tabindex="-1">
+                    <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-library"></use></svg> Card Library
+                </button>
             </div>
 
             <div class="archives-body">
-                <div id="archive-view-journal" class="tarot-journal-pane" role="tabpanel" aria-labelledby="tab-btn-journal"></div>
-                <div id="archive-view-library" class="tarot-library-grid hidden" role="tabpanel" aria-labelledby="tab-btn-library"></div>
+              <div class="archives-toolbar">
+                  <div id="archive-search-container" class="tarot-search-group hidden">
+                      <div class="tarot-search-input-wrapper">
+                          <svg class="icon tarot-search-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-search"></use></svg>
+                          <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input" aria-label="Search deck cards" autocomplete="off">
+                      </div>
+                      <button id="filter-toggle-btn" class="tarot-filter-toggle-btn" aria-expanded="false" aria-controls="archive-filters">
+                          <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-filter"></use></svg> Filters
+                      </button>
+                  </div>
+                  <div id="archive-filters" class="tarot-filters-collapse hidden" role="group" aria-label="Filter cards">
+                      <button data-filter="all" class="lib-filter-btn active" aria-pressed="true">All</button>
+                      <button data-filter="Major Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-crown"></use></svg><span class="filter-text">Major</span></button>
+                      <button data-filter="Minor Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-star"></use></svg><span class="filter-text">Minor</span></button>
+                      <button data-filter="Wands" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-wand"></use></svg><span class="filter-text">Wands</span></button>
+                      <button data-filter="Cups" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-chalice"></use></svg><span class="filter-text">Cups</span></button>
+                      <button data-filter="Swords" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sword"></use></svg><span class="filter-text">Swords</span></button>
+                      <button data-filter="Pentacles" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-pentacle"></use></svg><span class="filter-text">Pentacles</span></button>
+                  </div>
+              </div>
+              <div id="archive-view-journal" class="tarot-journal-pane" role="tabpanel" aria-labelledby="tab-btn-journal"></div>
+              <div id="archive-view-library" class="tarot-library-grid hidden" role="tabpanel" aria-labelledby="tab-btn-library"></div>
             </div>
 
             <div class="archives-footer">

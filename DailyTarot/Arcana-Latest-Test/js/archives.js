@@ -188,8 +188,7 @@ function setFiltersOpen(open) {
     $('archive-filters').classList.toggle('hidden', !open);
     const toggle = $('filter-toggle-btn');
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.classList.toggle('border-gold', open);
-    toggle.classList.toggle('bg-gold/10', open);
+    toggle.classList.toggle('filters-open', open);
 }
 
 /* ---------- Init ---------- */
