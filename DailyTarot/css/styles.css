@@ -112,6 +112,7 @@ html {
     padding: 0;
     width: 100%;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
 }
 
 body, .site-body {
@@ -139,14 +140,6 @@ body, .site-body {
     opacity: 0.5;
     z-index: 1;
 }
-
-/* While the Archives modal is open (html.modal-open, set in main.js) hide the canvas and freeze the
-   animations behind the overlay. The overlay covers them, and every moving pixel behind it costs a repaint. */
-html.modal-open #fx-canvas { visibility: hidden; }
-html.modal-open .site-header .nav-logo,
-html.modal-open #deck-draw-area *,
-html.modal-open .single-slot-container *,
-html.modal-open .sacred-geometry-container * { animation-play-state: paused !important; }
 
 /* Scrollbars */
 ::-webkit-scrollbar { width: 6px; }
@@ -201,7 +194,7 @@ html.modal-open .sacred-geometry-container * { animation-play-state: paused !imp
 /* Dynamic Glow Utilities */
 .text-glow-gold { text-shadow: 0 0 12px rgb(var(--color-gold) / 0.6), 0 0 24px rgb(var(--color-gold) / 0.25); }
 .text-glow-purple { text-shadow: 0 0 12px rgb(var(--color-mystic-purple) / 0.6), 0 0 24px rgb(var(--color-mystic-purple) / 0.2); }
-.box-glow-gold { box-shadow: 0 0 10px rgb(var(--color-gold) / 0.2), inset 0 0 15px rgb(var(--color-gold) / 0.08); }
+.box-glow-gold { box-shadow: 0 0 7px rgb(var(--color-gold) / 0.2), inset 0 0 15px rgb(var(--color-gold) / 0.08); }
 .box-glow-plum { box-shadow: 0 0 20px rgb(var(--color-plum) / 0.5), inset 0 0 10px rgb(var(--color-mystic-purple) / 0.15); }
 
 /* ==========================================================================
@@ -311,8 +304,10 @@ p {
 }
 
 .tarot-nav-btn {
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
+    text-align: center;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
     font-family: var(--font-cinzel, 'Cinzel', serif);
@@ -475,8 +470,9 @@ p {
    text-align: left;
 }
 
-.insight-tabs-nav {
+.insight-tabs-nav, .tarot-tabs-group  {
    display: flex;
+   height: 68px;
    width: 100%;
    margin-bottom: 0;
    padding-bottom: 0;
@@ -484,7 +480,7 @@ p {
    z-index: 2;
 }
 
-.insight-tab-btn {
+.insight-tab-btn, .tarot-tab-btn {
    flex: 1;
    position: relative;
    background: linear-gradient(180deg, rgb(var(--color-obsidian) / 0.35), rgb(var(--color-abyss) / 0.95));
@@ -496,27 +492,28 @@ p {
    font-size: 0.825rem;
    letter-spacing: 0.05em;
    cursor: pointer;
-   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
    display: flex;
    align-items: center;
    justify-content: center;
    gap: 0.2rem;
    text-align: center;
+   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.insight-tab-btn:hover {
+.insight-tab-btn:hover, .tarot-tab-btn:hover {
    color: rgb(var(--color-gold));
    border-color: rgb(var(--color-gold) / 0.6);
    background: linear-gradient(180deg, rgb(var(--color-plum) / 0.6), rgb(var(--color-abyss) / 0.95));
 }
 
-.insight-tab-btn.active {
-   background: linear-gradient(to bottom, rgb(var(--color-gold) / 0.15), rgb(var(--color-abyss) / 0.95) 25%);
-   color: rgb(var(--color-starlight));
-   border-top: 3px solid rgb(var(--color-gold) / .7) !important;
-   border-color: rgb(var(--color-gold) / 0.3);
-   border-bottom: 2px solid rgb(var(--color-abyss));
-   font-weight: 600;
+.insight-tab-btn.active, .tarot-tab-btn.active {
+    flex: 2;
+    background: linear-gradient(to bottom, rgb(var(--color-gold) / 0.15), rgb(var(--color-abyss) / 0.95) 25%);
+    color: rgb(var(--color-starlight));
+    border-top: 3px solid rgb(var(--color-gold) / .7) !important;
+    border-color: rgb(var(--color-gold) / 0.3);
+    border-bottom: 2px solid rgb(var(--color-abyss));
+    font-weight: 600;
 }
 
 .insight-tab-panel {
@@ -631,16 +628,6 @@ p {
     transform: scale(0.95);
 }
 
-.tarot-btn-cast-triple.is-locked {
-    opacity: 0.85;
-    cursor: not-allowed;
-    background: linear-gradient(135deg, rgb(var(--color-obsidian) / 0.95), rgb(var(--color-ivory) / 0.08));
-    border-color: rgb(var(--color-ivory) / 0.15);
-    color: rgb(var(--color-ivory) / 0.7);
-    transform: none;
-    box-shadow: none;
-}
-
 .card-action-container, .triple-actions-container {
     display: flex;
     align-items: center;
@@ -650,138 +637,87 @@ p {
     margin-top: 1rem;
 }
 
+.tarot-share-btn, .tarot-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-cinzel, 'Cinzel', serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
 .tarot-share-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.8rem 1.5rem;
-    border-radius: 0.5rem;
-    background-color: rgb(var(--color-gold) / 0.8);
+    background-color: rgb(var(--color-gold) / 0.9);
     color: rgb(var(--color-obsidian));
-    font-size: 0.85rem;
-    font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid rgb(var(--color-gold) / 0.8);
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgb(var(--color-gold) / 0.9);
 }
 
 .tarot-share-btn:hover {
     background-color: rgb(var(--color-gold));
+    box-shadow: 0 0 12px rgb(var(--color-gold) / 0.3);
+    transform: translateY(-1px);
 }
 
 .tarot-save-btn {
-    padding: 0.8rem 1.5rem;
-    border-radius: 0.5rem;
     background-color: rgb(var(--color-velvet) / 0.4);
     border: 1px solid rgb(var(--color-gold) / 0.4);
     color: rgb(var(--color-gold));
-    font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
     text-align: center;
 }
 
 .tarot-save-btn:hover {
-    background-color: rgb(var(--color-velvet) / 0.8);
-}
-
-.save-icon { margin-right: 0.375rem; }
-
-.triple-share-group {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
+    background-color: rgb(var(--color-gold) / 0.15);
+    border-color: rgb(var(--color-gold));
+    box-shadow: 0 0 12px rgb(var(--color-gold) / 0.3);
+    transform: translateY(-1px);
 }
 
 /* ==========================================================================
-   11. ARCHIVES MODAL SYSTEM (JOURNAL + LIBRARY)
+   11. ARCHIVES PAGE (archives.html: JOURNAL + LIBRARY)
    ========================================================================== */
-.tarot-modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background-color: rgb(var(--color-obsidian) / 0.97);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 2.5rem 1rem 1rem;
-}
+.archives-main { justify-content: flex-start; }
 
-.tarot-modal-container {
-    background-color: rgb(var(--color-abyss));
-    border: 1px solid rgb(var(--color-gold) / 0.3);
-    border-radius: 1rem;
+.archives-panel {
     max-width: 56rem;
     width: 100%;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
-    margin: 0 auto;
 }
 
-.tarot-modal-header {
-    padding: 1rem;
-    border-bottom: 1px solid rgb(var(--color-gold) / 0.2);
-    background-color: rgb(var(--color-obsidian) / 0.6);
+#archives-toolbar {
     display: flex;
     flex-direction: column;
-    contain: layout style;
-    flex-shrink: 0;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
 }
 
-.tarot-modal-title-row, .tarot-history-item-top, .tarot-modal-footer {
+#archives-toolbar + .tarot-filters-collapse { padding-left: 1rem; padding-right: 1rem; }
+
+.archives-body {
+    padding: 1rem;
+    margin-top: -1px;
+    min-height: 16rem;
+    border-radius: 0 0 1rem 1rem;
+    background: linear-gradient(360deg, rgb(var(--color-plum) / 0.15), rgb(var(--color-abyss) / 0.95));
+    border: 1px solid rgb(var(--color-gold) / 0.3);
+}
+
+.archives-empty-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    color: rgb(var(--color-gold));
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.tarot-history-item-top, .archives-footer {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-}
-
-.tarot-modal-title {
-    font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: rgb(var(--color-gold));
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.tarot-modal-close-btn {
-    background-color: rgb(var(--color-velvet));
-    color: rgb(var(--color-gold));
-    border: 1px solid rgb(var(--color-gold) / 0.4);
-    border-radius: 50%;
-    padding: 0.35rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.tarot-modal-close-btn:hover {
-    background-color: rgb(var(--color-gold) / 0.15);
-    border-color: rgb(var(--color-gold));
-    box-shadow: 0 0 12px rgb(var(--color-gold) / 0.4);
-    transform: scale(1.05) rotate(90deg);
-}
-
-.tarot-modal-close-btn:active {
-    transform: scale(0.95) rotate(90deg);
-}
-
-.tarot-modal-controls-row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
 }
 
 #archive-footer-action {
@@ -809,47 +745,11 @@ p {
 
 #archive-footer-action:active { transform: translateY(0); }
 
-.tarot-tabs-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: rgb(var(--color-obsidian) / 0.6);
-    padding: 0.25rem;
-    border-radius: 0.5rem;
-    border: 1px solid rgb(var(--color-gold) / 0.2);
-    width: 100%;
-}
-
-.tarot-tab-btn {
-    flex: 1;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-family: var(--font-cinzel, 'Cinzel', serif);
-    font-size: 0.75rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-    cursor: pointer;
-    background: transparent;
-    color: rgb(var(--color-starlight) / 0.7);
-    text-align: center;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.tab-icon { margin-right: 5px; }
-
-.tarot-tab-btn:hover { color: rgb(var(--color-gold)); }
-
-.tarot-tab-btn.active {
-    background-color: rgb(var(--color-gold) / 0.15);
-    color: rgb(var(--color-gold));
-    border-color: rgb(var(--color-gold) / 0.3);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
 .tarot-search-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    width:100%
 }
 
 .tarot-search-input-wrapper {
@@ -860,22 +760,26 @@ p {
 
 .tarot-search-icon {
     position: absolute;
-    left: 0.875rem;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: rgb(var(--color-gold) / 0.8);
     font-size: 0.75rem;
 }
 
+.tarot-search-input, .tarot-filter-toggle-btn {
+  border: 1px solid rgb(var(--color-gold) / 0.3);
+  background-color: rgb(var(--color-obsidian) / 0.8);
+  font-family: var(--font-cinzel, 'Cinzel', serif);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+
 .tarot-search-input {
-    background-color: rgb(var(--color-obsidian) / 0.8);
-    border: 1px solid rgb(var(--color-gold) / 0.3);
-    border-radius: 0.5rem;
     padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-    font-size: 0.8rem;
     color: rgb(var(--color-ivory));
-    font-family: var(--font-atkinson, 'Atkinson Hyperlegible', sans-serif);
     transition: border-color 0.15s ease;
+    width:100%;
 }
 
 .tarot-search-input:focus {
@@ -888,12 +792,7 @@ p {
     align-items: center;
     gap: 0.375rem;
     padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    border-radius: 0.5rem;
-    border: 1px solid rgb(var(--color-gold) / 0.3);
-    background-color: rgb(var(--color-obsidian) / 0.8);
     color: rgb(var(--color-gold));
-    font-family: var(--font-cinzel, 'Cinzel', serif);
     cursor: pointer;
     white-space: nowrap;
     transition: border-color 0.15s ease;
@@ -908,7 +807,6 @@ p {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.375rem;
-    padding-top: 0.75rem;
     max-height: 15rem;
     opacity: 1;
     overflow: hidden;
@@ -953,19 +851,9 @@ p {
     font-weight: 600;
 }
 
-/* Modal Body & Stacked Panes */
-.tarot-modal-body {
-    padding: 1.5rem;
-    position: relative;
-    display: grid;
-    align-content: start;
-    overflow-y: auto;
-    width: 100%;
-}
-
 .tarot-journal-pane {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
 }
 
@@ -975,28 +863,10 @@ p {
     gap: 1rem;
 }
 
-#archive-view-journal, #archive-view-library {
-    grid-column: 1 / 1;
-    grid-row: 1 / 1;
-    width: 100%;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(6px);
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s ease;
-    pointer-events: none;
-}
-
-#archive-view-journal.active-view, #archive-view-library.active-view {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
 .tarot-history-item-actions {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.25rem;
 }
 
 .tarot-history-delete-btn {
@@ -1077,6 +947,8 @@ p {
 }
 
 .tarot-library-card {
+    text-decoration: none;
+    color: inherit;
     background-color: rgb(var(--color-velvet) / 0.5);
     border: 1px solid rgb(var(--color-gold) / 0.2);
     border-radius: 0.5rem;
@@ -1086,7 +958,7 @@ p {
     align-items: center;
     text-align: center;
     cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
     min-height: 220px;
@@ -1184,10 +1056,8 @@ p {
 
 .tarot-library-keyword-tag { padding: 0.125rem 0.375rem; }
 
-.tarot-modal-footer {
+.archives-footer {
     padding: 0.75rem 1rem;
-    border-top: 1px solid rgb(var(--color-gold) / 0.2);
-    background-color: rgb(var(--color-obsidian) / 0.4);
     font-size: 0.75rem;
     color: rgb(var(--color-starlight) / 0.6);
 }
@@ -1226,7 +1096,7 @@ p {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-top: 1.25rem;
+    margin: 1.25rem 0;
     padding-top: 1.25rem;
     border-top: 1px dotted rgb(var(--color-gold) / 0.2);
 }
@@ -1244,7 +1114,7 @@ p {
 
 .elemental-track {
     width: 100%;
-    background-color: rgb(var(--color-obsidian) / 0.6);
+    background-color: rgb(var(--color-plum) / 0.5);
     border-radius: 9999px;
     height: 0.75rem;
     overflow: hidden;
@@ -1314,22 +1184,13 @@ p {
     color: rgb(var(--color-gold));
 }
 
-.spread-reading-thread {
+.spread-reading-thread, .elemental-flow {
     border-top: 1px dotted rgb(var(--color-gold) / 0.2);
     padding-top: 1.25rem;
     text-align: center;
 }
 
-.spread-reading-thread-label {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgb(var(--color-gold) / 0.8);
-}
-
-.spread-reading-steps {
+.spread-reading-steps, .elemental-flow-steps {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -1339,7 +1200,7 @@ p {
     gap: 1.5rem;
 }
 
-.spread-reading-step {
+.spread-reading-step, .elemental-flow-step {
     position: relative;
     flex: 1 1 0;
     min-width: 0;
@@ -1348,7 +1209,7 @@ p {
     gap: 0.2rem;
 }
 
-.spread-reading-step:not(:last-child)::after {
+.spread-reading-step:not(:last-child)::after, .elemental-flow-step:not(:last-child)::after {
     content: '→';
     position: absolute;
     left: calc(100% + 1.5rem / 5);
@@ -1357,7 +1218,7 @@ p {
     color: rgb(var(--color-gold) / 0.6);
 }
 
-.spread-reading-step-pos {
+.spread-reading-step-pos, .elemental-flow-pos {
     line-height: 1.2;
     font-size: 0.65rem;
     letter-spacing: 0.1em;
@@ -1365,13 +1226,46 @@ p {
     color: rgb(var(--color-gold) / 0.8);
 }
 
-.spread-reading-step-word {
+.spread-reading-step-word, .elemental-flow-card {
     font-size: 0.85rem;
     line-height: 1.35;
     color: rgb(var(--color-starlight));
     overflow-wrap: anywhere;
 }
 
+.elemental-flow-rev, .spread-reading-step-rev {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fb7185;
+}
+
+/* Teaser at the bottom of the Wisdom reading: a real button that opens the Elemental tab */
+.spread-reading-teaser {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: 0.5rem;
+    border: 1px dotted rgb(var(--color-gold) / 0.4);
+    background-color: rgb(var(--color-gold) / 0.06);
+    color: rgb(var(--color-gold));
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.spread-reading-teaser:hover {
+    background-color: rgb(var(--color-gold) / 0.14);
+    border-color: rgb(var(--color-gold) / 0.7);
+}
 
 /* ==========================================================================
    13. SETTINGS, THEME SELECTOR & TOAST NOTIFICATION
@@ -1615,15 +1509,17 @@ p {
 /* ==========================================================================
    14. MEDIA QUERIES
    ========================================================================== */
+
+@media (max-width: 550px) {
+   .card-action-container, .triple-actions-container { flex-direction: column; width: 100%; }
+   .card-action-container button, .triple-actions-container button { width: 100%; }
+   .insight-tab-btn.active, .tarot-tab-btn.active { flex: 1; }
+}
+
 @media (min-width: 640px) {
     h1 { font-size: 2.25rem; }
     h2 { font-size: 1.75rem; }
-    .tarot-modal-overlay { padding-top: 4rem; }
-    .tarot-tab-btn { flex: none; }
-    .tarot-tabs-group { width: auto; }
-    .tarot-modal-title, .tarot-modal-header { font-size: 1.25rem; }
-    .tarot-modal-controls-row {
-        flex-direction: row;
+    .archives-toolbar {
         justify-content: space-between;
         align-items: center;
     }
@@ -1635,14 +1531,9 @@ p {
     .tarot-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .tarot-library-card-title { font-size: 0.875rem; }
     .tarot-nav-btn {
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1rem;
         font-size: 0.875rem;
     }
-}
-
-@media (max-width: 550px) {
-    .card-action-container, .triple-actions-container { flex-direction: column; width: 100%; }
-    .card-action-container button, .triple-actions-container button { width: 100%; }
 }
 
 @media (min-width: 768px) {
@@ -1656,6 +1547,7 @@ p {
 }
 
 @media (max-width: 768px) {
+    .tarot-journal-pane { grid-template-columns: 1fr; }
     .single-card-content-row {
         grid-template-columns: 1fr;
         gap: 1.5rem;

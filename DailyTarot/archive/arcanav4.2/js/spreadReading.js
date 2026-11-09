@@ -296,21 +296,18 @@ function majorPhasePatterns(facts, out) {
     out.push({ priority: 58, headline: phase.headline, text: phase.text });
 }
 
-/**
- * One keyword per card for the closing "thread". The keyword is plain text and `reversed` is a
- * separate flag, so the page can style the "Reversed" marker itself (see .spread-reading-step-rev).
- */
+/** One keyword per card, reversed cards flagged, for the closing "thread". */
 function keywordThread(facts) {
     return facts.map((f, i) => {
         const word = (f.card.keywords && f.card.keywords[0]) || f.card.originalName || f.card.name;
-        return { position: POSITIONS[i], keyword: word, reversed: f.reversed };
+        return { position: POSITIONS[i], keyword: f.reversed ? `${word} (Reversed)` : word };
     });
 }
 
 /**
  * @param {Array} cards     three card objects from the deck
  * @param {Array} reversed  three booleans
- * @returns {{headline: string, points: string[], thread: Array<{position: string, keyword: string, reversed: boolean}>}|null}
+ * @returns {{headline: string, points: string[], thread: Array}|null}
  */
 export function analyzeSpread(cards, reversed = []) {
     if (!Array.isArray(cards) || cards.length !== 3 || cards.some(c => !c)) return null;

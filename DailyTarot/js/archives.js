@@ -52,9 +52,10 @@ function setTab(tab, { focus = false } = {}) {
     if (focus) $(`tab-btn-${tab}`).focus();
 
     $('archive-search-container').classList.toggle('hidden', isJournal);
+    $('archives-toolbar').classList.toggle('hidden', isJournal);
+
     if (isJournal) $('archive-filters').classList.add('hidden');
     else if (state.filter !== 'all') setFiltersOpen(true);
-
     document.title = `${isJournal ? 'Journal' : 'Card Library'} - The Arcane Archives - Arcana`;
 
     if (isJournal) {

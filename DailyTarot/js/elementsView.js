@@ -35,13 +35,11 @@ function renderBars(percentages) {
 function renderFlow(flow) {
     return `
         <div class="elemental-flow">
-            <span class="elemental-flow-label">Elemental Flow</span>
             <ol class="elemental-flow-steps">
                 ${flow.map(step => `
                     <li class="elemental-flow-step">
                         <span class="elemental-flow-pos">${escapeHTML(step.position)}</span>
-                        <span class="elemental-flow-chip is-${step.element ? step.element.toLowerCase() : 'none'}">${escapeHTML(step.element || 'Spirit')}</span>
-                        <span class="elemental-flow-card">${escapeHTML(step.name)}</span>
+                        <span class="elemental-flow-card">${escapeHTML(step.keyword)}</span>
                         ${step.reversed ? '<span class="elemental-flow-rev">Reversed</span>' : ''}
                     </li>
                 `).join('')}

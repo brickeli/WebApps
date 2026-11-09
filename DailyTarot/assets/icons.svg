@@ -62,8 +62,8 @@ Utility Icons
      <circle cx="8.4" cy="9.9" r="4.2" opacity="0.5"></circle>
 </symbol>
 
-<!-- Prismatic Lattice: Interlocking inverted triangles (Hexagram/Merkaba vector matrix) -->
-<symbol id="icon-prismatic-lattice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+<!-- Prismatic Hexagram: Interlocking inverted triangles (Hexagram/Merkaba vector matrix) -->
+<symbol id="icon-prismatic-hexagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
      <path d="M12 3.5L20.5 18H3.5L12 3.5z" opacity="0.4"></path>
      <path d="M12 20.5L3.5 6h17L12 20.5z" opacity="0.7"></path>
      <path d="M12 3.5v17M3.5 6l17 12M20.5 6L3.5 18" stroke-width="0.9" opacity="0.4"></path>

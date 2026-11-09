@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
     <title>Arcana - Daily Tarot Companion</title>
+    <!-- Base Custom Design System Stylesheet -->
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/card-styles.css">
-    <link rel="stylesheet" href="./css/elemental.css">
+    <!-- Google Fonts: Cinzel + Cinzel Decorative (Headers) & Atkinson Hyperlegible (Body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
@@ -32,10 +33,10 @@
                     <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-triple"></use></svg>
                     3-Card Spread
                 </button>
-                <a id="btn-archives" href="./archives.html" class="tarot-nav-btn">
+                <button id="btn-archives" onclick="toggleArchivesModal(true)" class="tarot-nav-btn">
                     <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-archives"></use></svg>
                     The Archives
-                </a>
+                </button>
             </nav>
         </div>
     </header>
@@ -129,13 +130,13 @@
 
                         <!-- Tab Guidance Panel -->
                         <div id="tarot-insights-container" class="tarot-insights-container">
-                            <div class="insight-tabs-nav" role="tablist" aria-label="Single insight">
-                                <button type="button" class="insight-tab-btn active" id="btn-tab-wisdom" role="tab" aria-selected="true" aria-controls="single-tab-overall" tabindex="0">
+                            <div class="insight-tabs-nav">
+                                <button class="insight-tab-btn active" id="btn-tab-wisdom">
                                     <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-scroll"></use></svg> Arcanum Wisdom
                                 </button>
-                                <button type="button" class="insight-tab-btn" id="btn-tab-elemental" role="tab" aria-selected="false" aria-controls="single-tab-elemental" tabindex="-1">
+                                <button class="insight-tab-btn" id="btn-tab-elemental">
                                     <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-flame"></use></svg> Elemental Insight
-                                </button>                                
+                                </button>
                             </div>
 
                             <div id="tab-content-wisdom" class="insight-tab-panel active">
@@ -329,8 +330,8 @@
                         <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-seed-of-life"></use></svg>
                     </button>
                     <button class="card-theme-btn" data-card-style="metatron" aria-pressed="false">
-                        <span>Prismatic Hexagram</span>
-                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-hexagram"></use></svg>
+                        <span>Prismatic Lattice</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-lattice"></use></svg>
                     </button>
                 </div>
             </div>
@@ -339,6 +340,78 @@
         </div>
       </div>
     </footer>
+
+    <!-- Unified Archives Modal (Journal + Library Tabs) -->
+    <div id="archives-modal" class="tarot-modal-overlay hidden">
+        <div class="tarot-modal-container" role="dialog" aria-modal="true" aria-label="The Arcane Archives">
+            <!-- Modal Header & Tab Navigation -->
+            <div class="tarot-modal-header">
+                <div class="tarot-modal-title-row">
+                    <h3 class="tarot-modal-title">
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-archives"></use></svg> The Arcane Archives
+                    </h3>
+                    <button onclick="toggleArchivesModal(false)" class="tarot-modal-close-btn" aria-label="Close archives">
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-close"></use></svg>
+                    </button>
+                </div>
+
+                <!-- Search Bar & Mobile Filter Toggle Header -->
+                <div class="tarot-modal-controls-row">
+                    <!-- Tab Buttons -->
+                    <div class="tarot-tabs-group">
+                        <button id="tab-btn-journal" onclick="switchArchiveTab('journal')" class="tarot-tab-btn active">
+                            <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Journal (<span id="tab-journal-count">0</span>)
+                        </button>
+                        <button id="tab-btn-library" onclick="switchArchiveTab('library')" class="tarot-tab-btn">
+                            <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-library"></use></svg> Card Library
+                        </button>
+                    </div>
+
+                    <!-- Contextual Search Bar & Filter Toggle (Visible in Library Tab) -->
+                    <div id="archive-search-container" class="tarot-search-group hidden">
+                        <div class="tarot-search-input-wrapper">
+                            <svg class="icon tarot-search-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-search"></use></svg>
+                            <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input">
+                        </div>
+                        <!-- Mobile Filter Toggle Button -->
+                        <button id="filter-toggle-btn" class="tarot-filter-toggle-btn">
+                            <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-filter"></use></svg> Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Element & Arcana Filter Chips -->
+                <div id="archive-filters" class="tarot-filters-collapse hidden">
+                    <button onclick="filterLibrary('all')" class="lib-filter-btn active">All</button>
+                    <button onclick="filterLibrary('Major Arcana')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-crown"></use></svg><span class="filter-text">Major</span></button>
+                    <button onclick="filterLibrary('Minor Arcana')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-star"></use></svg><span class="filter-text">Minor</span></button>
+                    <button onclick="filterLibrary('Wands')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-wand"></use></svg><span class="filter-text">Wands</span></button>
+                    <button onclick="filterLibrary('Cups')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-chalice"></use></svg><span class="filter-text">Cups</span></button>
+                    <button onclick="filterLibrary('Swords')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sword"></use></svg><span class="filter-text">Swords</span></button>
+                    <button onclick="filterLibrary('Pentacles')" class="lib-filter-btn"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-pentacle"></use></svg><span class="filter-text">Pentacles</span></button>
+                </div>
+            </div>
+
+            <!-- Tab Content Views -->
+            <div class="tarot-modal-body">
+                <!-- Journal View Pane -->
+                <div id="archive-view-journal" class="tarot-journal-pane">
+                    <!-- Populated via JS -->
+                </div>
+
+                <!-- Library View Pane (Grid) -->
+                <div id="archive-view-library" class="tarot-library-grid">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="tarot-modal-footer">
+                <span id="archives-footer-status">Stored in local browser memory</span>
+                <button id="archive-footer-action" onclick="clearHistory()" class="tarot-clear-journal-btn">Clear Journal Readings</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Javascript Logic -->
     <script type="module" src="./main.js"></script>

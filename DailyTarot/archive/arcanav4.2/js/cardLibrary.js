@@ -7,8 +7,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["New Beginnings", "Innocence", "Leap of Faith", "Spontaneity"],
     desc: "The Pilgrim stands at the threshold of destiny, gazing toward celestial horizons with unburdened heart and open spirit.",
-    light: "Welcoming fresh beginnings, trusting the flow of life, and stepping bravely into the unknown.",
-    shadow: "Carelessness, avoiding reality, taking reckless leaps without awareness, or pure naivety.",
+    light: "Embrace fresh beginnings, trust the flow of life, and step bravely into uncharted paths.",
+    shadow: "Carelessness, avoiding reality, reckless leaps without awareness, or naivety.",
     advice: "Trust your innate potential; every grand journey starts with a single step into light."
   },
   {
@@ -19,8 +19,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Manifestation", "Resourcefulness", "Willpower", "Mastery"],
     desc: "Surrounded by sacred symbols, The Alchemist channels ethereal energies from above to shape material reality below.",
-    light: "Align inner intent with outer action. You hold all the tools needed to manifest your desires.",
-    shadow: "Unchanneled talents, misdirection, and manipulation leading to wasted creative potential.",
+    light: "Align your inner intent with outer action. You possess all elements needed to create your desires.",
+    shadow: "Wasted potential, misdirection, manipulation, or unchanneled talents.",
     advice: "Focus your will and transform raw thought into lasting form."
   },
   {
@@ -31,8 +31,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Intuition", "Sacred Mystery", "Subconscious", "Inner Truth"],
     desc: "Veiled between light and shadow, The Oracle guards the doorway to internal wisdom and deep intuitive insight.",
-    light: "Trust your silent instincts, honor inner wisdom, and explore the mysteries beneath the surface.",
-    shadow: "Hiding secrets out of fear, suppressing deep intuition, or maintaining cold emotional distance.",
+    light: "Honor your inner voice, trust silent instincts, and explore the mysteries hidden beneath the surface.",
+    shadow: "Secrets withheld out of fear, ignoring deep intuition, or emotional distance.",
     advice: "Be still; the answers you seek whisper in the quiet chambers of your heart."
   },
   {
@@ -43,8 +43,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Abundance", "Nurturing", "Creation", "Grace"],
     desc: "Enthroned amidst lush flora and golden starlight, The Sovereign Queen embodies unconditional beauty and creation.",
-    light: "Abundant creative harvest, deep comfort, emotional richness, and surrounding nature warmth.",
-    shadow: "Creative blockages, neglecting vital self-care, smothering attachment, or total dependence.",
+    light: "A time of creative harvest, deep comfort, emotional richness, and nature's warmth.",
+    shadow: "Creative blockages, neglect of self-care, smothering attachment, or dependence.",
     advice: "Allow your creative spirit to blossom fully without fear."
   },
   {
@@ -55,8 +55,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Structure", "Authority", "Stability", "Discipline"],
     desc: "Standing resolute atop stone foundations, The Sovereign Monarch commands stability, logic, and sacred boundaries.",
-    light: "Establish structure, enforce healthy boundaries, and lead your life with calm, steady strength.",
-    shadow: "Rigidity, over-control, unyielding stubbornness, or creating unnecessary structural friction.",
+    light: "Establish order, set healthy boundaries, and lead your life with calm, steady strength.",
+    shadow: "Rigidity, over-control, unyielding stubbornness, or structural friction.",
     advice: "Build your life upon firm principles and balanced leadership."
   },
   {
@@ -67,8 +67,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Tradition", "Wisdom", "Mentorship", "Spiritual Order"],
     desc: "A custodian of timeless knowledge, holding keys that unlock sacred philosophy and esoteric heritage.",
-    light: "Respecting tradition, seeking mentor wisdom, structured path, and deepening personal beliefs.",
-    shadow: "Blind conformity, rigid dogmas, outdated systems, or surrendering your inner voice to rules.",
+    light: "Seek wisdom from reliable traditions and mentors while deepening your core beliefs.",
+    shadow: "Blind conformity, outdated rules, or losing your voice to rigid dogmas.",
     advice: "Honor traditional wisdom, but filter every lesson through your personal integrity."
   },
   {
@@ -79,8 +79,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Harmony", "Relationships", "Moral Choice", "Alignment"],
     desc: "Two souls stand in divine balance under a radiant star, united by trust, mutual respect, and shared truth.",
-    light: "Creating deep harmony in relationships, aligning personal values, and making clear choices.",
-    shadow: "Disharmony in relationships, misaligned priorities, reluctance to commit, or inner conflict.",
+    light: "Deep harmony in relationships, aligned personal values, and choices made with clarity.",
+    shadow: "Disharmony, misaligned priorities, reluctance to commit, or inner conflict.",
     advice: "Choose that which aligns with your highest moral and emotional truth."
   },
   {
@@ -115,8 +115,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Solitude", "Introspection", "Guidance", "Inner Light"],
     desc: "A solitary figure holding a luminous beacon traverses quiet paths to uncover profound inner truths.",
-    light: "Take quiet time for introspection, self-discovery, and listening closely to your inner guidance.",
-    shadow: "Excessive isolation, feeling deep loneliness, hiding from life, or rejecting sound insight.",
+    light: "Take quiet time for introspection, self-discovery, and listening to your inner guidance.",
+    shadow: "Excessive isolation, loneliness, hiding from life, or rejecting sound insight.",
     advice: "Step back from external noise; the light you seek resides within your quiet center."
   },
   {
@@ -127,8 +127,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Cycles", "Destiny", "Turning Points", "Evolution"],
     desc: "The timeless wheel spins against the starry sky, marking shifting seasons, karma, and natural evolution.",
-    light: "Embrace inevitable turning points, unexpected good fortune, and the evolution of life cycles.",
-    shadow: "Resisting natural cycles, clinging to the past, or experiencing a deep fear of transition.",
+    light: "Embrace inevitable turning points, good fortune, and the evolution of life cycles.",
+    shadow: "Resisting natural cycles, clinging to the past, or fear of transition.",
     advice: "Remain centered at the hub of the wheel as life's outer currents turn."
   },
   {
@@ -139,8 +139,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Fairness", "Truth", "Accountability", "Clarity"],
     desc: "Seated between twin pillars with scales balanced and sword unsheathed, a figure weighs action and consequence with absolute objectivity.",
-    light: "Evaluating milestones with clarity, moral integrity, cause-and-effect balance, and honesty.",
-    shadow: "Unconscious bias, dishonesty, avoiding responsibility, or feeling treated unfairly by others.",
+    light: "Milestones evaluated with clarity, moral integrity, cause-and-effect balance, and unvarnished truth.",
+    shadow: "Bias, dishonesty, avoiding responsibility, or feeling treated unfairly.",
     advice: "Weigh your choices honestly; what you set upon the scales today returns to you in kind."
   },
   {
@@ -151,8 +151,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Surrender", "New Perspective", "Pause", "Enlightenment"],
     desc: "Suspended upside down from a living tree with a halo of light surrounding their head, a figure rests peacefully in deliberate stillness.",
-    light: "Gain wisdom through stillness, release control, and view situations through an inverted lens.",
-    shadow: "Stalling out of fear, resisting a necessary pause, making pointless sacrifices, or indecision.",
+    light: "Unlocking wisdom through stillness, releasing control, seeing situations from an inverted lens, and spiritual pause.",
+    shadow: "Stalling, resisting necessary pause, unnecessary sacrifice, or indecision.",
     advice: "Suspend action and surrender control; a change in perspective reveals the path forward."
   },
   {
@@ -199,8 +199,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Sudden Change", "Awakening", "Revelation", "Breakthrough"],
     desc: "Lightning strikes a stone spire built on high rocks, shattering fragile walls to reveal raw ground beneath.",
-    light: "Break false foundations to welcome sudden liberating epiphanies, clarity, and awakening.",
-    shadow: "Clinging to collapsing structures, fear of vital change, and denying reality to delay impact.",
+    light: "Dismantling false foundations, sudden liberating epiphanies, clearing illusion, and inevitable awakening.",
+    shadow: "Clinging to collapsing structures, fear of change, or denying reality to delay impact.",
     advice: "Let false structures break away; what collapses makes room for genuine truth."
   },
   {
@@ -211,8 +211,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Hope", "Inspiration", "Serenity", "Renewal"],
     desc: "Beneath a glowing constellation, pure waters flow, bringing tranquility and renewed spirit after the storm.",
-    light: "Restored hope, deep mental clarity, spiritual healing, and serene confidence in tomorrow.",
-    shadow: "Temporary discouragement, a sudden lack of faith in your path, or lingering cynicism.",
+    light: "Restored hope, mental clarity, spiritual healing, and serene confidence in tomorrow.",
+    shadow: "Temporary discouragement, lack of faith in your path, or cynicism.",
     advice: "Keep your gaze fixed upon hope; your guiding star shines steadily."
   },
   {
@@ -223,8 +223,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Intuition", "Dreams", "Unconscious", "Illusion"],
     desc: "Silver moonlight casts subtle patterns over quiet waters, illuminating deep dreams and intuitive paths.",
-    light: "Pay attention to dreams, embrace artistic imagination, and navigate with keen intuition.",
-    shadow: "Anxiety over uncertainties, deep emotional confusion, or misinterpreting subtle signs.",
+    light: "Pay attention to dreams, embrace artistic imagination, and navigate subtlety with keen intuition.",
+    shadow: "Anxiety over uncertainties, confusion, or misinterpreting subtle signs.",
     advice: "Trust your gut instincts through foggy moments; clarity will return with dawn."
   },
   {
@@ -235,8 +235,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Vitality", "Joy", "Clarity", "Success"],
     desc: "Golden rays illuminate the landscape in warmth, bringing joy, truth, and vibrant energy to light.",
-    light: "Radiant success, boundless optimism, creative energy, and warm clarity across all endeavors.",
-    shadow: "Temporary cloudiness, a brief delay in celebration, or experiencing muted enthusiasm.",
+    light: "Radiant success, optimism, creative energy, and warm clarity across all endeavors.",
+    shadow: "Temporary cloudiness, delayed celebration, or muted enthusiasm.",
     advice: "Bask in your accomplishments and share your light generously with others."
   },
   {
@@ -259,8 +259,8 @@ const MAJOR_ARCANA = [
     arcana: "Major Arcana",
     keywords: ["Completion", "Wholeness", "Achievement", "Fulfillment"],
     desc: "Encircled by a wreath of stars, a figure stands in wholeness, celebrating a cycle brought to rich completion.",
-    light: "Reaching major milestones, holistic fulfillment, a sense of belonging, and well-earned success.",
-    shadow: "Facing unfinished tasks, a lack of total closure, or delaying necessary final completion.",
+    light: "Major milestones achieved, holistic fulfillment, sense of belonging, and well-earned success.",
+    shadow: "Unfinished tasks, lack of closure, or delaying necessary completion.",
     advice: "Honor your achievements; one beautiful cycle concludes as another begins."
   }
 ];
@@ -959,10 +959,10 @@ const MINOR_ARCANA = [
    ELEMENTAL LORE DICTIONARY
    ========================================================================== */
 const ELEMENTAL_LORE = {
-  Fire: "Governed by Wands and passion. Sparking willpower, creative drive, sudden transformation, and dynamic action.",
-  Water: "Governed by Cups and intuition. Reflecting deep emotional currents, subconscious realms, relationships, and fluid adaptability.",
-  Air: "Governed by Swords and intellect. Ruling clear perception, strategic thought, communication, and decisive mental clarity.",
-  Earth: "Governed by Pentacles and matter. Anchored in physical manifestation, tangible stability, patience, and grounded growth."
+  Fire: "Governed by Wands and passion—sparking willpower, creative drive, sudden transformation, and dynamic action.",
+  Water: "Governed by Cups and intuition—reflecting deep emotional currents, subconscious realms, relationships, and fluid adaptability.",
+  Air: "Governed by Swords and intellect—ruling clear perception, strategic thought, communication, and decisive mental clarity.",
+  Earth: "Governed by Pentacles and matter—anchored in physical manifestation, tangible stability, patience, and grounded growth."
 };
 
 export const fullTarotDeck = [...MAJOR_ARCANA, ...MINOR_ARCANA];

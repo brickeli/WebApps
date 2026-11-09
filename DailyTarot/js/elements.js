@@ -14,7 +14,7 @@ export const ELEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 
 const POSITIONS = ['Past', 'Present', 'Future'];
 const MAX_POINTS = 3;
-const BALANCED_LORE = 'A harmonious equilibrium of cosmic forces flowing through the timeline.';
+const BALANCED_LORE = 'A harmonious trifecta of cosmic forces flowing through the timeline.';
 
 /** Every card in cardLibrary.js carries an `element`; suit/coin fallbacks are kept for older saved data. */
 export function getElement(card) {
@@ -60,14 +60,54 @@ const FLOW = {
 
 // Keys are the two element names in alphabetical order.
 const TENSION = {
-    'Fire+Water': 'drive and feeling pull against each other, so what you want to do and what you feel may not agree yet',
-    'Air+Earth':  'ideas and practicality pull against each other, so the plan and the ground it stands on need reconciling'
+    'Fire+Water': 'drive and feeling pull against each other; what you want to do and what you feel may not agree yet',
+    'Air+Earth':  'ideas and practicality pull against each other; the plan and the ground it stands on need reconciling'
 };
 
 const HARMONY = {
-    'Air+Fire':    'ideas feed action and action sharpens ideas, so momentum comes easily',
-    'Earth+Water': 'feeling and practicality support each other, so care becomes something that actually gets built'
+    'Air+Fire':    'ideas feed action and action sharpens ideas; momentum comes easily',
+    'Earth+Water': 'feeling and practicality support each other; care becomes something that actually gets built'
 };
+
+/**
+ * Elemental Flow keywords: one or two words per element, position and orientation.
+ * Upright reads as the element moving freely; reversed reads as it blocked or running to excess
+ * (the same ideas as BLOCKED above), shaped by whether it sits in the Past, Present or Future.
+ */
+const FLOW_KEYWORDS = {
+    Fire: {
+        Past:    { upright: 'Kindled Spark',   reversed: 'Banked Embers' },
+        Present: { upright: 'Blazing Will',    reversed: 'Scorching Haste' },
+        Future:  { upright: 'Rising Flame',    reversed: 'Flickering Fire' }
+    },
+    Water: {
+        Past:    { upright: 'Deep Currents',   reversed: 'Buried Tides' },
+        Present: { upright: 'Flowing Tide',    reversed: 'Troubled Waters' },
+        Future:  { upright: 'Clear Waters',    reversed: 'Ebbing Tide' }
+    },
+    Air: {
+        Past:    { upright: 'Gathered Winds',  reversed: 'Lingering Fog' },
+        Present: { upright: 'Clear Skies',     reversed: 'Restless Gale' },
+        Future:  { upright: 'Rising Wind',     reversed: 'Scattered Gusts' }
+    },
+    Earth: {
+        Past:    { upright: 'Deep Roots',      reversed: 'Brittle Roots' },
+        Present: { upright: 'Firm Ground',     reversed: 'Shaky Ground' },
+        Future:  { upright: 'Ripening Harvest', reversed: 'Barren Field' }
+    }
+};
+
+// Only used if a card's element cannot be determined (old saved data), so the row is never blank.
+const NEUTRAL_KEYWORDS = {
+    Past:    { upright: 'Quiet Echoes',   reversed: 'Tangled Echoes' },
+    Present: { upright: 'Open Moment',    reversed: 'Strained Moment' },
+    Future:  { upright: 'Open Road',      reversed: 'Winding Road' }
+};
+
+function flowKeyword(element, position, reversed) {
+    const table = (element && FLOW_KEYWORDS[element]) || NEUTRAL_KEYWORDS;
+    return table[position][reversed ? 'reversed' : 'upright'];
+}
 
 /* ---- Small helpers ----------------------------------------------------------- */
 
@@ -82,11 +122,6 @@ function joinPositions(indexes) {
 
 function positionsOf(elems, element) {
     return elems.map((e, i) => (e === element ? i : -1)).filter(i => i >= 0);
-}
-
-/** Display name without the numeral prefix: "XVI. The Lightning Spire" -> "The Lightning Spire". */
-function shortName(card) {
-    return String(card.name || '').replace(/^([IVXL]+|0)\.\s*/, '');
 }
 
 function pairKey(a, b) {
@@ -104,7 +139,7 @@ function dominancePatterns(ctx, out) {
             out.push({
                 priority: 95,
                 headline: `Pure ${el}`,
-                text: `All three cards carry ${el} energy: ${t.trait} saturate this spread with nothing to balance them, so watch for ${t.excess}.`
+                text: `All three cards carry ${el} energy: ${t.trait} saturate this spread with nothing to balance them; watch for ${t.excess}.`
             });
         } else if (n === 2) {
             const other = elems.find(e => e && e !== el);
@@ -122,7 +157,7 @@ function distinctPatterns(ctx, out) {
         out.push({
             priority: 66,
             headline: 'Three Elements, One Silent',
-            text: 'Three different elements share this spread, so no single temperament runs the show.'
+            text: 'Three different elements share this spread; no single temperament runs the show.'
         });
     }
 }
@@ -135,14 +170,14 @@ function absencePatterns(ctx, out) {
         out.push({
             priority: 60,
             headline: `${m} Is Silent`,
-            text: `Nothing here speaks for ${m}, so ${TEMPER[m].lack} may need deliberate attention.`
+            text: `Nothing here speaks for ${m}; ${TEMPER[m].lack} may need deliberate attention.`
         });
     } else if (missing.length === 2) {
         const [a, b] = missing;
         out.push({
             priority: 42,
             headline: `${a} and ${b} Absent`,
-            text: `Neither ${a} nor ${b} appears, so ${TEMPER[a].lack} and ${TEMPER[b].lack} are the gaps to watch.`
+            text: `Neither ${a} nor ${b} appears; ${TEMPER[a].lack} and ${TEMPER[b].lack} are the gaps to watch.`
         });
     }
 }
@@ -222,7 +257,7 @@ function reversalPatterns(ctx, out) {
             must: true,
             priority: 52,
             headline: 'Energies Out of Tune',
-            text: `Reversals touch ${list}: those energies are blocked, excessive or still being worked through, so give them extra attention.`
+            text: `Reversals touch ${list}: those energies are blocked, excessive or still being worked through; give them extra attention.`
         });
     }
 }
@@ -258,7 +293,9 @@ function summarise(counts, known) {
  * @param {Array} reversed  three booleans
  * @returns {{headline: string, points: string[], counts: object, percentages: object,
  *            leaders: string[], dominant: string, lore: string, cssElement: string,
- *            flow: Array}|null}
+ *            flow: Array<{position: string, keyword: string, reversed: boolean}>}|null}
+ *          `flow` has one entry per position: a one- or two-word keyword for that element, position
+ *          and orientation, plus the `reversed` flag so the page can keep showing "(Reversed)".
  */
 export function analyzeElements(cards, reversed = []) {
     if (!Array.isArray(cards) || cards.length !== 3 || cards.some(c => !c)) return null;
@@ -307,10 +344,9 @@ export function analyzeElements(cards, reversed = []) {
         dominant: summary.dominant,
         lore: summary.lore,
         cssElement: summary.cssElement,
-        flow: cards.map((card, i) => ({
+        flow: cards.map((_, i) => ({
             position: POSITIONS[i],
-            element: elems[i],
-            name: shortName(card),
+            keyword: flowKeyword(elems[i], POSITIONS[i], ctx.reversed[i]),
             reversed: ctx.reversed[i]
         }))
     };
