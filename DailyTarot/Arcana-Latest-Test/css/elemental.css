@@ -1,0 +1,125 @@
+/* ==========================================================================
+   ELEMENTAL INSIGHT: points, flow strip and the Wisdom teaser
+   Loaded by arcana.html after card-styles.css. Builds on the elemental / spread-reading styles in styles.css.
+   ========================================================================== */
+
+/* Spacing inside the Elemental panel: lore, then points, then bars (which carry their own top rule) */
+.elemental-balance-container .elemental-lore-blurb { margin-bottom: 1.25rem; }
+.elemental-balance-container .spread-reading-points { margin-bottom: 0; }
+
+/* Past / Present / Future flow, last thing in the panel */
+.elemental-flow {
+    --flow-gap: 1.5rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px dotted rgb(var(--color-gold) / 0.2);
+    text-align: center;
+}
+
+.elemental-flow-label {
+    display: block;
+    margin-bottom: 0.9rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.8);
+}
+
+.elemental-flow-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--flow-gap);
+}
+
+.elemental-flow-step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* arrow sits in the middle of the gap, level with the chip */
+.elemental-flow-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    left: calc(100% + var(--flow-gap) / 2);
+    top: 1.95rem;
+    transform: translate(-50%, -50%);
+    color: rgb(var(--color-gold) / 0.6);
+}
+
+.elemental-flow-pos {
+    font-size: 0.65rem;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.8);
+}
+
+.elemental-flow-chip {
+    padding: 0.2rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: rgb(var(--color-starlight));
+}
+
+.elemental-flow-chip.is-fire  { color: rgb(var(--color-element-fire));  background: rgb(var(--color-element-fire) / 0.12); }
+.elemental-flow-chip.is-water { color: rgb(var(--color-element-water)); background: rgb(var(--color-element-water) / 0.12); }
+.elemental-flow-chip.is-air   { color: rgb(var(--color-element-air));   background: rgb(var(--color-element-air) / 0.1); }
+.elemental-flow-chip.is-earth { color: rgb(var(--color-element-earth)); background: rgb(var(--color-element-earth) / 0.12); }
+
+.elemental-flow-card {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: rgb(var(--color-starlight));
+    overflow-wrap: anywhere;
+}
+
+.elemental-flow-rev,
+.spread-reading-step-rev {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fb7185;
+}
+
+@media (max-width: 550px) {
+    .elemental-flow { --flow-gap: 0.75rem; }
+    .elemental-flow-chip { padding: 0.2rem 0.5rem; font-size: 0.7rem; }
+}
+
+/* Teaser at the bottom of the Wisdom reading: a real button that opens the Elemental tab */
+.spread-reading-teaser {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.85rem 0.9rem;
+    border-radius: 0.5rem;
+    border: 1px dotted rgb(var(--color-gold) / 0.4);
+    background-color: rgb(var(--color-gold) / 0.06);
+    color: rgb(var(--color-gold));
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.spread-reading-teaser:hover {
+    background-color: rgb(var(--color-gold) / 0.14);
+    border-color: rgb(var(--color-gold) / 0.7);
+}

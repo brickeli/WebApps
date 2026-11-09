@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <title>The Arcane Archives - Arcana Daily Tarot</title>
+    <meta name="description" content="Your saved tarot readings and the complete 78-card deck index.">
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/card-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="site-body">
+    <canvas id="fx-canvas"></canvas>
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="brand-group">
+                <svg class="nav-logo" filter="url(#gold-glow)"><use href="./assets/icons.svg#icon-arcana"></use></svg>
+                <h1 class="brand-title">Arcana</h1>
+                <span class="brand-subtitle">Daily Tarot Companion</span>
+            </div>
+            <nav class="nav-container" aria-label="Main">
+                <a id="btn-single" href="./arcana.html" class="tarot-nav-btn">
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-daily"></use></svg>
+                    Daily Card
+                </a>
+                <a id="btn-triple" href="./arcana.html?mode=triple" class="tarot-nav-btn">
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-triple"></use></svg>
+                    3-Card Spread
+                </a>
+                <a id="btn-archives" href="./archives.html" class="tarot-nav-btn active" aria-current="page">
+                    <svg class="nav-icon-svg"><use href="./assets/icons.svg#icon-archives"></use></svg>
+                    The Archives
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main archives-main">
+        <div class="intro-container">
+            <h2 class="intro-title">The Arcane Archives</h2>
+            <p class="intro-description">Revisit the readings you have saved, or wander the full deck.</p>
+        </div>
+
+        <section class="archives-panel" aria-label="Archives">
+            <div class="archives-toolbar">
+                <div class="tarot-tabs-group" role="tablist" aria-label="Archive sections">
+                    <button id="tab-btn-journal" class="tarot-tab-btn active" role="tab" aria-selected="true" aria-controls="archive-view-journal" data-tab="journal">
+                        <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-journal"></use></svg> Journal (<span id="tab-journal-count">0</span>)
+                    </button>
+                    <button id="tab-btn-library" class="tarot-tab-btn" role="tab" aria-selected="false" aria-controls="archive-view-library" data-tab="library" tabindex="-1">
+                        <svg class="icon tab-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-library"></use></svg> Card Library
+                    </button>
+                </div>
+
+                <div id="archive-search-container" class="tarot-search-group hidden">
+                    <div class="tarot-search-input-wrapper">
+                        <svg class="icon tarot-search-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-search"></use></svg>
+                        <input id="archive-search-input" type="text" placeholder="Search deck cards..." class="tarot-search-input" aria-label="Search deck cards" autocomplete="off">
+                    </div>
+                    <button id="filter-toggle-btn" class="tarot-filter-toggle-btn" aria-expanded="false" aria-controls="archive-filters">
+                        <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#icon-filter"></use></svg> Filters
+                    </button>
+                </div>
+            </div>
+
+            <div id="archive-filters" class="tarot-filters-collapse hidden" role="group" aria-label="Filter cards">
+                <button data-filter="all" class="lib-filter-btn active" aria-pressed="true">All</button>
+                <button data-filter="Major Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-crown"></use></svg><span class="filter-text">Major</span></button>
+                <button data-filter="Minor Arcana" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-star"></use></svg><span class="filter-text">Minor</span></button>
+                <button data-filter="Wands" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-wand"></use></svg><span class="filter-text">Wands</span></button>
+                <button data-filter="Cups" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-chalice"></use></svg><span class="filter-text">Cups</span></button>
+                <button data-filter="Swords" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sword"></use></svg><span class="filter-text">Swords</span></button>
+                <button data-filter="Pentacles" class="lib-filter-btn" aria-pressed="false"><svg class="icon filter-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-pentacle"></use></svg><span class="filter-text">Pentacles</span></button>
+            </div>
+
+            <div class="archives-body">
+                <div id="archive-view-journal" class="tarot-journal-pane" role="tabpanel" aria-labelledby="tab-btn-journal"></div>
+                <div id="archive-view-library" class="tarot-library-grid hidden" role="tabpanel" aria-labelledby="tab-btn-library"></div>
+            </div>
+
+            <div class="archives-footer">
+                <span id="archives-footer-status" aria-live="polite">Stored in your local browser memory</span>
+                <button id="archive-footer-action" type="button" class="tarot-clear-journal-btn">Clear All Readings</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="tarot-toast">
+        <svg class="icon toast-star-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-hexagram"></use></svg>
+        <span id="toast-msg">Reading saved to your journal!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="tarot-footer">
+      <div class="footer-inner">
+        <p class="footer-copyright">✦ Arcana Tarot Companion • Seek Wisdom within the Stars ✦</p>
+
+        <!-- Combined Utilities / Settings Menu -->
+        <div class="footer-settings-wrapper">
+          <button id="utils-menu-btn" class="tarot-settings-btn" aria-haspopup="true" aria-expanded="false" aria-controls="utils-dropdown">
+              <svg class="icon settings-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-sliders"></use></svg>
+              <span>Settings</span>
+              <svg class="icon settings-chevron" aria-hidden="true"><use href="./assets/icons.svg#icon-chevron-up"></use></svg>
+          </button>
+
+          <!-- Upward Opening Utilities Popup Menu -->
+          <div id="utils-dropdown" class="tarot-settings-dropdown hidden">
+            <!-- Section 1: Ambient Audio Toggle -->
+            <div class="settings-section-audio">
+              <span class="settings-section-label">Audio</span>
+              <button id="menu-audio-btn" class="tarot-audio-toggle-btn">
+                <div class="settings-audio-info">
+                  <svg id="audio-icon" class="icon settings-audio-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-volume-off"></use></svg>
+                  <span id="audio-status-text" class="settings-audio-text">Sound Muted</span>
+                </div>
+                <span id="audio-toggle-badge" class="settings-audio-badge">OFF</span>
+              </button>
+            </div>
+
+            <!-- Section 2: Color Theme Selector -->
+            <div>
+              <span class="settings-section-label">Aesthetic Palette</span>
+              <div class="settings-themes-list">
+                <button onclick="selectTheme('obsidian-plum', 'Gothic Plum')" class="theme-option-btn" data-theme-id="obsidian-plum" aria-pressed="false">
+                  <span>Gothic Plum</span>
+                  <span class="theme-dot theme-dot-plum"></span>
+                </button>
+                <button onclick="selectTheme('crimson-alchemist', 'Crimson Alchemist')" class="theme-option-btn" data-theme-id="crimson-alchemist" aria-pressed="false">
+                  <span>Crimson Alchemist</span>
+                  <span class="theme-dot theme-dot-crimson"></span>
+                </button>
+                <button onclick="selectTheme('solar-radiance', 'Modern Astral')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
+                  <span>Solar Radiance</span>
+                  <span class="theme-dot theme-dot-amber"></span>
+                </button>
+                <button onclick="selectTheme('emerald-sanctuary', 'Emerald Sanctuary')" class="theme-option-btn" data-theme-id="emerald-sanctuary" aria-pressed="false">
+                  <span>Emerald Sanctuary</span>
+                  <span class="theme-dot theme-dot-emerald"></span>
+                </button>
+                <button onclick="selectTheme('nocturnal-cosmic', 'Nocturnal Cosmic')" class="theme-option-btn" data-theme-id="nocturnal-cosmic" aria-pressed="false">
+                  <span>Nocturnal Cosmic</span>
+                  <span class="theme-dot theme-dot-cosmic"></span>
+                </button>
+              </div>
+            </div>
+            <!-- Section 3: Card Back Geometry Theme Picker -->
+            <div class="settings-section-card-theme" style="margin-top: 0.625rem; padding-top: 0.625rem; border-top: 1px solid rgb(var(--color-gold) / 0.2);">
+                <span class="settings-section-label">Card Back Motif</span>
+                <div class="card-theme-options-list">
+                    <button class="card-theme-btn active" data-card-style="octagram" aria-pressed="true">
+                        <span>Celestial Octagram</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-celestial-octagram"></use></svg>
+                    </button>
+                    <button class="card-theme-btn" data-card-style="seed-of-life" aria-pressed="false">
+                        <span>Seed of Life</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-seed-of-life"></use></svg>
+                    </button>
+                    <button class="card-theme-btn" data-card-style="metatron" aria-pressed="false">
+                        <span>Prismatic Hexagram</span>
+                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-hexagram"></use></svg>
+                    </button>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="./js/archives.js"></script>
+</body>
+</html>
