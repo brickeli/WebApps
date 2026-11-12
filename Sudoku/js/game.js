@@ -1,6 +1,6 @@
 // js/game.js
 
-import { isValid, solveSudoku } from './solver.js';
+import { isValid, solveSudoku, countSolutions, evaluatePuzzleLogic } from './solver.js';
 import { saveStats, renderStatsTable, sortStats } from './storage.js';
 import { initBoardUI, toggleSidePanel, highlightCellPeers, renderBoard, updateAutoNotesMenuLabel, applyTheme } from './ui.js';
 
@@ -115,13 +115,10 @@ function toggleNotesMode() {
         notesBtn.classList.remove('notes-active');
         notesBtn.innerHTML = '<i class="fa-solid fa-pen-clip"></i> Notes Mode: <span class="user-notes toggle-status off">OFF</span>';
     }
-    // Toggle visual state on the number pad wrapper to scale buttons
-  if (keypad) {
-    keypad.classList.toggle('notes-active', isNotesMode);
-  }
 
-  // Optional: Update board selection highlights or cursor styling if applicable
-  updateUI();
+    if (keypad) {
+        keypad.classList.toggle('notes-active', isNotesMode);
+    }
 }
 
 function toggleTheme() {
@@ -153,7 +150,6 @@ function togglePause() {
         clearInterval(timerInterval);
         pauseOverlayEl.style.display = 'flex';
 
-        // Pause timer UI state
         timerBtnEl.classList.add('paused');
         const timerTextEl = document.getElementById('timer-text');
         if (timerTextEl) timerTextEl.textContent = 'Resume';
@@ -232,35 +228,28 @@ function autoFillNotes() {
 function inputNumber(num) {
     if (selectedCell === null || givens[selectedCell] || isGameWon || isPaused) return;
 
-    // Snapshot state for undo prior to mutation
     recordMove();
 
     if (num === 0) {
-        // Clear value, hints, and notes for the selected cell
         board[selectedCell] = 0;
         hints[selectedCell] = false;
         notes[selectedCell].fill(false);
     } else if (isNotesMode) {
-        // Clear any placed primary value when entering Notes Mode on a cell
         if (board[selectedCell] !== 0) {
             board[selectedCell] = 0;
             hints[selectedCell] = false;
         }
-
-        // Toggle the specific note boolean (true -> false or false -> true)
         notes[selectedCell][num] = !notes[selectedCell][num];
     } else {
-        // Standard Entry Mode
-        board[selectedCell] = (board[selectedCell] === num) ? 0 : num; // Toggle value off if re-pressed
+        board[selectedCell] = (board[selectedCell] === num) ? 0 : num;
         hints[selectedCell] = false;
-        notes[selectedCell].fill(false); // Clear notes on primary entry
+        notes[selectedCell].fill(false);
 
         if (board[selectedCell] !== 0) {
             clearPeerNotes(selectedCell, num);
         }
     }
 
-    // Always re-render the board UI to show the updated note state
     triggerRender();
     checkWinCondition();
     updateBoardHighlights(boardEl, board);
@@ -269,15 +258,10 @@ function inputNumber(num) {
 
 function updateBoardHighlights(boardEl, boardState) {
     const cells = Array.from(boardEl.children);
-
-    // 1. Clear existing duplicate styles
     cells.forEach(cell => cell.classList.remove('duplicate'));
 
-    // 2. Compare entries directly from the numerical state array
     for (let i = 0; i < 81; i++) {
         const val = boardState[i];
-
-        // Skip empty/unplaced cells
         if (!val || val === 0) continue;
 
         const row = Math.floor(i / 9);
@@ -287,7 +271,6 @@ function updateBoardHighlights(boardEl, boardState) {
 
         for (let j = i + 1; j < 81; j++) {
             const otherVal = boardState[j];
-
             if (otherVal === val) {
                 const r = Math.floor(j / 9);
                 const c = j % 9;
@@ -339,7 +322,7 @@ function provideHint() {
 
 function resetPuzzle() {
     if (isGameWon || isPaused) return;
-    undoStack.length = 0; // Clear undo stack on reset
+    undoStack.length = 0;
 
     for (let i = 0; i < 81; i++) {
         if (!givens[i]) {
@@ -367,7 +350,10 @@ function toggleStatsModal() {
 }
 
 function checkWinCondition() {
-    if (board.every((val, idx) => val === solution[idx])) {
+    // Verify all 81 cells are filled and obey Sudoku row/col/box rules
+    const isCompleteAndValid = board.every((val, idx) => val !== 0 && isValid(board, idx, val));
+
+    if (isCompleteAndValid) {
         isGameWon = true;
         clearInterval(timerInterval);
         saveStats(timerSeconds, currentDiffLabel, hintCount);
@@ -384,29 +370,118 @@ function triggerRender() {
     renderBoard(boardEl, board, solution, givens, hints, notes, selectedCell);
 }
 
+// Helper: Checks minimum box & digit representation so Expert/Master boards stay fair
+function canSafelyRemoveClue(boardState, idx, minBoxGivens) {
+    const val = boardState[idx];
+
+    // 1. Ensure at least 1 instance of every digit (1-9) remains on the board
+    let digitCount = 0;
+    for (let i = 0; i < 81; i++) {
+        if (boardState[i] === val) digitCount++;
+    }
+    if (digitCount <= 1) return false;
+
+    // 2. Ensure the 3x3 box keeps at least `minBoxGivens` anchors
+    const startRow = Math.floor(Math.floor(idx / 9) / 3) * 3;
+    const startCol = Math.floor((idx % 9) / 3) * 3;
+    let boxGivens = 0;
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+            if (boardState[(startRow + r) * 9 + (startCol + c)] !== 0) {
+                boxGivens++;
+            }
+        }
+    }
+    if (boxGivens <= minBoxGivens) return false;
+
+    return true;
+}
+
 function newGame() {
     isGameWon = false;
     hintCount = 0;
-    undoStack.length = 0; // Reset undo history for new game
+    undoStack.length = 0;
 
-    solution = Array(81).fill(0);
-    solveSudoku(solution);
+    // Set difficulty floors & ceilings so Hard/Expert/Master never generate trivial Singles boards
+    let minLogicTier = 1;
+    let maxLogicTier = 1;
 
-    board = [...solution];
-    givens = Array(81).fill(true);
+    if (currentClues <= 25) {
+        // Master
+        minLogicTier = 3;
+        maxLogicTier = 3;
+    } else if (currentClues <= 28) {
+        // Expert
+        minLogicTier = 2;
+        maxLogicTier = 3;
+    } else if (currentClues <= 31) {
+        // Hard
+        minLogicTier = 2;
+        maxLogicTier = 2;
+    }
+
+    const minBoxGivens = currentClues <= 26 ? 1 : 2;
+    const targetRemoved = 81 - currentClues;
+
+    let bestPuzzle = null;
+    let bestSolution = null;
+    let bestScore = -1;
+
+    // Run up to 35 rapid generations (<20ms total) to hit both clue count AND minimum logic depth
+    for (let attempt = 0; attempt < 35; attempt++) {
+        const candidateSolution = Array(81).fill(0);
+        solveSudoku(candidateSolution);
+
+        const candidateBoard = [...candidateSolution];
+
+        // Fisher-Yates shuffle all 81 cell indices
+        const cellIndices = Array.from({ length: 81 }, (_, i) => i);
+        for (let i = cellIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cellIndices[i], cellIndices[j]] = [cellIndices[j], cellIndices[i]];
+        }
+
+        let removed = 0;
+        let currentEval = { solvable: true, highestTierUsed: 1 };
+
+        for (const idx of cellIndices) {
+            if (removed >= targetRemoved) break;
+            if (!canSafelyRemoveClue(candidateBoard, idx, minBoxGivens)) continue;
+
+            const backup = candidateBoard[idx];
+            candidateBoard[idx] = 0;
+
+            if (countSolutions(candidateBoard, 2) === 1) {
+                const evalResult = evaluatePuzzleLogic(candidateBoard, maxLogicTier);
+                if (evalResult.solvable) {
+                    removed++;
+                    currentEval = evalResult;
+                } else {
+                    candidateBoard[idx] = backup;
+                }
+            } else {
+                candidateBoard[idx] = backup;
+            }
+        }
+
+        // Score favors hitting the required logic tier first, then hitting the exact clue target
+        const meetsMinLogic = currentEval.highestTierUsed >= minLogicTier ? 100 : 0;
+        const score = meetsMinLogic + removed;
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestPuzzle = candidateBoard;
+            bestSolution = candidateSolution;
+        }
+
+        if (meetsMinLogic > 0 && removed >= targetRemoved) break;
+    }
+
+    solution = bestSolution;
+    board = bestPuzzle;
+    givens = board.map(val => val !== 0);
     hints = Array(81).fill(false);
     notes = Array(81).fill(0).map(() => Array(10).fill(false));
-
-    let removeCount = 81 - currentClues;
-    let removed = 0;
-    while (removed < removeCount) {
-        let idx = Math.floor(Math.random() * 81);
-        if (board[idx] !== 0) {
-            board[idx] = 0;
-            givens[idx] = false;
-            removed++;
-        }
-    }
     selectedCell = null;
 
     if (isAutoNotesEnabled) {
