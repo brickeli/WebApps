@@ -134,7 +134,7 @@ function matchesFilter(card) {
     if (f === 'all') return true;
     if (f === 'Major Arcana') return card.arcana === 'Major Arcana';
     if (f === 'Minor Arcana') return card.arcana.startsWith('Minor Arcana');
-    return card.arcana.includes(f);
+    return card.suit === f.toLowerCase();
 }
 
 function matchesQuery(card) {
