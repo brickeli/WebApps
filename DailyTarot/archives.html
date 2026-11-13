@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-    <title>The Arcane Archives - Arcana Daily Tarot</title>
+    <title>The Arcane Archives - Tarot of the Elements & Daily Sigil Reader</title>
     <meta name="description" content="Your saved tarot readings and the complete 78-card deck index.">
+    <script type="application/ld+json">
+      { "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Arcana",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "All",
+        "description": "Tarot of the Elements & Daily Sigil Generator" }
+    </script>
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/card-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="site-body">
     <canvas id="fx-canvas"></canvas>
@@ -19,7 +27,7 @@
             <div class="brand-group">
                 <svg class="nav-logo" filter="url(#gold-glow)"><use href="./assets/icons.svg#icon-arcana"></use></svg>
                 <h1 class="brand-title">Arcana</h1>
-                <span class="brand-subtitle">Daily Tarot Companion</span>
+                <span class="brand-subtitle">Daily Elemental Tarot</span>
             </div>
             <nav class="nav-container" aria-label="Main">
                 <a id="btn-single" href="./arcana.html" class="tarot-nav-btn">
@@ -93,7 +101,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="tarot-footer">
+    <footer class="tarot-footer">hexagram
       <div class="footer-inner">
         <p class="footer-copyright">✦ Arcana Tarot Companion • Seek Wisdom within the Stars ✦</p>
 
@@ -131,10 +139,6 @@
                   <span>Crimson Alchemist</span>
                   <span class="theme-dot theme-dot-crimson"></span>
                 </button>
-                <button onclick="selectTheme('solar-radiance', 'Modern Astral')" class="theme-option-btn" data-theme-id="solar-radiance" aria-pressed="false">
-                  <span>Solar Radiance</span>
-                  <span class="theme-dot theme-dot-amber"></span>
-                </button>
                 <button onclick="selectTheme('emerald-sanctuary', 'Emerald Sanctuary')" class="theme-option-btn" data-theme-id="emerald-sanctuary" aria-pressed="false">
                   <span>Emerald Sanctuary</span>
                   <span class="theme-dot theme-dot-emerald"></span>
@@ -147,23 +151,22 @@
             </div>
             <!-- Section 3: Card Back Geometry Theme Picker -->
             <div class="settings-section-card-theme" style="margin-top: 0.625rem; padding-top: 0.625rem; border-top: 1px solid rgb(var(--color-gold) / 0.2);">
-                <span class="settings-section-label">Card Back Motif</span>
-                <div class="card-theme-options-list">
-                    <button class="card-theme-btn active" data-card-style="octagram" aria-pressed="true">
-                        <span>Celestial Octagram</span>
-                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-celestial-octagram"></use></svg>
-                    </button>
-                    <button class="card-theme-btn" data-card-style="seed-of-life" aria-pressed="false">
-                        <span>Seed of Life</span>
-                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-seed-of-life"></use></svg>
-                    </button>
-                    <button class="card-theme-btn" data-card-style="metatron" aria-pressed="false">
-                        <span>Prismatic Hexagram</span>
-                        <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-hexagram"></use></svg>
-                    </button>
-                </div>
+              <span class="settings-section-label">Card Back Motif</span>
+              <div class="card-theme-options-list">
+                <button class="card-theme-btn active" data-card-style="octagram" aria-pressed="true">
+                    <span>Celestial Octagram</span>
+                    <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-celestial-octagram"></use></svg>
+                </button>
+                <button class="card-theme-btn" data-card-style="seed-of-life" aria-pressed="false">
+                    <span>Harmonic Rosette</span>
+                    <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-seed-of-life"></use></svg>
+                </button>
+                <button class="card-theme-btn" data-card-style="hexagram" aria-pressed="false">
+                    <span>Prismatic Hexagram</span>
+                    <svg class="icon theme-icon" aria-hidden="true"><use href="./assets/icons.svg#icon-prismatic-hexagram"></use></svg>
+                </button>
+              </div>
             </div>
-
           </div>
         </div>
       </div>

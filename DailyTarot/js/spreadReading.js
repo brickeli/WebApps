@@ -67,19 +67,29 @@ function joinPositions(indexes) {
 
 /** Reduce a card to the facts the patterns care about. */
 function describeCard(card, reversed) {
-    const isMajor = card.arcana === 'Major Arcana';
+    const isMajor = card.arcana === 'Major Arcana' || card.type === 'major';
     const facts = { card, reversed: !!reversed, isMajor, suit: null, rank: null, number: null, isCourt: false };
 
     if (isMajor) {
-        const match = /^([IVXL]+|0)\./.exec(card.name || '');
-        facts.number = match ? (match[1] === '0' ? 0 : romanToInt(match[1])) : null;
-    } else {
-        const match = /^(\w+) of (\w+)$/.exec(card.originalName || card.name || '');
-        if (match) {
-            facts.rank = RANK_BY_WORD[match[1].toLowerCase()] || null;
-            facts.suit = match[2].toLowerCase();
-            facts.isCourt = facts.rank !== null && facts.rank > 10;
+        if (typeof card.number === 'number') {
+            facts.number = card.number;
+        } else {
+            const match = /^([IVXL]+|0)[\.\s]/i.exec(card.name || '');
+            facts.number = match ? (match[1] === '0' ? 0 : romanToInt(match[1].toUpperCase())) : null;
         }
+    } else {
+        if (card.suit && card.rank) {
+            facts.suit = String(card.suit).toLowerCase();
+            facts.rank = typeof card.rank === 'number' ? card.rank : (RANK_BY_WORD[String(card.rank).toLowerCase()] || null);
+        } else {
+            const match = /^(.+)\s+of\s+(.+)$/i.exec(card.originalName || card.name || '');
+            if (match) {
+                const rankStr = match[1].trim().toLowerCase();
+                facts.rank = RANK_BY_WORD[rankStr] || parseInt(rankStr, 10) || null;
+                facts.suit = match[2].trim().toLowerCase();
+            }
+        }
+        facts.isCourt = facts.rank !== null && facts.rank > 10;
     }
     return facts;
 }
@@ -99,12 +109,34 @@ function groupBy(items, keyFn) {
 
 function majorPatterns(facts, out) {
     const idx = facts.map((f, i) => (f.isMajor ? i : -1)).filter(i => i >= 0);
+    const revCount = idx.filter(i => facts[i].reversed).length;
+
     if (idx.length === 3) {
-        out.push({ priority: 100, headline: 'A Spread of Destiny', text: 'All three cards are Major Arcana: these are the big currents of your life, larger than any single day.' });
+        if (revCount === 0) {
+            out.push({ priority: 100, headline: 'A Spread of Destiny', text: 'All three cards are upright Major Arcana: major life currents are moving openly and unmistakably forward.' });
+        } else if (revCount === 3) {
+            out.push({ priority: 100, headline: 'Deep Internal Reckoning', text: 'All three cards are reversed Major Arcana: profound life lessons are unfolding beneath the surface, asking for inner surrender before outer action.' });
+        } else {
+            out.push({ priority: 100, headline: 'Crossroads of Destiny', text: `All three cards are Major Arcana, with ${revCount === 1 ? 'one' : 'two'} reversed: big life currents are at work, though part of the lesson is still integrating internally.` });
+        }
     } else if (idx.length === 2) {
-        out.push({ priority: 70, headline: 'Weighty Currents', text: `Two Major Arcana, in the ${joinPositions(idx)}: this stretch of your story carries real weight.` });
+        const where = joinPositions(idx);
+        if (revCount === 0) {
+            out.push({ priority: 70, headline: 'Weighty Currents', text: `Two upright Major Arcana in the ${where}: this stretch of your story carries clear, outward momentum.` });
+        } else if (revCount === 2) {
+            out.push({ priority: 70, headline: 'Deep Undercurrents', text: `Two reversed Major Arcana in the ${where}: heavy, internalized lessons are reshaping this stretch of your story from within.` });
+        } else {
+            const revPos = POSITIONS[idx.find(i => facts[i].reversed)];
+            out.push({ priority: 70, headline: 'A Pivotal Tension', text: `Two Major Arcana in the ${where}, with the ${revPos} reversed: a major life lesson is active here, meeting inner resistance in the ${revPos}.` });
+        }
     } else if (idx.length === 1) {
-        out.push({ priority: 40, headline: `The ${POSITIONS[idx[0]]} Holds the Lesson`, text: `The only Major Arcana falls in the ${POSITIONS[idx[0]]}, so that is where the deepest lesson of this spread lives.` });
+        const pos = idx[0];
+        const where = POSITIONS[pos];
+        if (facts[pos].reversed) {
+            out.push({ priority: 40, headline: `An Unfinished Lesson in the ${where}`, text: `The only Major Arcana falls reversed in the ${where}, pointing to an internal block or deeper lesson waiting to be integrated there.` });
+        } else {
+            out.push({ priority: 40, headline: `The ${where} Holds the Lesson`, text: `The only Major Arcana falls upright in the ${where}, so that is where the clearest turning point of this spread lives.` });
+        }
     } else {
         out.push({ priority: 15, headline: 'Within Your Hands', text: 'No Major Arcana appear: this is about everyday choices and circumstances, and most of it is within your reach.' });
     }
@@ -152,14 +184,55 @@ function rankPatterns(facts, out) {
     }
 }
 
+const COURT_PROFILE = {
+    11: { // Page
+        upright: ['an early curiosity or younger mindset you brought in', 'a student’s posture—curious, receptive and learning as you go', 'a fresh spark of curiosity or a message arriving'],
+        reversed: ['a restless, scattered beginning you have since outgrown', 'hesitation, mixed signals or ungrounded curiosity right now', 'an unready start or message that needs patience before acting']
+    },
+    12: { // Knight
+        upright: ['a fast-moving chapter or bold pursuit that carried you here', 'active momentum—charging forward on conviction right now', 'a decisive push, pursuit or messenger entering the scene'],
+        reversed: ['haste, friction or a detour that knocked things off course', 'impatience or scattered energy pulling your focus right now', 'reckless momentum ahead unless you pace your next move']
+    },
+    13: { // Queen
+        upright: ['a nurturing influence or inner steadiness you already cultivated', 'quiet emotional mastery and grounded care at the center of things', 'a steady, perceptive presence—or deeper self-mastery ahead'],
+        reversed: ['over-giving, emotional guarding or inner depletion left behind', 'emotional reactivity or neglected boundaries needing care now', 'a call to protect your energy before pouring outward']
+    },
+    14: { // King
+        upright: ['an authority figure or earned mastery that shaped this path', 'command, structure and clear leadership you are holding now', 'a decisive figure or full ownership of your craft ahead'],
+        reversed: ['rigid control or a heavy hand that left a mark', 'control slipping or authority feeling heavy right now', 'a warning against rigidity—lead with steadiness, not force']
+    }
+};
+
+const COURT_HEADLINE_BY_POS = {
+    0: { upright: 'A Past Figure', reversed: 'An Old Role Revisited' },
+    1: { upright: 'The Role You Wear', reversed: 'A Role Under Strain' },
+    2: { upright: 'A Person Enters', reversed: 'A Guarded Presence Ahead' }
+};
+
 function courtPatterns(facts, out) {
     const idx = facts.map((f, i) => (f.isCourt ? i : -1)).filter(i => i >= 0);
     if (idx.length === 3) {
         out.push({ priority: 80, headline: 'A Gathering of People', text: 'Three court cards: people, roles and personalities matter more than events here.' });
     } else if (idx.length === 2) {
-        out.push({ priority: 48, headline: 'Many Faces', text: `Court cards in the ${joinPositions(idx)}: other people, or roles you are stepping into, shape the story.` });
+        const includesPast = idx[0] === 0;
+        const framing = includesPast
+            ? 'people who shaped the path, or roles you have carried and are stepping into'
+            : 'other people, or roles you are stepping into';
+        out.push({ priority: 48, headline: 'Many Faces', text: `Court cards in the ${joinPositions(idx)}: ${framing}, shape the story.` });
     } else if (idx.length === 1) {
-        out.push({ priority: 25, headline: 'A Person Enters', text: `The ${POSITIONS[idx[0]]} is a court card (${facts[idx[0]].card.originalName}): a person, or a role you are growing into.` });
+        const pos = idx[0];
+        const fact = facts[pos];
+        const state = fact.reversed ? 'reversed' : 'upright';
+        const profile = COURT_PROFILE[fact.rank];
+        const nuance = profile
+            ? profile[state][pos]
+            : (pos === 0 ? 'a person or role that shaped how you arrived here' : 'a person, or a role you are growing into');
+
+        out.push({
+            priority: 25,
+            headline: COURT_HEADLINE_BY_POS[pos][state],
+            text: `The ${POSITIONS[pos]} is a court card (${fact.card.originalName}${fact.reversed ? ', reversed' : ''}): ${nuance}.`
+        });
     }
 }
 
@@ -239,14 +312,41 @@ const CARD_PAIRS = [
     { ids: ['temperance', 'star'],
       neutral: { headline: 'Gentle Recovery', meaning: 'balance and hope: steady, unhurried healing' } },
     { ids: ['devil', 'tower'],
-      forward:  { headline: 'Chains Break', meaning: 'a bondage that cracks open suddenly, painful and freeing at once' },
-      backward: { headline: 'Watch What You Cling To', meaning: 'a collapse followed by a new trap, so notice what you reach for after the fall' } },
+      forward:  { headline: 'Chains Break', meaning: 'a bondage that cracks open suddenly, painful and freeing at once' }, backward: { headline: 'Watch What You Cling To', meaning: 'a collapse followed by a new trap, so notice what you reach for after the fall' } },
     { ids: ['ace_cups', 'ten_cups'],
-      forward:  { headline: 'Love\'s Full Arc', meaning: 'a new feeling that grows into lasting fulfilment' },
-      backward: { headline: 'Joy Renewing', meaning: 'a settled happiness that opens into something new' } },
+      forward:  { headline: 'Love\'s Full Arc', meaning: 'a new feeling that grows into lasting fulfilment' }, backward: { headline: 'Joy Renewing', meaning: 'a settled happiness that opens into something new' } },
     { ids: ['eight_pentacles', 'ten_pentacles'],
-      forward:  { headline: 'Craft Becomes Legacy', meaning: 'patient work builds lasting security' },
-      backward: { headline: 'Security Frees the Craft', meaning: 'stability that lets you deepen your work without pressure' } }
+      forward:  { headline: 'Craft Becomes Legacy', meaning: 'patient work builds lasting security' }, backward: { headline: 'Security Frees the Craft', meaning: 'stability that lets you deepen your work without pressure' } },
+    { ids: ['fool', 'tower'],
+      forward:  { headline: 'Leap into the Storm', meaning: 'a leap of faith triggers a sudden disruption that clears your path' }, backward: { headline: 'Shaken into the Unknown', meaning: 'a sudden collapse forces an unscripted fresh start' } },
+    { ids: ['hermit', 'sun'],
+      forward:  { headline: 'Emerging into Light', meaning: 'a period of quiet reflection leads directly into breakthrough clarity' }, backward: { headline: 'Stepping Back from the Spotlight', meaning: 'a period of high visibility settles into a quiet search for inner truth' } },
+    { ids: ['magician', 'wheel_of_fortune'],
+      forward:  { headline: 'Seizing the Moment', meaning: 'focused personal action aligns perfectly with shifting momentum' }, backward: { headline: 'Riding the Shift', meaning: 'external circumstances shift, opening a window to manifest intent' } },
+    { ids: ['hanged_man', 'star'],
+      forward:  { headline: 'Surrender Brings Hope', meaning: 'releasing control opens space for quiet inspiration and healing' }, backward: { headline: 'Hope Demands Stillness', meaning: 'a vision for the future requires pausing and looking from a new angle' } },
+    { ids: ['emperor', 'tower'],
+      forward:  { headline: 'Rigidity Meets Reckoning', meaning: 'overly strict structures fracture when tested by sudden change' }, backward: { headline: 'Rebuilding the Order', meaning: 'after the fall, strong organization and boundaries must be restored' } },
+    { ids: ['chariot', 'hermit'],
+      forward:  { headline: 'Drive Turns Inward', meaning: 'forward momentum pauses to seek internal alignment and direction' }, backward: { headline: 'Solitude Sparks Momentum', meaning: 'time spent in reflection provides the clarity needed to push forward' } },
+    { ids: ['high_priestess', 'judgement'],
+      forward:  { headline: 'Unveiling the Calling', meaning: 'quiet intuition matures into a decisive awakening and direction' }, backward: { headline: 'A Call to Listen', meaning: 'a life awakening asks you to quiet external noise and trust inner knowing' } },
+    { ids: ['devil', 'sun'],
+      forward:  { headline: 'Illuminating the Shadow', meaning: 'bright awareness exposes and dissolves hidden attachments' }, backward: { headline: 'Sunlight Clouded by Craving', meaning: 'joy and vitality are temporarily weighed down by unhealthy dependencies' } },
+    { ids: ['three_swords', 'star'],
+      neutral: { headline: 'Wounded Healing', meaning: 'heartbreak meets hope; recovery takes time, but relief is real' } },
+    { ids: ['five_pentacles', 'ten_pentacles'],
+      forward:  { headline: 'From Scarcity to Abundance', meaning: 'hardship and isolation open into long-term security and support' }, backward: { headline: 'Generational Safety Net', meaning: 'established stability protects you through a temporary patch of lack' } },
+    { ids: ['ace_wands', 'world'],
+      forward:  { headline: 'A Spark Reaches Fulfillment', meaning: 'a sudden creative drive carries all the way to a major milestone' }, backward: { headline: 'A Completed Quest Ignites', meaning: 'finishing a major cycle immediately sparks a new creative urge' } },
+    { ids: ['four_cups', 'four_swords'],
+      neutral: { headline: 'Deep Withdrawal', meaning: 'apathy and exhaustion agree: take a full mental break before choosing' } },
+    { ids: ['two_wands', 'three_wands'],
+      forward:  { headline: 'From Plan to Horizon', meaning: 'deciding on a direction moves quickly into watching your ships come in' }, backward: { headline: 'Expanding Then Grounding', meaning: 'broad ambition returns to basic planning to ensure solid footing' } },
+    { ids: ['seven_swords', 'justice'],
+      neutral: { headline: 'Truth Exposed', meaning: 'evasion or secrecy meets accountability; clarity and cause prevail' } },
+    { ids: ['page_swords', 'knight_swords'],
+      forward:  { headline: 'Curiosity Turns to Action', meaning: 'gathering information quickly accelerates into decisive movement' }, backward: { headline: 'Hasty Charge Needs Fact-Checking', meaning: 'swift action must slow down to double-check the facts' } }
 ];
 
 // Above "Weighty Currents" (two Major Arcana, 70): most pairs are two Majors, and a specific pairing

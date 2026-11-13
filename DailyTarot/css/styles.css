@@ -56,24 +56,6 @@
     --color-element-water: 56 189 248;   /* Radiant Sapphire Blue */
 }
 
-/* Alternate Theme: Modern Astral Minimalist */
-[data-theme="solar-radiance"] {
-    --color-obsidian: 5 4 3;             /* Near-Black Warm Charcoal (Higher Contrast BG) */
-    --color-abyss: 20 12 9;               /* Pitch Burnt Umber */
-    --color-velvet: 25 10 6;             /* Deep High-Contrast Rust */
-    --color-plum: 85 35 15;              /* Vivid Spiced Ember */
-    --color-gold: 255 195 90;            /* High-Luminance Radiant Gold */
-    --color-antique-gold: 210 145 55;    /* Brightened Ochre Gold */
-    --color-dark-gold: 155 100 35;       /* Clarified Bronze Gold */
-    --color-ivory: 255 252 248;          /* High-Contrast Warm White */
-    --color-starlight: 250 232 210;      /* Bright Amber Mist */
-    --color-mystic-purple: 255 95 15;    /* High-Vibrancy Fire Red-Orange */
-    --color-element-fire: 255 30 30;    /* High-Contrast Solar Orange */
-    --color-element-earth: 40 215 105;   /* High-Luminance Forest Green */
-    --color-element-air: 255 248 220;    /* Pure Warm Topaz White */
-    --color-element-water: 38 185 245;   /* Vibrant Celestial Blue */
-}
-
 /* Alternate Theme: Emerald Sanctuary */
 [data-theme="emerald-sanctuary"] {
     --color-obsidian: 5 8 7;           /* Deep Forest Shadow */
@@ -483,7 +465,7 @@ p {
 .insight-tab-btn, .tarot-tab-btn {
    flex: 1;
    position: relative;
-   background: linear-gradient(180deg, rgb(var(--color-obsidian) / 0.35), rgb(var(--color-abyss) / 0.95));
+   background: rgba(var(--color-abyss) / 0.75);
    border: 1px solid rgb(var(--color-gold) / 0.1);
    color: rgb(var(--color-gold));
    padding: 0.9rem 1rem;
@@ -497,13 +479,14 @@ p {
    justify-content: center;
    gap: 0.2rem;
    text-align: center;
-   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   transition: all 0.4s ease;
 }
 
 .insight-tab-btn:hover, .tarot-tab-btn:hover {
-   color: rgb(var(--color-gold));
-   border-color: rgb(var(--color-gold) / 0.6);
-   background: linear-gradient(180deg, rgb(var(--color-plum) / 0.6), rgb(var(--color-abyss) / 0.95));
+    font-weight: 600;
+    color: rgb(var(--color-gold));
+    border-color: rgb(var(--color-gold) / 0.3);
+    background: rgb(var(--color-gold) / 0.1);
 }
 
 .insight-tab-btn.active, .tarot-tab-btn.active {
@@ -534,16 +517,16 @@ p {
    ========================================================================== */
 
 .elemental-balance-container.element-fire .elemental-header span,
-.single-elemental-banner.element-fire .elemental-header span { color: rgb(var(--color-element-fire)); }
+.elemental-header .element-fire { color: rgb(var(--color-element-fire)); }
 
 .elemental-balance-container.element-water .elemental-header span,
-.single-elemental-banner.element-water .elemental-header span { color: rgb(var(--color-element-water)); }
+.elemental-header .element-water { color: rgb(var(--color-element-water)); }
 
 .elemental-balance-container.element-air .elemental-header span,
-.single-elemental-banner.element-air .elemental-header span { color: rgb(var(--color-element-air)); }
+.elemental-header .element-air { color: rgb(var(--color-element-air)); }
 
 .elemental-balance-container.element-earth .elemental-header span,
-.single-elemental-banner.element-earth .elemental-header span { color: rgb(var(--color-element-earth)); }
+.elemental-header .element-earth { color: rgb(var(--color-element-earth)); }
 
 /* ==========================================================================
    9. ESOTERIC SCROLL CONTAINER STYLING
@@ -563,6 +546,20 @@ p {
     padding: 1.25rem;
     height: 100%;
 }
+
+.esoteric-quote {
+  font-size: 1rem;
+  margin: 0 0 1.25rem;
+  position: relative;
+}
+.esoteric-quote::before {
+  content: '{';
+  position: absolute;
+  top: -35px;
+  font-size: 5rem;
+  color: rgb(var(--color-gold) / 0.1);
+}
+
 
 .card-details-header {
     border-bottom: 1px dotted rgb(var(--color-gold) / 0.2);
@@ -1157,7 +1154,7 @@ p {
     border-radius: 0 0 0.5rem 0.5rem;
 }
 
-.spread-reading-points {
+.spread-reading-points, .single-reading-points {
     list-style: none;
     margin: 0 0 1.25rem;
     padding: 0;
@@ -1167,7 +1164,8 @@ p {
     text-align: left;
 }
 
-.spread-reading-points li {
+.spread-reading-points li,
+.single-reading-points li {
     position: relative;
     padding-left: 1.4rem;
     font-size: 0.9rem;
@@ -1175,7 +1173,8 @@ p {
     color: rgb(var(--color-starlight) / 0.9);
 }
 
-.spread-reading-points li::before {
+.spread-reading-points li::before,
+.single-reading-points li::before {
     content: '✦';
     position: absolute;
     left: 0;

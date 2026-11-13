@@ -7,8 +7,7 @@
    move from Past to Future, and where they pull against each other.
    Pure functions, no DOM access.
    ========================================================================== */
-
-import { ELEMENTAL_LORE } from './cardLibrary.js';
+import { escapeHTML } from './common.js';
 
 export const ELEMENTS = ['Fire', 'Water', 'Air', 'Earth'];
 
@@ -16,7 +15,18 @@ const POSITIONS = ['Past', 'Present', 'Future'];
 const MAX_POINTS = 3;
 const BALANCED_LORE = 'A harmonious trifecta of cosmic forces flowing through the timeline.';
 
-/** Every card in cardLibrary.js carries an `element`; suit/coin fallbacks are kept for older saved data. */
+export const ELEMENTAL_LORE = {
+  Fire: "Governed by passion. Sparking willpower, creative drive, sudden transformation, and dynamic action.",
+  Water: "Governed by intuition. Reflecting deep emotional currents, subconscious realms, relationships, and fluid adaptability.",
+  Air: "Governed by intellect. Ruling clear perception, strategic thought, communication, and decisive mental clarity.",
+  Earth: "Governed by matter. Anchored in physical manifestation, tangible stability, patience, and grounded growth."
+};
+
+
+/**
+ * The one place that turns a card into 'Fire' | 'Water' | 'Air' | 'Earth' (or null).
+ * Every card in cardLibrary.js carries an `element`; suit/coin fallbacks are kept for older saved data.
+ */
 export function getElement(card) {
     if (!card) return null;
     const s = String(card.element || card.suit || '').toLowerCase();
@@ -25,6 +35,12 @@ export function getElement(card) {
     if (s.includes('air') || s.includes('sword')) return 'Air';
     if (s.includes('earth') || s.includes('pentacle') || s.includes('coin')) return 'Earth';
     return null;
+}
+
+/** Lowercase form for CSS class names ('fire', 'water', ...), or '' when the element is unknown. */
+export function getElementKey(card) {
+    const element = getElement(card);
+    return element ? element.toLowerCase() : '';
 }
 
 /* ---- Wording tables -------------------------------------------------------- */
@@ -83,7 +99,7 @@ const FLOW_KEYWORDS = {
     Water: {
         Past:    { upright: 'Deep Currents',   reversed: 'Buried Tides' },
         Present: { upright: 'Flowing Tide',    reversed: 'Troubled Waters' },
-        Future:  { upright: 'Clear Waters',    reversed: 'Ebbing Tide' }
+        Future:  { upright: 'Clear Waters',    reversed: 'Distant Waves' }
     },
     Air: {
         Past:    { upright: 'Gathered Winds',  reversed: 'Lingering Fog' },
@@ -349,5 +365,130 @@ export function analyzeElements(cards, reversed = []) {
             keyword: flowKeyword(elems[i], POSITIONS[i], ctx.reversed[i]),
             reversed: ctx.reversed[i]
         }))
+    };
+}
+
+
+/* ==========================================================================
+   ELEMENTAL READING (Single Card Engine)
+   ========================================================================== */
+
+const ELEMENT_DOMAINS = {
+    fire: {
+        name: 'Fire',
+        attribute: 'Will & Spark',
+        uprightFocus: 'Creation & Drive',
+        reversedFocus: 'Internal Flame & Friction',
+        uprightHeadline: 'The Spark of Unwavering Will',
+        reversedHeadline: 'Smoldering Force Turning Inward',
+        quote: 'Feed the inner spark, but allow time for the embers to take hold.'
+    },
+    water: {
+        name: 'Water',
+        attribute: 'Emotion & Intuition',
+        uprightFocus: 'Flow & Alignment',
+        reversedFocus: 'Undercurrents & Reflection',
+        uprightHeadline: 'The Tide of Deep Feeling',
+        reversedHeadline: 'Settling Stagnant Waters',
+        quote: 'Let the emotional current pass through without attempting to dam the river.'
+    },
+    air: {
+        name: 'Air',
+        attribute: 'Mind & Truth',
+        uprightFocus: 'Clarity & Intellect',
+        reversedFocus: 'Internal Noise & Perspective',
+        uprightHeadline: 'The Winds of Mental Clarity',
+        reversedHeadline: 'Clearing the Inner Storm',
+        quote: 'Cut through surface illusion to reach objective, unyielding truth.'
+    },
+    earth: {
+        name: 'Earth',
+        attribute: 'Form & Mastery',
+        uprightFocus: 'Grounding & Manifestation',
+        reversedFocus: 'Root Systems & Recalibration',
+        uprightHeadline: 'The Firmament of Physical Form',
+        reversedHeadline: 'Tending to the Roots',
+        quote: 'Patience and steady effort build structures that endure the passage of time.'
+    }
+};
+
+function buildElementBadge(elementName) {
+    const key = String(elementName || 'fire').toLowerCase();
+    return `<span class="element-${key}">${escapeHTML(elementName)}</span>`;
+}
+
+export function analyzeElementalCard(card, isReversed = false) {
+    if (!card) return null;
+
+    // Unknown elements fall back to Fire so the panel is never empty.
+    const elemKey = getElementKey(card) || 'fire';
+    const elemData = ELEMENT_DOMAINS[elemKey];
+    const isMajor = card.arcana === 'Major Arcana' || card.type === 'major';
+    const rankStr = card.rank ? String(card.rank).toLowerCase() : '';
+    const isCourt = !isMajor && ['page', 'knight', 'queen', 'king'].includes(rankStr);
+    const reversed = !!isReversed;
+
+    const activeElemBadge = buildElementBadge(elemData.name);
+
+    const tags = [
+        {
+            header: 'ELEMENT',
+            value: elemData.attribute
+        },
+        {
+            header: 'RESONANCE',
+            value: isMajor
+                ? (reversed ? 'Crucial Recalibration' : 'Primal Force')
+                : isCourt
+                    ? (reversed ? 'Reflected Persona' : 'Active Catalyst')
+                    : (reversed ? elemData.reversedFocus : elemData.uprightFocus)
+        }
+    ];
+
+    let rawHeadline = reversed ? elemData.reversedHeadline : elemData.uprightHeadline;
+    if (isMajor) {
+        rawHeadline = reversed
+            ? `Subconscious Turning of ${elemData.name}`
+            : `Classic Mastery of ${elemData.name}`;
+    } else if (isCourt) {
+        rawHeadline = reversed
+            ? `Internalizing Factors of ${elemData.name}`
+            : `Embodying the Active ${elemData.name} Force`;
+    }
+
+    // Whole-word match only: "Stagnant Waters" must not be split into "<Water>s".
+    const nameRe = new RegExp(`\\b${elemData.name}\\b`);
+    const formattedHeadline = nameRe.test(rawHeadline)
+        ? rawHeadline.replace(nameRe, activeElemBadge)
+        : `${rawHeadline}: ${activeElemBadge}`;
+
+    let subheadText = '';
+    if (isMajor) {
+        subheadText = reversed
+            ? `The defined currents of ${elemData.name.toLowerCase()} are working quietly beneath the surface of conscious awareness.`
+            : `Universal forces of ${elemData.name.toLowerCase()} dominate this station, calling for complete alignment with your higher path.`;
+    } else if (isCourt) {
+        subheadText = reversed
+            ? `Focus your command over ${elemData.attribute.toLowerCase()} internally before attempting to shape external outcomes.`
+            : `Step forward as a conscious agent of ${elemData.attribute.toLowerCase()} in your present field.`;
+    } else {
+        subheadText = reversed
+            ? `Friction or delay around ${elemData.attribute.toLowerCase()} invites you to pause, recharge, and adjust your course.`
+            : `Unobstructed momentum is flowing smoothly through the realm of ${elemData.attribute.toLowerCase()} with ease.`;
+    }
+
+    const baseLoreText = ELEMENTAL_LORE[elemData.name] || elemData.quote;
+    const orientationNoteText = reversed
+        ? `Reversed. Energy is redirected inward toward foundations.`
+        : `Upright. Energy is expressing outward into active form.`;
+
+    return {
+        element: elemData.name,
+        tags,
+        headline: formattedHeadline,   // contains the badge <span>; elementsView.js inserts it as HTML
+        subhead: subheadText,
+        lore: [baseLoreText, orientationNoteText],
+        quote: elemData.quote,
+        reversed
     };
 }

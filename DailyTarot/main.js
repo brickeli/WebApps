@@ -1,29 +1,49 @@
-import { fullTarotDeck, ELEMENTAL_LORE } from './js/cardLibrary.js';
+import { fullTarotDeck } from './js/cardLibrary.js';
 import { renderAllCardBacks } from './js/theme.js';
-import { iconHTML, escapeHTML, showToast, initSiteChrome } from './js/common.js';
+import { escapeHTML, showToast, initSiteChrome } from './js/common.js';
 import { generateSigilFromAdvice, animateSigilDraw } from './js/sigil.js';
 import { addJournalEntry, SAVE_FAILED_MSG } from './js/journal.js';
 import { playMysticChime } from './js/audio.js';
 import { initShareButton } from './js/share.js';
+import { analyzeSingleCard, renderSingleReading } from './js/singleReading.js';
 import { analyzeSpread } from './js/spreadReading.js';
-import { analyzeElements } from './js/elements.js';
-import { renderElementalReading, renderElementalTeaser } from './js/elementsView.js';
+import { analyzeElements, analyzeElementalCard, getElementKey } from './js/elements.js';
+import { renderElementalReading, renderElementalTeaser, renderSingleElementalReading } from './js/elementsView.js';
+import { syncArchiveKeepsake } from './js/archivePreview.js';
 import { safeGetItem, safeSetItem, safeParse, checkURLState, updateURLMode, readURLMode } from './js/storage.js';
 
+const REVERSAL_CHANCE = 0.25;
+
 let currentMode = 'single';
-let tripleCasting = false;   // true while the cast animation runs, so extra taps can't interrupt it
+let singleDrawing = false;   // true while the draw animation runs, so extra taps can't interrupt it
+let tripleCasting = false;   // same for the cast animation
 let currentSingleCard = null;
+let isSingleReversed = false;
 let isSingleFlipped = false;
 let tripleCards = [null, null, null];
+let tripleReversed = [false, false, false];
 let tripleFlipped = [false, false, false];
-let browseCard = null; // card opened from the Archives (never overwrites today's draw)
+let tripleAnalysis = null;   // { elements, spread } for the spread on screen; computed once, reused by render/share/save
+let browseCard = null;       // card opened from the Archives (never overwrites today's draw)
 
-/* ==========================================================================
-   1. HANDLERS & HELPER FUNCTIONS
-   ========================================================================== */
 /* ==========================================================================
    0. SMALL SHARED HELPERS
    ========================================================================== */
+function todayKey() {
+    return new Date().toDateString();
+}
+
+/** Today's saved daily card, or null. Mirrors loadSavedTriple(). */
+function loadSavedSingle() {
+    if (safeGetItem('arcana_last_single_date') !== todayKey()) return null;
+    const saved = safeParse(safeGetItem('arcana_saved_single_card'), null);
+    if (!saved || typeof saved !== 'object') return null;
+    return {
+        card: fullTarotDeck.find(c => c.id === saved.id) || saved,
+        reversed: safeGetItem('arcana_saved_single_reversed') === 'true'
+    };
+}
+
 function loadSavedTriple() {
     const cards = safeParse(safeGetItem('arcana_saved_triple_cards'), null);
     if (!Array.isArray(cards) || cards.length !== 3 || !cards.every(Boolean)) return null;
@@ -35,10 +55,10 @@ function loadSavedTriple() {
     };
 }
 
-// True only when today's spread can actually be shown. The saved date alone is not enough:
+// Today's spread, only when it can actually be shown. The saved date alone is not enough:
 // if the cards failed to save, the visitor must still be able to cast.
-function hasTripleToday() {
-    return safeGetItem('arcana_last_triple_date') === new Date().toDateString() && loadSavedTriple() !== null;
+function loadTodaysTriple() {
+    return safeGetItem('arcana_last_triple_date') === todayKey() ? loadSavedTriple() : null;
 }
 
 function shuffle(list) {
@@ -78,15 +98,8 @@ function setSingleActionsVisible(visible) {
     document.querySelector('#single-reveal-area .card-action-container')?.classList.toggle('hidden', !visible);
 }
 
-function canDrawToday(drawType) {
-    const lastDate = safeGetItem(`arcana_last_${drawType}_date`);
-    const today = new Date().toDateString();
-    return lastDate !== today;
-}
-
 function recordDrawToday(drawType) {
-    const today = new Date().toDateString();
-    return safeSetItem(`arcana_last_${drawType}_date`, today);
+    return safeSetItem(`arcana_last_${drawType}_date`, todayKey());
 }
 
 let storageWarningShown = false;
@@ -106,8 +119,27 @@ function findCardBySlug(slug) {
     return fullTarotDeck.find(c => c.id === slug) || null;
 }
 
+/** Resets a card face's element class from the card's element ('fire' | 'water' | 'air' | 'earth' | ''). */
+function applyElementClass(face, elemKey) {
+    face.classList.remove('element-fire', 'element-water', 'element-earth', 'element-air');
+    face.classList.add('card-front', 'tarot-card-front-face', 'box-glow-gold');
+    if (elemKey) face.classList.add(`element-${elemKey}`);
+    face.style.background = '';
+}
+
+/** Draws the card's sigil into the face's icon slot. */
+function drawSigilInto(face, card, fallbackText) {
+    const adviceText = card.advice || card.meaning || fallbackText || card.name;
+    const seedString = `${card.id || card.name}_${adviceText}`;
+    const iconSlot = face.querySelector('.card-icon-slot');
+    if (iconSlot) {
+        iconSlot.innerHTML = generateSigilFromAdvice({ advice: seedString });
+        animateSigilDraw(iconSlot);
+    }
+}
+
 /* ==========================================================================
-   2. GLOBAL SCOPE BINDING
+   1. GLOBAL SCOPE BINDING (for the inline onclick handlers still in arcana.html)
    ========================================================================== */
 Object.assign(window, {
     setMode,
@@ -120,16 +152,10 @@ Object.assign(window, {
 });
 
 /* ==========================================================================
-   3. INITIALIZATION
+   2. INITIALIZATION
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    checkURLState(() => {
-        if (typeof setMode === 'function') {
-            setMode('triple');
-        } else {
-            document.getElementById('btn-triple')?.click();
-        }
-    });
+    checkURLState(() => setMode('triple'));
 
     window.addEventListener('popstate', () => {
         const { mode, slug } = readURLMode();
@@ -143,99 +169,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initSiteChrome();
     initTripleCarousel();
-    initTripleInsightTabs();
+    initInsightTabs('tarot-insights-container', ['tab-content-wisdom', 'tab-content-elemental']);
+    initInsightTabs('triple-insights-container', ['triple-tab-overall', 'triple-tab-elemental']);
     updateNav();
     renderAllCardBacks();
 
-    // Mode Navigation
+    // Mode navigation (arcana.html also has inline onclick="setMode(...)" on these two; the URL update lives here)
     document.getElementById('btn-single')?.addEventListener('click', () => { setMode('single'); updateURLMode('single'); });
     document.getElementById('btn-triple')?.addEventListener('click', () => { setMode('triple'); updateURLMode('triple'); });
 
-    // Single Card Draw & Flip Listeners
+    // Single card draw & flip
     document.getElementById('deck-card-container')?.addEventListener('click', drawSingleCard);
     document.getElementById('btn-draw-single')?.addEventListener('click', drawSingleCard);
     document.getElementById('single-card-inner')?.addEventListener('click', flipSingleCard);
-    document.getElementById('btn-tab-wisdom')?.addEventListener('click', () => switchInsightTab('wisdom'));
-    document.getElementById('btn-tab-elemental')?.addEventListener('click', () => switchInsightTab('elemental'));
 
-    // 3-Card Spread Listeners
+    // 3-card spread: tapping a back casts the spread; once cast, tapping toggles the reveal.
+    // Decided from memory, not storage, so a blocked-storage visitor does not recast on every tap.
     for (let i = 0; i < 3; i++) {
-        const cardInner = document.getElementById(`triple-card-inner-${i}`);
-        if (cardInner) {
-            cardInner.addEventListener('click', (e) => {
-                if (tripleCasting) return;
-
-                if (!hasTripleToday()) {
-                    // Nothing cast yet: tapping any of the three card backs casts the spread
-                    e.stopPropagation();
-                    drawTripleSpread();
-                } else {
-                    flipTripleCard(i);
-                }
-            });
-        }
-    }
-
-    // Restore Today's Single Draw
-    const today = new Date().toDateString();
-
-    if (safeGetItem('arcana_last_single_date') === today) {
-        const savedCardJson = safeGetItem('arcana_saved_single_card');
-        const savedReversed = safeGetItem('arcana_saved_single_reversed') === 'true';
-
-        const savedCard = safeParse(savedCardJson, null);
-        if (savedCard) {
-            currentSingleCard = fullTarotDeck.find(c => c.id === savedCard.id) || savedCard;
-            isSingleReversed = savedReversed;
-
-            restoreSingleCardUI();
-        }
-    }
-
-    // Restore Today's Triple Spread
-    if (safeGetItem('arcana_last_triple_date') === today) {
-        const savedTriple = loadSavedTriple();
-        if (savedTriple) {
-            // Only hide the Cast button when there is a saved reading to show instead
-            const tripleBtn = document.querySelector('.tarot-btn-cast-triple');
-            if (tripleBtn) {
-                tripleBtn.style.display = 'none';
+        document.getElementById(`triple-card-inner-${i}`)?.addEventListener('click', (e) => {
+            if (tripleCasting) return;
+            if (!tripleCards[0]) {
+                e.stopPropagation();
+                drawTripleSpread();
+            } else {
+                flipTripleCard(i);
             }
-            tripleCards = savedTriple.cards;
-            tripleReversed = savedTriple.reversed;
-            tripleFlipped = [true, true, true];
-
-            const actionsDiv = document.getElementById('triple-actions');
-            if (actionsDiv) actionsDiv.classList.remove('hidden');
-
-            for (let i = 0; i < 3; i++) {
-                const inner = document.getElementById(`triple-card-inner-${i}`);
-                const front = document.getElementById(`triple-card-front-${i}`);
-
-                if (inner) inner.classList.add('flipped');
-                renderTripleFront(front, tripleCards[i], tripleReversed[i]);
-            }
-
-            renderTripleInsights();
-        }
+        });
     }
 
-    const allFlipped = [0, 1, 2].every(i => {
-        const cardInner = document.getElementById(`triple-card-inner-${i}`);
-        return cardInner && cardInner.classList.contains('flipped');
-    });
-
-    const container = document.querySelector('.triple-spread-container');
-    if (container && allFlipped) {
-        container.classList.add('revealed');
+    // Restore today's single draw
+    const savedSingle = loadSavedSingle();
+    if (savedSingle) {
+        currentSingleCard = savedSingle.card;
+        isSingleReversed = savedSingle.reversed;
+        restoreSingleCardUI();
     }
 
-    // Share Results Init
+    // Restore today's triple spread
+    const savedTriple = loadTodaysTriple();
+    if (savedTriple) showSavedTriple(savedTriple);
+
+    // Share
     initShareButton(() => {
         if (currentMode === 'triple') {
-            if (!tripleCards || !tripleCards[0]) return null;
-            const balance = analyzeElements(tripleCards, tripleReversed);
-            const overall = analyzeSpread(tripleCards, tripleReversed);
+            if (!tripleCards[0]) return null;
+            const { elements: balance, spread: overall } = tripleAnalysis || computeTripleAnalysis();
             return {
                 isTripleSpread: true,
                 title: 'My 3-Card Arcana Spread',
@@ -245,13 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loreBlurb: balance ? balance.lore : "A harmonious equilibrium of cosmic forces flowing through the timeline.",
                 description: `Past: ${tripleCards[0].name} | Present: ${tripleCards[1].name} | Future: ${tripleCards[2].name}`
             };
-        } else {
-            if (browseCard || !currentSingleCard) return null;
-            return {
-                ...currentSingleCard,
-                isReversed: isSingleReversed
-            };
         }
+        if (browseCard || !currentSingleCard) return null;
+        return { ...currentSingleCard, isReversed: isSingleReversed };
     });
 
     // Deep link: ?mode=archive-king_wands opens that card's preview straight away
@@ -347,13 +321,17 @@ function setMode(mode) {
         browseCard = null;
         setSingleActionsVisible(true);
 
-        if (!canDrawToday('single')) {
-            if (currentSingleCard) {
-                restoreSingleCardUI();
-            } else {
-                if (deckArea) deckArea.classList.add('hidden');
-                if (revealArea) revealArea.classList.remove('hidden');
+        // A card already drawn today (in memory, or saved) is shown; otherwise the deck is offered.
+        if (!currentSingleCard) {
+            const saved = loadSavedSingle();
+            if (saved) {
+                currentSingleCard = saved.card;
+                isSingleReversed = saved.reversed;
             }
+        }
+
+        if (currentSingleCard) {
+            restoreSingleCardUI();
         } else {
             if (deckArea) {
                 deckArea.classList.remove('hidden', 'card-slide-travel');
@@ -374,34 +352,25 @@ function setMode(mode) {
 }
 
 /* ==========================================================================
-   4. SINGLE CARD LOGIC
+   3. SINGLE CARD LOGIC
    ========================================================================== */
-const REVERSAL_CHANCE = 0.25;
-let isSingleReversed = false;
-
 function drawSingleCard() {
-    const today = new Date().toDateString();
-    const lastDate = safeGetItem('arcana_last_single_date');
+    if (singleDrawing) return;
 
-    if (lastDate === today) {
-        const savedCardJson = safeGetItem('arcana_saved_single_card');
-        const savedReversed = safeGetItem('arcana_saved_single_reversed') === 'true';
-
-        const parsedCard = safeParse(savedCardJson, null);
-        if (parsedCard) {
-            currentSingleCard = fullTarotDeck.find(c => c.name === parsedCard.name || c.id === parsedCard.id) || parsedCard;
-            isSingleReversed = savedReversed;
-
-            playMysticChime();
-            restoreSingleCardUI();
-            return;
-        }
+    // Already drawn today (this page, or saved by an earlier visit / another tab): show it again.
+    const existing = currentSingleCard ? { card: currentSingleCard, reversed: isSingleReversed } : loadSavedSingle();
+    if (existing) {
+        currentSingleCard = existing.card;
+        isSingleReversed = existing.reversed;
+        playMysticChime();
+        restoreSingleCardUI();
+        return;
     }
 
-    const randomIndex = Math.floor(Math.random() * fullTarotDeck.length);
-    currentSingleCard = fullTarotDeck[randomIndex];
-    isSingleFlipped = false;
+    singleDrawing = true;
+    currentSingleCard = fullTarotDeck[Math.floor(Math.random() * fullTarotDeck.length)];
     isSingleReversed = Math.random() < REVERSAL_CHANCE;
+    isSingleFlipped = false;
     browseCard = null;
     updateNav();
     setSingleActionsVisible(true);
@@ -422,8 +391,6 @@ function drawSingleCard() {
     playMysticChime();
     renderCardFront(cardFront);
 
-    // Reset card state for new draw
-    isSingleFlipped = false;
     if (cardInner) cardInner.classList.remove('flipped');
 
     // Reset details box to enter state (will slide in later)
@@ -483,6 +450,7 @@ function drawSingleCard() {
                 detailsBox.classList.remove('details-slide-enter');
                 detailsBox.classList.add('details-slide-active');
             }
+            singleDrawing = false;
         }, 550);
 
     }, 450);
@@ -510,7 +478,10 @@ function restoreSingleCardUI() {
 
     populateSingleDetails();
 
-    if (detailsBox) detailsBox.classList.add('details-slide-active');
+    if (detailsBox) {
+        detailsBox.classList.remove('details-slide-enter');
+        detailsBox.classList.add('details-slide-active');
+    }
 }
 
 function renderCardFront(cardFront) {
@@ -518,37 +489,23 @@ function renderCardFront(cardFront) {
     const reversed = getShownReversed();
     if (!cardFront || !card) return;
 
-    const rawElem = card.element || card.suit || card.elemental || '';
-    let elemKey = String(rawElem).toLowerCase();
-
-    if (elemKey.includes('fire') || elemKey.includes('wand')) elemKey = 'fire';
-    else if (elemKey.includes('water') || elemKey.includes('cup')) elemKey = 'water';
-    else if (elemKey.includes('air') || elemKey.includes('sword')) elemKey = 'air';
-    else if (elemKey.includes('earth') || elemKey.includes('pentacle')) elemKey = 'earth';
-
-    cardFront.classList.remove('element-fire', 'element-water', 'element-earth', 'element-air');
-    cardFront.classList.add('card-front', 'tarot-card-front-face', 'box-glow-gold');
-    if (elemKey) cardFront.classList.add(`element-${elemKey}`);
-
-    cardFront.classList.toggle('is-reversed', reversed);
-    cardFront.classList.toggle('card-reverse', reversed);
-
-    cardFront.style.background = '';
+    const elemKey = getElementKey(card);
+    applyElementClass(cardFront, elemKey);
 
     const artRotation = reversed ? 'single-reversed' : '';
 
     cardFront.innerHTML = `
         <div class="tarot-single-header">
-            <span>${card.arcana || 'TAROT'}</span>
+            <span>${escapeHTML(card.arcana || 'TAROT')}</span>
             <span class="tarot-element-badge badge-${elemKey}">
-                ${card.element || rawElem || 'Spirit'}
+                ${escapeHTML(card.element || card.suit || 'Spirit')}
             </span>
         </div>
 
         <div class="tarot-single-body ${artRotation}">
             <div class="card-icon-slot tarot-single-icon"></div>
-            <h3 class="tarot-single-title">${card.name}</h3>
-            <p class="tarot-single-subtitle">(${card.originalName || card.name})</p>
+            <h3 class="tarot-single-title">${escapeHTML(card.name)}</h3>
+            <p class="tarot-single-subtitle">(${escapeHTML(card.originalName || card.name)})</p>
         </div>
 
         <div class="tarot-single-footer">
@@ -557,30 +514,21 @@ function renderCardFront(cardFront) {
         </div>
     `;
 
-    const adviceText = card.advice || card.meaning || card.desc || card.name;
-    const seedString = `${card.id || card.name}_${adviceText}`;
-    const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
-
-    const iconSlot = cardFront.querySelector('.card-icon-slot');
-    if (iconSlot) {
-        iconSlot.innerHTML = sigilMarkup;
-        animateSigilDraw(iconSlot);
-    }
+    drawSigilInto(cardFront, card, card.desc);
 }
 
 function flipSingleCard() {
     const cardInner = document.getElementById('single-card-inner');
-    const cardFront = document.getElementById('single-card-front');
-
     if (!cardInner) return;
 
-    // Toggle 3D flip on the card face only—details panel stays visible once revealed
+    // Toggle the 3D flip on the card face only. The face and the details panel are already rendered,
+    // so flipping back just replays the sigil draw.
     isSingleFlipped = !isSingleFlipped;
     cardInner.classList.toggle('flipped', isSingleFlipped);
 
-    if (isSingleFlipped && currentSingleCard && cardFront) {
-        renderCardFront(cardFront);
-        populateSingleDetails();
+    if (isSingleFlipped) {
+        const slot = document.querySelector('#single-card-front .card-icon-slot');
+        if (slot) animateSigilDraw(slot);
     }
 }
 
@@ -589,52 +537,48 @@ function populateSingleDetails() {
     const reversed = getShownReversed();
     if (!card) return;
 
-    const titleText = reversed
-        ? `${card.name} (Reversed)`
-        : card.name;
+    const previewing = !!browseCard;
+    const isRev = previewing ? false : reversed;
+
+    // 1. Run the single-card and elemental engines once each
+    const analysis = analyzeSingleCard(card, isRev);
+    const elemAnalysis = analyzeElementalCard(card, isRev);
+
+    // 2. Arcana tag & top title
+    const titleText = (!previewing && reversed) ? `${card.name} (Reversed)` : card.name;
 
     const elArcana = document.getElementById('card-arcana');
     const elTitle = document.getElementById('card-title');
+
+    if (elArcana) {
+        elArcana.textContent = previewing
+            ? `${card.arcana || 'TAROT'}`
+            : (analysis ? analysis.tag[0]?.value : `${card.arcana || 'TAROT'} ${reversed ? '• Reversed' : '• Upright'}`);
+    }
+    if (elTitle) elTitle.textContent = titleText;
+
+    // 3. Wisdom tab (renderSingleReading returns inner markup only)
+    const elWisdomTab = document.getElementById('tab-content-wisdom');
+    if (elWisdomTab) {
+        elWisdomTab.innerHTML = renderSingleReading(card, isRev, elemAnalysis, analysis);
+    }
+
+    // 4. Standard card descriptions
     const elDesc = document.getElementById('card-desc');
     const elLight = document.getElementById('card-light');
     const elShadow = document.getElementById('card-shadow');
-    const elAdvice = document.getElementById('card-advice-text');
-    const elSingleElemental = document.getElementById('single-elemental-container');
 
-    // A Library preview has no orientation: it shows the card itself, with both aspects on equal footing
-    const previewing = !!browseCard;
-
-    if (elArcana) elArcana.textContent = previewing
-        ? `${card.arcana || 'TAROT'}`
-        : `${card.arcana || 'TAROT'} ${reversed ? '• Reversed' : '• Upright'}`;
-    if (elTitle) elTitle.textContent = titleText;
     if (elDesc) elDesc.textContent = card.desc || '';
     if (elLight) elLight.textContent = card.light || '';
     if (elShadow) elShadow.textContent = card.shadow || '';
-    if (elAdvice) elAdvice.textContent = card.advice || '';
 
-    const deckMatch = (typeof fullTarotDeck !== 'undefined' ? fullTarotDeck.find(d => d.name === card.name) : null) || card;
-    const rawElem = deckMatch.element || deckMatch.suit || card.element || card.suit || '';
-    const s = String(rawElem).toLowerCase();
-
-    let elementKey = 'Fire';
-    if (s.includes('fire') || s.includes('wand')) elementKey = 'Fire';
-    else if (s.includes('water') || s.includes('cup')) elementKey = 'Water';
-    else if (s.includes('air') || s.includes('sword')) elementKey = 'Air';
-    else if (s.includes('earth') || s.includes('pentacle') || s.includes('coin')) elementKey = 'Earth';
-
-    const loreMap = (typeof ELEMENTAL_LORE !== 'undefined') ? ELEMENTAL_LORE : {};
-    const elementalBlurb = loreMap[elementKey] || "";
-
-    if (elSingleElemental) {
-        elSingleElemental.innerHTML = elementalBlurb ? `
-            <div class="single-elemental-banner element-${elementKey.toLowerCase()}">
-                <div class="elemental-header">✦ GUIDED BY: <span class="element-${elementKey.toLowerCase()}">${elementKey}</span> ✦</div>
-                <p class="elemental-lore-blurb">${elementalBlurb}</p>
-            </div>
-        ` : '';
+    // 5. Elemental tab
+    const elElementalTab = document.getElementById('tab-content-elemental');
+    if (elElementalTab) {
+        elElementalTab.innerHTML = renderSingleElementalReading(card, isRev, elemAnalysis, analysis?.headline);
     }
 
+    // 6. Aspect box highlighting (Light / Shadow)
     const lightBox = elLight ? elLight.closest('div') : null;
     const shadowBox = elShadow ? elShadow.closest('div') : null;
 
@@ -649,99 +593,122 @@ function populateSingleDetails() {
         if (shadowBox) shadowBox.className = "tarot-aspect-box tarot-aspect-dim";
     }
 
+    // 7. Library preview swaps the reading tabs for the keepsake; a drawn card gets the tabs back
+    syncArchiveKeepsake(previewing ? card : null);
+
+    // 8. Keywords
     const kwContainer = document.getElementById('card-keywords');
     if (kwContainer && card.keywords) {
         kwContainer.innerHTML = card.keywords.map(kw =>
-            `<span class="tarot-keyword-pill">${kw}</span>`
+            `<span class="tarot-keyword-pill">${escapeHTML(kw)}</span>`
         ).join('');
     }
 }
 
-function switchInsightTab(tabName) {
-    const wisdomBtn = document.querySelector('#tarot-insights-container .insight-tab-btn:nth-child(1)');
-    const elementalBtn = document.querySelector('#tarot-insights-container .insight-tab-btn:nth-child(2)');
-    const wisdomPanel = document.getElementById('tab-content-wisdom');
-    const elementalPanel = document.getElementById('tab-content-elemental');
+/* ==========================================================================
+   4. INSIGHT TABS (single card and triple spread share one controller)
+   Click + arrow keys + Home/End. panelIds lists the panels in tab order (Wisdom, Elemental).
+   Buttons inside a panel can jump to another tab with data-goto-tab="wisdom|elemental";
+   that listener sits on the container because the panels are re-rendered with innerHTML.
+   ========================================================================== */
+function initInsightTabs(rootId, panelIds) {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = panelIds.map(id => document.getElementById(id));
+    if (tabs.length !== panels.length || panels.some(p => !p)) return;
 
-    if (!wisdomBtn || !elementalBtn || !wisdomPanel || !elementalPanel) return;
+    tabs.forEach((tab, i) => {
+        tab.setAttribute('aria-controls', panelIds[i]);
+        panels[i].setAttribute('role', 'tabpanel');
+        panels[i].setAttribute('aria-labelledby', tab.id);
+    });
 
-    if (tabName === 'wisdom') {
-        wisdomBtn.classList.add('active');
-        elementalBtn.classList.remove('active');
-        wisdomPanel.classList.add('active');
-        elementalPanel.classList.remove('active');
-    } else if (tabName === 'elemental') {
-        elementalBtn.classList.add('active');
-        wisdomBtn.classList.remove('active');
-        elementalPanel.classList.add('active');
-        wisdomPanel.classList.remove('active');
-    }
+    const select = (tab, { focus = false } = {}) => {
+        tabs.forEach((t, i) => {
+            const on = t === tab;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', String(on));
+            t.tabIndex = on ? 0 : -1;
+            panels[i].classList.toggle('active', on);
+        });
+        if (focus) tab.focus();
+    };
+
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab));
+        tab.addEventListener('keydown', event => {
+            let next = null;
+            if (event.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+            else if (event.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+            else if (event.key === 'Home') next = tabs[0];
+            else if (event.key === 'End') next = tabs[tabs.length - 1];
+            if (next) {
+                event.preventDefault();
+                select(next, { focus: true });
+            }
+        });
+    });
+
+    root.addEventListener('click', event => {
+        const jump = event.target.closest('[data-goto-tab]');
+        if (!jump) return;
+        select(jump.dataset.gotoTab === 'elemental' ? tabs[1] : tabs[0], { focus: true });
+    });
 }
-
-window.switchInsightTab = switchInsightTab;
 
 /* ==========================================================================
    5. TRIPLE CARD LOGIC
    ========================================================================== */
-let tripleReversed = [false, false, false];
+function computeTripleAnalysis() {
+    tripleAnalysis = {
+        elements: analyzeElements(tripleCards, tripleReversed),
+        spread: analyzeSpread(tripleCards, tripleReversed)
+    };
+    return tripleAnalysis;
+}
+
+/** Puts an already-cast spread on screen (page load, or a second tap on Cast). */
+function showSavedTriple({ cards, reversed }) {
+    const castBtn = document.querySelector('.tarot-btn-cast-triple');
+    if (castBtn) castBtn.style.display = 'none';   // only hide Cast when there is a reading to show instead
+
+    tripleCards = cards;
+    tripleReversed = reversed;
+    tripleFlipped = [true, true, true];
+    tripleAnalysis = null;
+
+    document.getElementById('triple-actions')?.classList.remove('hidden');
+
+    for (let i = 0; i < 3; i++) {
+        document.getElementById(`triple-card-inner-${i}`)?.classList.add('flipped');
+        renderTripleFront(document.getElementById(`triple-card-front-${i}`), tripleCards[i], tripleReversed[i]);
+    }
+
+    document.querySelector('.triple-spread-container')?.classList.add('revealed');
+    renderTripleInsights();
+}
 
 function drawTripleSpread() {
     if (tripleCasting) return;
 
-    const today = new Date().toDateString();
-    const lastDate = safeGetItem('arcana_last_triple_date');
-    const castTripleBtn = document.querySelector('.tarot-btn-cast-triple');
-    const presentCardInner = document.getElementById('triple-card-inner-1');
-    const container = document.querySelector('.triple-spread-container');
+    document.getElementById('triple-card-inner-1')?.classList.remove('deck-pulse-trigger');
 
-    if (presentCardInner) {
-        presentCardInner.classList.remove('deck-pulse-trigger');
-    }
-
-    if (lastDate === today) {
-        const savedTriple = loadSavedTriple();
-        if (savedTriple) {
-            // Hide the draw button completely if today's reading is loaded
-            if (castTripleBtn) {
-                castTripleBtn.style.display = 'none';
-            }
-
-            tripleCards = savedTriple.cards;
-            tripleReversed = savedTriple.reversed;
-            tripleFlipped = [true, true, true];
-
-            playMysticChime();
-            const actionsDiv = document.getElementById('triple-actions');
-            if (actionsDiv) actionsDiv.classList.remove('hidden');
-
-            for (let i = 0; i < 3; i++) {
-                const inner = document.getElementById(`triple-card-inner-${i}`);
-                const front = document.getElementById(`triple-card-front-${i}`);
-
-                if (inner) inner.classList.add('flipped');
-                renderTripleFront(front, tripleCards[i], tripleReversed[i]);
-            }
-
-            if (container) container.classList.add('revealed');
-
-            renderTripleInsights();
-
-            return;
-        }
+    // Already cast today (this page, or saved by an earlier visit / another tab): show it again.
+    const existing = tripleCards[0] ? { cards: tripleCards, reversed: tripleReversed } : loadTodaysTriple();
+    if (existing) {
+        playMysticChime();
+        showSavedTriple(existing);
+        return;
     }
 
     tripleCasting = true;
+    tripleAnalysis = null;
     const tripleDateSaved = recordDrawToday('triple');
 
-    const shuffled = shuffle([...fullTarotDeck]);
-    tripleCards = shuffled.slice(0, 3);
+    tripleCards = shuffle([...fullTarotDeck]).slice(0, 3);
     tripleFlipped = [false, false, false];
-
-    tripleReversed = [
-        Math.random() < REVERSAL_CHANCE,
-        Math.random() < REVERSAL_CHANCE,
-        Math.random() < REVERSAL_CHANCE
-    ];
+    tripleReversed = tripleCards.map(() => Math.random() < REVERSAL_CHANCE);
 
     const triplePersisted = [
         tripleDateSaved,
@@ -751,44 +718,28 @@ function drawTripleSpread() {
     if (!triplePersisted) warnDrawNotRemembered();
 
     const actionsDiv = document.getElementById('triple-actions');
+    const castTripleBtn = document.querySelector('.tarot-btn-cast-triple');
+    const container = document.querySelector('.triple-spread-container');
+
     if (actionsDiv) actionsDiv.classList.add('hidden');
 
     for (let i = 0; i < 3; i++) {
-        const inner = document.getElementById(`triple-card-inner-${i}`);
-        const front = document.getElementById(`triple-card-front-${i}`);
-
-        if (inner) inner.classList.remove('flipped');
-        renderTripleFront(front, tripleCards[i], tripleReversed[i]);
+        document.getElementById(`triple-card-inner-${i}`)?.classList.remove('flipped');
+        renderTripleFront(document.getElementById(`triple-card-front-${i}`), tripleCards[i], tripleReversed[i]);
     }
 
     if (container) container.classList.add('revealed');
 
-    setTimeout(() => {
-        const inner0 = document.getElementById('triple-card-inner-0');
-        if (inner0) inner0.classList.add('flipped');
-        tripleFlipped[0] = true;
-    }, 250);
-
-    setTimeout(() => {
-        const inner1 = document.getElementById('triple-card-inner-1');
-        if (inner1) inner1.classList.add('flipped');
-        tripleFlipped[1] = true;
-    }, 550);
-
-    setTimeout(() => {
-        const inner2 = document.getElementById('triple-card-inner-2');
-        if (inner2) inner2.classList.add('flipped');
-        tripleFlipped[2] = true;
-    }, 850);
+    [250, 550, 850].forEach((delay, i) => {
+        setTimeout(() => {
+            document.getElementById(`triple-card-inner-${i}`)?.classList.add('flipped');
+            tripleFlipped[i] = true;
+        }, delay);
+    });
 
     setTimeout(() => {
         if (actionsDiv) actionsDiv.classList.remove('hidden');
-
-        // Hide the button once the final card flip finishes and actions display
-        if (castTripleBtn) {
-            castTripleBtn.style.display = 'none';
-        }
-
+        if (castTripleBtn) castTripleBtn.style.display = 'none';   // hide Cast once the last flip finishes
         renderTripleInsights();
         tripleCasting = false;
     }, 1200);
@@ -799,90 +750,61 @@ function drawTripleSpread() {
 function renderTripleFront(front, card, isReversed) {
     if (!front || !card) return;
 
-    const deckMatch = fullTarotDeck.find(d => d.name === card.name || d.id === card.id) || card;
-    const rawElem = deckMatch.element || deckMatch.suit || card.element || card.suit || '';
-    let elemKey = String(rawElem).toLowerCase();
-
-    if (elemKey.includes('fire') || elemKey.includes('wand')) elemKey = 'fire';
-    else if (elemKey.includes('water') || elemKey.includes('cup')) elemKey = 'water';
-    else if (elemKey.includes('air') || elemKey.includes('sword')) elemKey = 'air';
-    else if (elemKey.includes('earth') || elemKey.includes('pentacle')) elemKey = 'earth';
-
-    front.classList.remove('element-fire', 'element-water', 'element-earth', 'element-air');
-    front.classList.add('card-front', 'tarot-card-front-face', 'box-glow-gold');
-    if (elemKey) front.classList.add(`element-${elemKey}`);
-
-    front.style.background = '';
+    const deckMatch = fullTarotDeck.find(d => d.id === card.id) || card;
+    const elemKey = getElementKey(deckMatch) || getElementKey(card);
+    applyElementClass(front, elemKey);
 
     const artRotation = isReversed ? 'rotate-180' : '';
     const orientationBadge = isReversed ? 'Reversed' : 'Upright';
     const badgeClass = isReversed ? 'tarot-triple-badge-reversed' : 'tarot-triple-badge-upright';
     const meaningText = isReversed ? (deckMatch.shadow || card.shadow) : (deckMatch.light || card.light);
     const infoBoxClass = isReversed ? 'tarot-triple-info-box-reversed' : 'tarot-triple-info-box-upright';
+    const name = deckMatch.name || card.name;
 
     front.innerHTML = `
         <div class="tarot-triple-header">
-            <span>${deckMatch.arcana || card.arcana || 'TAROT'}</span>
+            <span>${escapeHTML(deckMatch.arcana || card.arcana || 'TAROT')}</span>
             <span class="tarot-element-badge badge-${elemKey}">
-                ${deckMatch.element || rawElem || 'Spirit'}
+                ${escapeHTML(deckMatch.element || card.element || 'Spirit')}
             </span>
         </div>
         <div class="tarot-triple-body ${artRotation}">
             <div class="card-icon-slot tarot-triple-icon"></div>
-            <h4 class="tarot-triple-title">${deckMatch.name || card.name}</h4>
-            <p class="tarot-triple-subtitle">(${deckMatch.originalName || card.originalName || deckMatch.name})</p>
+            <h4 class="tarot-triple-title">${escapeHTML(name)}</h4>
+            <p class="tarot-triple-subtitle">(${escapeHTML(deckMatch.originalName || card.originalName || name)})</p>
         </div>
         <div class="${infoBoxClass}">
             <div class="tarot-triple-info-header">
-                <h5 class="tarot-triple-info-title">${deckMatch.name || card.name}</h5>
+                <h5 class="tarot-triple-info-title">${escapeHTML(name)}</h5>
                 <span class="${badgeClass}">${orientationBadge}</span>
             </div>
-            <p class="card-aspect-text">${meaningText}</p>
+            <p class="card-aspect-text">${escapeHTML(meaningText || '')}</p>
         </div>
     `;
 
-    const adviceText = deckMatch.advice || card.advice || meaningText || card.name;
-    const seedString = `${deckMatch.id || card.id || deckMatch.name}_${adviceText}`;
-    const sigilMarkup = generateSigilFromAdvice({ advice: seedString });
-
-    const iconSlot = front.querySelector('.card-icon-slot');
-    if (iconSlot) {
-        iconSlot.innerHTML = sigilMarkup;
-        animateSigilDraw(iconSlot);
-    }
+    drawSigilInto(front, deckMatch, meaningText);
 }
 
-function flipTripleCard(index) {
+function flipTripleCard() {
     const container = document.querySelector('.triple-spread-container');
     if (!container) return;
 
     const isRevealed = container.classList.contains('revealed');
+    tripleFlipped = isRevealed ? [false, false, false] : [true, true, true];
 
-    if (isRevealed) {
-        tripleFlipped = [false, false, false];
-        container.classList.remove('revealed');
-
-        for (let i = 0; i < 3; i++) {
-            const cardInner = document.getElementById(`triple-card-inner-${i}`);
-            if (cardInner) {
-                cardInner.classList.remove('flipped');
-            }
-        }
-    } else {
-        tripleFlipped = [true, true, true];
-        for (let i = 0; i < 3; i++) {
-            const cardInner = document.getElementById(`triple-card-inner-${i}`);
-            if (cardInner) {
-                cardInner.classList.add('flipped');
-            }
-        }
-        container.classList.add('revealed');
+    for (let i = 0; i < 3; i++) {
+        document.getElementById(`triple-card-inner-${i}`)?.classList.toggle('flipped', !isRevealed);
     }
+    container.classList.toggle('revealed', !isRevealed);
 }
 
 /* ==========================================================================
    6. SAVING TO THE JOURNAL (the Journal itself lives on archives.html)
    ========================================================================== */
+function todayLabel() {
+    return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function saveCurrentReading() {
     if (browseCard || !currentSingleCard) return;
 
@@ -892,7 +814,7 @@ function saveCurrentReading() {
 
     const entry = {
         type: 'Daily Single Card',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: todayLabel(),
         cards: [cardDisplayName],
         summary: isSingleReversed ? currentSingleCard.shadow : currentSingleCard.advice
     };
@@ -911,11 +833,11 @@ function saveTripleReading() {
         tripleReversed[i] ? `${card.name} (Reversed)` : card.name
     );
 
-    const overall = analyzeSpread(tripleCards, tripleReversed);
+    const overall = (tripleAnalysis || computeTripleAnalysis()).spread;
 
     const entry = {
         type: '3-Card Celestial Spread',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: todayLabel(),
         cards: formattedCards,
         headline: overall ? overall.headline : '',
         summary: `Past: ${formattedCards[0]} | Present: ${formattedCards[1]} | Future: ${formattedCards[2]}`
@@ -956,7 +878,10 @@ function previewArchiveCard(cardId, { updateUrl = true, announce = true } = {}) 
     isSingleFlipped = true;
     if (cardInner) cardInner.classList.add('flipped');
     populateSingleDetails();
-    if (detailsBox) detailsBox.classList.add('details-slide-active');
+    if (detailsBox) {
+        detailsBox.classList.remove('details-slide-enter');
+        detailsBox.classList.add('details-slide-active');
+    }
 
     if (cardInner) cardInner.focus({ preventScroll: true });
 
@@ -966,11 +891,10 @@ function previewArchiveCard(cardId, { updateUrl = true, announce = true } = {}) 
 
 /* ==========================================================================
    SPREAD INSIGHTS (the two tabs under the 3-card spread)
-   Arcanum Wisdom  -> analyzeSpread()   in js/spreadReading.js
+   Arcanum Wisdom    -> analyzeSpread()   in js/spreadReading.js
    Elemental Insight -> analyzeElements() in js/elements.js, markup in js/elementsView.js
    ========================================================================== */
-function renderSpreadReading(drawnCards, reversedFlags, elementalAnalysis) {
-    const reading = analyzeSpread(drawnCards, reversedFlags);
+function renderSpreadReading(reading, elementalAnalysis) {
     if (!reading) return '<div class="spread-reading">✦ Awaiting Your Spread ✦</div>';
 
     return `
@@ -1004,51 +928,8 @@ function renderTripleInsights() {
     const elemental = document.getElementById('triple-elemental-container');
     if (!root || !overall || !elemental) return;
 
-    const elementalAnalysis = analyzeElements(tripleCards, tripleReversed);
-    overall.innerHTML = renderSpreadReading(tripleCards, tripleReversed, elementalAnalysis);
-    elemental.innerHTML = renderElementalReading(tripleCards, tripleReversed, elementalAnalysis);
+    const { elements, spread } = computeTripleAnalysis();
+    overall.innerHTML = renderSpreadReading(spread, elements);
+    elemental.innerHTML = renderElementalReading(tripleCards, tripleReversed, elements, spread?.headline);
     root.classList.remove('hidden');
-}
-
-/** Tab behaviour for the triple insights (click + arrow keys), scoped to its own container. */
-function initTripleInsightTabs() {
-    const root = document.getElementById('triple-insights-container');
-    if (!root) return;
-    const tabs = [...root.querySelectorAll('[role="tab"]')];
-
-    const select = (tab, { focus = false } = {}) => {
-        tabs.forEach(t => {
-            const on = t === tab;
-            t.classList.toggle('active', on);
-            t.setAttribute('aria-selected', String(on));
-            t.tabIndex = on ? 0 : -1;
-            const panel = document.getElementById(t.getAttribute('aria-controls'));
-            if (panel) panel.classList.toggle('active', on);
-        });
-        if (focus) tab.focus();
-    };
-
-    tabs.forEach((tab, i) => {
-        tab.addEventListener('click', () => select(tab));
-        tab.addEventListener('keydown', event => {
-            let next = null;
-            if (event.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
-            else if (event.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
-            else if (event.key === 'Home') next = tabs[0];
-            else if (event.key === 'End') next = tabs[tabs.length - 1];
-            if (next) {
-                event.preventDefault();
-                select(next, { focus: true });
-            }
-        });
-    });
-
-    // Buttons inside a panel (the Wisdom teaser) can jump to another tab with data-goto-tab="<name>".
-    // The listener sits on the container because the panels are re-rendered with innerHTML.
-    root.addEventListener('click', event => {
-        const jump = event.target.closest('[data-goto-tab]');
-        if (!jump) return;
-        const target = tabs.find(t => t.id === `btn-triple-tab-${jump.dataset.gotoTab}`);
-        if (target) select(target, { focus: true });
-    });
 }

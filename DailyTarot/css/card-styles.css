@@ -736,7 +736,7 @@
 
 .triple-dot.active {
     background-color: rgb(var(--color-gold) / 0.1);
-    color: rgb(var(--color-Starlight));
+    color: rgb(var(--color-starlight));
 }
 
 @media (max-width: 640px) {
@@ -750,8 +750,102 @@
         transform: translateX(20px) translateY(30px) rotate(3deg);
     }
 }
+
+/* ==========================================================================
+   ARCHIVE KEEPSAKE (library preview): paste at the end of card-styles.css
+   ========================================================================== */
+.archive-keepsake {
+    --keepsake-accent: var(--color-gold);
+    position: relative;
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 1rem;
+    border: 1px solid rgb(var(--keepsake-accent) / 0.45);
+    animation: keepsake-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.archive-keepsake::before {
+    content: '';
+    position: absolute;
+    inset: 0.35rem;
+    border: 1px solid rgb(var(--color-gold) / 0.18);
+    border-radius: 0.7rem;
+    pointer-events: none;
+}
+
+.keepsake-fire  { --keepsake-accent: var(--color-element-fire); }
+.keepsake-water { --keepsake-accent: var(--color-element-water); }
+.keepsake-air   { --keepsake-accent: var(--color-element-air); }
+.keepsake-earth { --keepsake-accent: var(--color-element-earth); }
+
+.keepsake-header {
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgb(var(--color-gold) / 0.85);
+    margin-bottom: 1rem;
+}
+
+.keepsake-advice { margin: 0; }
+
+.keepsake-advice blockquote,
+.keepsake-element blockquote {
+    margin: 0;
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 1.2rem;
+    line-height: 1.45;
+    color: rgb(var(--color-ivory));
+    text-shadow: 0 0 18px rgb(var(--color-gold) / 0.3);
+    text-wrap: balance;
+}
+
+.keepsake-advice figcaption {
+    margin-top: 0.6rem;
+    font-family: var(--font-atkinson, 'Atkinson Hyperlegible', sans-serif);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--color-starlight) / 0.6);
+}
+
+.keepsake-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.1rem auto;
+    max-width: 14rem;
+    color: rgb(var(--color-gold) / 0.7);
+    font-size: 0.7rem;
+}
+.keepsake-divider::before,
+.keepsake-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgb(var(--color-gold) / 0.45), transparent);
+}
+
+.keepsake-element-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-cinzel, 'Cinzel', serif);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    margin-bottom:1rem;
+    text-transform: uppercase;
+    color: rgb(var(--keepsake-accent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .archive-keepsake { animation: none; }
+}
+
 /* --------------------------------------------------------------------------
-   7. KEYFRAME ANIMATION LOOPS
+   8. KEYFRAME ANIMATION LOOPS
    Keyframes animate transform/opacity only. Animating `filter` repaints every frame, so the glow is the
    static drop-shadow on each element above instead of a breathing one.
    -------------------------------------------------------------------------- */
@@ -792,4 +886,9 @@
     0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.92); }
     50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.05); }
     100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.92); }
+}
+
+@keyframes keepsake-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
