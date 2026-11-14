@@ -1,57 +1,1561 @@
 /* Base Fonts & Transitions */
 @import "googlefonts.css";
+@import "tokens.css";
 
-body {
-    font-family: 'Outfit', sans-serif;
-    transition: background-color 0.3s, color 0.3s;
+/* ==========================================================================
+   MAIN REACTION CARD & EQUATION STAGE
+   ========================================================================== */
+
+.reaction-card {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+                0 8px 10px -6px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.font-mono {
+.reaction-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.reaction-badges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.reaction-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+}
+
+.reaction-badge-accent {
+    color: rgb(var(--accent-text));
+    background-color: rgb(var(--accent) / 0.1);
+    border-color: rgb(var(--accent) / 0.2);
+}
+
+.reaction-badge-neutral {
+    color: rgb(var(--text-body));
+    background-color: rgb(var(--bg-well));
+    border-color: rgb(var(--text-secondary) / 0.2);
+}
+
+.dark .reaction-badge-neutral {
+    background-color: rgb(var(--bg-elevated));
+}
+
+.daily-header-tag {
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(var(--text-secondary));
+}
+
+.daily-header-tag.hidden {
+    display: none;
+}
+
+.daily-header-tag i {
+    margin-right: 0.25rem;
+    color: rgb(var(--accent));
+}
+
+/* Primary Equation Display Container */
+.equation-stage {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 100px;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .reaction-card {
+        padding: 2rem;
+    }
+
+    .reaction-card-header {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 0;
+        text-align: left;
+    }
+
+    .equation-stage {
+        gap: 1rem;
+    }
+}
+
+/* ==========================================================================
+   EQUATION BOARD & OPERATORS (renderNuclearBoard)
+   ========================================================================== */
+
+.equation-board {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.75rem;
+    color: rgb(var(--text-control));
+}
+
+.dark .equation-board {
+    color: rgb(var(--text-primary));
+}
+
+.equation-plus {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    font-weight: 700;
+    color: rgb(var(--text-secondary));
+}
+
+.equation-arrow {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    color: rgb(var(--accent));
+}
+
+@media (min-width: 640px) {
+    .equation-board {
+        gap: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .equation-board {
+        gap: 1rem;
+        font-size: 1.25rem;
+    }
+}
+
+
+/* ==========================================================================
+   EQUATION TERM CARDS, COEFFICIENT INPUTS & PARTICLE SLOTS
+   ========================================================================== */
+
+.term-card {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    background-color: rgb(var(--bg-base));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.dark .term-card {
+    background-color: rgb(var(--bg-subtle));
+    border-color: rgb(var(--border-strong));
+}
+
+/* Coefficient Number Input */
+.term-coeff-input {
+    width: 3rem;
+    height: 2.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: center;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg-well));
+    border: 2px solid rgb(var(--border-strong));
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .term-coeff-input {
+    background-color: rgb(var(--bg-base));
+}
+
+.term-coeff-input:focus {
+    border-color: rgb(var(--accent));
+    box-shadow: 0 0 0 2px rgb(var(--accent) / 0.4);
+}
+
+.dark .term-coeff-input:focus {
+    border-color: rgb(var(--accent-text));
+    box-shadow: 0 0 0 2px rgb(var(--accent-text) / 0.4);
+}
+
+/* Fixed Nuclide Label Wrapper */
+.term-nuclide-wrap {
+    cursor: help;
+    user-select: none;
+}
+
+/* Selectable Subatomic Particle Slot Button */
+.particle-slot-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.25rem;
+    color: rgb(var(--accent-text));
+    background-color: rgb(var(--accent) / 0.1);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.particle-slot-btn:hover {
+    background-color: rgb(var(--accent) / 0.2);
+}
+
+.particle-slot-btn.is-empty {
+    border: 2px dashed rgb(var(--accent) / 0.5);
+}
+
+.particle-slot-btn.is-empty:hover {
+    border-color: rgb(var(--accent));
+}
+
+.particle-slot-btn.is-selected {
+    border: 1px solid rgb(var(--accent) / 0.4);
+}
+
+.particle-slot-icon {
+    margin-right: 0.25rem;
+    color: rgb(var(--accent));
+}
+
+.particle-slot-nums {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.8;
+}
+
+.particle-slot-symbol {
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.molecule-formula {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: rgb(var(--text-primary));
+}
+
+@media (min-width: 640px) {
+    .term-card {
+        gap: 0.5rem;
+    }
+
+    .term-coeff-input {
+        width: 3.5rem;
+        height: 2.75rem;
+        font-size: 1.25rem;
+    }
+
+    .particle-slot-btn {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+    .molecule-formula {
+        font-size: 1.25rem;
+    }
+}
+
+
+/* ==========================================================================
+   LIVE MASS & CHARGE BALANCE MATRIX ACCORDION
+   ========================================================================== */
+
+.matrix-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgb(var(--border-default));
+}
+
+.matrix-toggle {
+    --toggle-bg: var(--bg-subtle);
+    --toggle-hover: var(--bg-well);
+    --toggle-alpha: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.75rem;
+    text-align: left;
+    background-color: rgb(var(--toggle-bg) / var(--toggle-alpha));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .matrix-toggle {
+    --toggle-bg: var(--bg-well);
+    --toggle-hover: var(--bg-well);
+    --toggle-alpha: 0.6;
+}
+
+.matrix-toggle:hover {
+    background-color: rgb(var(--toggle-hover) / var(--toggle-alpha));
+}
+
+.dark .matrix-toggle:hover {
+    --toggle-alpha: 0.9;
+}
+
+.matrix-toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.matrix-toggle-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: rgb(var(--accent));
+    background-color: rgb(var(--accent) / 0.1);
+    border-radius: 0.5rem;
+}
+
+.matrix-toggle-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(var(--text-primary));
+}
+
+.matrix-toggle-subtitle {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1rem;
+    color: rgb(var(--text-secondary));
+}
+
+.matrix-toggle-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.matrix-chevron {
+    color: rgb(var(--text-secondary));
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.matrix-toggle:hover .matrix-chevron {
+    color: rgb(var(--text-control));
+}
+
+.dark .matrix-toggle:hover .matrix-chevron {
+    color: rgb(var(--text-strong));
+}
+
+/* Accordion Collapse/Expand Wrapper */
+.matrix-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    max-height: 24rem;
+    margin-top: 1rem;
+    opacity: 1;
+    overflow: hidden;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.matrix-wrapper.is-collapsed {
+    grid-template-rows: 0fr;
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+}
+
+.matrix-chevron.is-open {
+    transform: rotate(-180deg);
+}
+
+.matrix-body > * + * {
+    overflow: hidden;
+    min-height: 0;
+    margin-top: 1rem;
+}
+
+.conservation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .conservation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Reaction Species Info Sub-Section */
+.species-section-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(var(--text-secondary));
+}
+
+.species-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .species-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    .species-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* ==========================================================================
+   ATOM & CONSERVATION MATRIX CARD
+   ========================================================================== */
+.atom-matrix-card {
+  --well-alpha: 0.8;
+  --state-color: var(--border-default);
+  --state-text: var(--state-color);
+  --state-border-alpha: 1;
+  --state-glow: none;
+
+  padding: 0.625rem;
+  border: 1px solid rgb(var(--state-color) / var(--state-border-alpha));
+  border-radius: 0.75rem;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+  font-size: 0.75rem;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conservation-card {
+    --well-alpha: 0.8;
+    --state-color: var(--border-default);
+    --state-text: var(--text-primary);
+    --state-border-alpha: 1;
+    --state-glow: none;
+
+    padding: 1rem;
+    border: 1px solid rgb(var(--state-color) / var(--state-border-alpha));
+    border-radius: 0.75rem;
+    box-shadow: var(--state-glow);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .conservation-card {
+    --well-alpha: 0.5;
+}
+
+.conservation-card.is-balanced, .atom-matrix-card.is-balanced {
+    --state-color: var(--status-valid);
+    --state-text: var(--status-valid-text);
+    background-color: rgb(var(--status-valid) / 0.08);
+    --state-border-alpha: 0.4;
+    --state-glow: 0 0 15px rgb(var(--status-valid) / 0.08);
+}
+
+.conservation-card.is-unbalanced, .atom-matrix-card.is-unbalanced {
+    --state-color: var(--status-invalid);
+    --state-text: var(--status-invalid-text);
+    background-color: rgb(var(--status-invalid) / 0.08);
+    --state-border-alpha: 0.4;
+    --state-glow: 0 0 15px rgb(var(--status-invalid) / 0.08);
+}
+
+/* Header */
+.conservation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.conservation-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(var(--text-body));
+}
+
+.conservation-icon {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: rgb(var(--state-color));
+}
+
+/* Reactants vs. Products Row */
+.conservation-values {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.conservation-side-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-transform: uppercase;
+    color: rgb(var(--text-muted));
 }
-::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+
+.conservation-side-right {
+    text-align: right;
 }
-::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.5);
+
+.conservation-count {
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.75rem;
+    color: rgb(var(--state-text));
+}
+
+.conservation-divider {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.75rem;
+    color: rgb(var(--text-muted));
+}
+
+@media (min-width: 640px) {
+    .conservation-count {
+        font-size: 1.5rem;
+        line-height: 2rem;
+    }
+}
+
+/* ==========================================================================
+   ATOM INFO CARDS (main.js)
+   ========================================================================== */
+
+.atom-matrix-count {
+    font-weight: 700;
+    line-height: 1rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    gap: 0.25rem;
+    align-items: center;
+    flex-shrink: 0;
+    display: flex;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.atom-count-sep {
+    font-weight: 400;
+    color: rgb(var(--text-muted));
+}
+
+.dark .atom-count-sep {
+    color: rgb(var(--neutral-500));
+}
+
+.atom-count-icon {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+/* Balanced state */
+.atom-matrix-card.is-balanced .atom-matrix-counts, .atom-count-icon {
+    color: rgb(var(--status-valid-text));
+}
+
+.dark .atom-matrix-card.is-balanced .atom-matrix-counts {
+    color: rgb(var(--status-valid));
+}
+
+/* Unbalanced state */
+.atom-matrix-card.is-unbalanced .atom-count-val,
+.atom-matrix-card.is-unbalanced .atom-count-icon {
+    color: rgb(var(--status-invalid));
+}
+
+@media (min-width: 640px) {
+    .atom-matrix-count {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+}
+
+/* ==========================================================================
+   ATOM & REACTION SPECIES INFO CARDS (nuclearMatrix.js)
+   ========================================================================== */
+
+
+
+.species-card {
+    --card-bg: var(--bg-well);
+    --card-bg-alpha: 0.6;
+    --card-border-alpha: 0.8;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1rem;
+    background-color: rgb(var(--card-bg) / var(--card-bg-alpha));
+    border: 1px solid rgb(var(--border-default) / var(--card-border-alpha));
+    border-radius: 0.75rem;
+    cursor: help;
+    user-select: none;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .species-card {
+    --card-bg-alpha: 0.4;
+    --card-border-alpha: 1;
+}
+
+.species-card:hover {
+    --card-bg: var(--bg-base);
+    --card-bg-alpha: 1;
+    border-color: rgb(var(--accent) / 0.4);
+}
+
+.dark .species-card:hover {
+    --card-bg: var(--bg-subtle);
+    --card-bg-alpha: 0.8;
+}
+
+.species-card-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    font-size: 0.75rem;
+}
+
+.species-card.is-placeholder .species-card-inner {
+    opacity: 0.7;
+}
+
+.species-card-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+/* Symbol / Placeholder Badge */
+.species-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg-base));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .species-badge {
+    background-color: rgb(var(--bg-subtle));
+    border-color: rgb(var(--border-strong));
+}
+
+.species-card:hover .species-badge {
+    color: rgb(var(--accent));
+    border-color: rgb(var(--accent) / 0.5);
+}
+
+.species-badge.is-placeholder {
+    color: rgb(var(--accent));
+    background-color: rgb(var(--accent) / 0.1);
+    border: 1px dashed rgb(var(--accent) / 0.4);
+    box-shadow: none;
+}
+
+/* Species Name & Placeholder Label */
+.species-label {
+    font-weight: 500;
+    color: rgb(var(--text-control));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .species-label {
+    color: rgb(var(--text-strong));
+}
+
+.species-card:hover .species-label {
+    color: rgb(var(--accent));
+}
+
+.species-label.is-placeholder {
+    font-style: italic;
+    color: rgb(var(--text-body));
+}
+
+.dark .species-label.is-placeholder {
+    color: rgb(var(--text-secondary));
+}
+
+/* Info Icon */
+.species-info-icon {
+    flex-shrink: 0;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    color: rgb(var(--text-muted));
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .species-info-icon {
+    color: rgb(var(--text-muted-hover));
+}
+
+.species-card:hover .species-info-icon {
+    color: rgb(var(--accent));
+}
+
+@media (min-width: 640px) {
+    .species-card {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+}
+
+/* ==========================================================================
+   NUCLIDE / ISOTOPE NOTATION (formatIsotopeHTML in nuclearUI.js)
+   ========================================================================== */
+
+.nuclide {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1;
+}
+
+.nuclide-nums {
+    display: inline-flex;
+    flex-direction: column;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 0.25rem;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: right;
+    color: rgb(var(--text-secondary));
+}
+
+.dark .nuclide-nums {
+    color: rgb(var(--text-body));
+}
+
+.nuclide-symbol {
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: 1.75rem;
+    color: rgb(var(--text-primary));
+}
+
+.nuclide-charge {
+    margin-left: 0.125rem;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgb(var(--accent));
+}
+
+@media (min-width: 640px) {
+    .nuclide-nums,
+    .nuclide-charge {
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+
+    .nuclide-symbol {
+        font-size: 1.25rem;
+    }
+}
+
+
+/* ==========================================================================
+   PARTICLE PICKER MODAL
+   ========================================================================== */
+
+.particle-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgb(var(--bg-scrim) / 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.particle-modal.hidden {
+    display: none;
+}
+
+.particle-modal-dialog {
+    width: 100%;
+    max-width: 24rem;
+    padding: 1.25rem;
+    background-color: rgb(var(--bg-base));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-lg);
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.particle-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgb(var(--border-subtle));
+}
+
+.particle-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.75rem;
+    color: rgb(var(--text-primary));
+}
+
+.particle-modal-icon {
+    color: rgb(var(--accent));
+}
+
+.particle-modal-close {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    color: rgb(var(--text-muted));
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.particle-modal-close:hover {
+    color: rgb(var(--text-muted-hover));
+}
+
+.particle-modal-subtitle {
+    margin: 0 0 1rem 0;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: rgb(var(--text-secondary));
+}
+
+.particle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+}
+
+.particle-option-btn {
+    --card-alpha: 1;
+    --hover-alpha: 0.1;
+
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    text-align: left;
+    background-color: rgb(var(--bg-subtle) / var(--card-alpha));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .particle-option-btn {
+    --card-alpha: 0.5;
+    --hover-alpha: 0.2;
+}
+
+.particle-option-btn:hover {
+    background-color: rgb(var(--accent) / var(--hover-alpha));
+    border-color: rgb(var(--accent) / 0.4);
+}
+
+.particle-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: rgb(var(--accent-text));
+    background-color: rgb(var(--accent) / 0.1);
+    border: 1px solid rgb(var(--accent) / 0.2);
+    border-radius: 0.75rem;
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.particle-option-btn:hover .particle-badge {
+    transform: scale(1.05);
+}
+
+.particle-nuclide-nums {
+    margin-right: 0.125rem;
+    font-size: 10px;
+    line-height: 1;
+    text-align: right;
+}
+
+.particle-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    color: rgb(var(--text-primary));
+}
+
+.particle-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1.25;
+    color: rgb(var(--text-secondary));
+}
+
+/* ==========================================================================
+   NUCLEAR REACTION INSIGHT CARD
+   ========================================================================== */
+
+.insight-card {
+    padding: 1.5rem;
+    border-left: 4px solid rgb(var(--accent));
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.insight-card > * + * {
+    margin-top: 0.75rem;
+}
+
+.insight-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.75rem;
+    color: rgb(var(--accent-text));
+}
+
+.insight-formula {
+    margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5rem;
+    color: rgb(var(--text-primary));
+}
+
+.insight-text {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    line-height: 1.625;
+    color: rgb(var(--text-body));
+}
+
+@media (min-width: 640px) {
+    .insight-formula {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+
+    .insight-text {
+        font-size: 0.875rem;
+    }
+}
+
+/* ==========================================================================
+   ACTION BUTTON BAR
+   ========================================================================== */
+
+.action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.875rem 2rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn.hidden {
+    display: none;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.action-btn-primary {
+    color: rgb(var(--text-inverse));
+    background-color: rgb(var(--accent));
+    box-shadow: 0 10px 15px -3px rgb(var(--accent) / 0.25),
+                0 4px 6px -4px rgb(var(--accent) / 0.25);
+}
+
+.action-btn-primary:hover {
+    background-color: rgb(var(--accent-hover));
+}
+
+.action-btn-gradient {
+    color: rgb(var(--white));
+    background-image: linear-gradient(
+        to right,
+        rgb(var(--accent)),
+        rgb(var(--accent-hover))
+    );
+    box-shadow: 0 10px 15px -3px rgb(var(--accent) / 0.25),
+                0 4px 6px -4px rgb(var(--accent) / 0.25);
+}
+
+.action-btn-gradient:hover {
+    background-image: linear-gradient(
+        to right,
+        rgb(var(--accent-hover)),
+        rgb(var(--accent-deep))
+    );
+}
+
+.action-btn-outline {
+    --outline-alpha: 0.1;
+
+    color: rgb(var(--accent-text));
+    background-color: rgb(var(--accent) / var(--outline-alpha));
+    box-shadow: inset 0 0 0 2px rgb(var(--accent) / 0.8);
+}
+
+.action-btn-outline:hover {
+    --outline-alpha: 0.2;
+    box-shadow: inset 0 0 0 2px rgb(var(--accent) / 1);
+}
+
+.action-btn-secondary {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    color: rgb(var(--text-control));
+    background-color: rgb(var(--bg-muted));
+}
+
+.action-btn-secondary:hover {
+    background-color: rgb(var(--bg-muted-hover));
+}
+
+.action-btn-secondary:active {
+    transform: none;
+}
+
+.action-btn-icon-amber {
+    color: rgb(var(--accent));
+}
+
+@media (min-width: 640px) {
+    .action-bar {
+        gap: 1rem;
+    }
+
+    .action-btn {
+        width: auto;
+    }
+}
+
+/* ==========================================================================
+   CUSTOM SOLVER VIEW & SOLUTION OUTPUT
+   ========================================================================== */
+
+.solver-view > * + * {
+    margin-top: 1.5rem;
+}
+
+.solver-view.hidden {
+    display: none;
+}
+
+.solver-card {
+    padding: 1.5rem;
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+                0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.solver-card > * + * {
+    margin-top: 1.5rem;
+}
+
+.solver-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 2rem;
+    color: rgb(var(--text-primary));
+}
+
+.solver-title i {
+    color: rgb(var(--accent));
+}
+
+.solver-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgb(var(--text-secondary));
+}
+
+.solver-code {
+    padding: 0.125rem 0.375rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    background-color: rgb(var(--bg-muted));
+    border-radius: 0.25rem;
+}
+
+.dark .solver-code {
+    background-color: rgb(var(--bg-subtle));
+}
+
+/* Input & Submit Row */
+.solver-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.solver-input {
+    flex: 1 1 auto;
+    padding: 0.75rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg-well));
+    border: 1px solid rgb(var(--border-strong));
+    border-radius: 0.75rem;
+    outline: none;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .solver-input {
+    background-color: rgb(var(--bg-base));
+}
+
+.solver-input:focus {
+    border-color: rgb(var(--accent));
+    box-shadow: 0 0 0 2px rgb(var(--accent));
+}
+
+.solver-submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.875rem 2rem;
+    font-weight: 700;
+    color: rgb(var(--text-inverse));
+    background-color: rgb(var(--accent));
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgb(var(--accent) / 0.25),
+                0 4px 6px -4px rgb(var(--accent) / 0.25);
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.solver-submit-btn:hover {
+    background-color: rgb(var(--accent-hover));
+}
+
+.solver-submit-btn:active {
+    transform: scale(0.95);
+}
+
+/* Example Chips */
+.solver-examples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.solver-examples-label {
+    font-weight: 600;
+    color: rgb(var(--text-secondary));
+}
+
+.solver-example-btn {
+    padding: 0.25rem 0.625rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgb(var(--text-primary));
+    background-color: rgb(var(--bg-muted));
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .solver-example-btn {
+    background-color: rgb(var(--bg-elevated));
+}
+
+.solver-example-btn:hover {
+    color: rgb(var(--text-inverse));
+    background-color: rgb(var(--accent));
+}
+
+/* Result Container */
+.solver-result {
+    --result-bg-alpha: 1;
+
+    padding: 1rem;
+    background-color: rgb(var(--bg-subtle) / var(--result-bg-alpha));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 1rem;
+}
+
+.dark .solver-result {
+    background-color: rgb(var(--bg-base) / 0.8);
+}
+
+.solver-result.hidden {
+    display: none;
+}
+
+.solver-result > * + * {
+    margin-top: 1rem;
+}
+
+.solver-result-heading {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(var(--text-secondary));
+}
+
+.solver-output-eq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: rgb(var(--text-body));
+}
+
+/* Dynamically Rendered Solution Markup (renderCustomSolution) */
+.solver-solution > * + * {
+    margin-top: 1rem;
+}
+
+.solver-solution-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.solver-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.solver-status.is-balanced {
+    color: rgb(var(--status-valid-text));
+}
+
+.solver-status.is-unbalanced {
+    color: rgb(var(--status-invalid-text));
+}
+
+.solver-missing-badge {
+    padding: 0.25rem 0.625rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(var(--accent-text));
+    background-color: rgb(var(--accent) / 0.2);
     border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(107, 114, 128, 0.8);
+
+.solver-equation-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 0.5rem;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
 }
 
-/* Glassmorphism Surface Base */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-}
-.dark .glass-panel {
-    background: rgba(30, 41, 59, 0.85);
-    backdrop-filter: blur(12px);
+.solver-term {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
 }
 
-/* Hide Number Input Spinners Cross-Browser */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type=number] {
-    appearance: textfield;
-    -moz-appearance: textfield;
+.dark .solver-term {
+    color: rgb(var(--text-body));
 }
 
-/* Hint & Active Reveal Glow Animation */
-@keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 15px rgba(20, 184, 166, 0.4); }
-    50% { box-shadow: 0 0 25px rgba(20, 184, 166, 0.8); }
+.solver-term.is-missing {
+    color: rgb(var(--accent));
+    animation: solver-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-.glow-active {
-    animation: pulseGlow 2s infinite;
+
+@keyframes solver-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.solver-term-coeff {
+    margin-right: 0.25rem;
+    font-weight: 700;
+    color: rgb(var(--accent));
+}
+
+.solver-term.is-missing .solver-term-coeff {
+    color: inherit;
+}
+
+.solver-term-nums {
+    display: inline-flex;
+    flex-direction: column;
+    margin-right: 0.125rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.65em;
+    font-weight: 400;
+    line-height: 1;
+    text-align: right;
+    opacity: 0.8;
+    user-select: none;
+}
+
+.solver-term-symbol {
+    font-weight: 700;
+}
+
+.solver-op {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    color: rgb(var(--text-muted));
+}
+
+.solver-op.is-accent {
+    font-weight: 700;
+    color: rgb(var(--accent));
+}
+
+.solver-arrow {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    font-size: 1.125rem;
+    color: rgb(var(--accent));
+}
+
+/* Breakdown Grid */
+.solver-breakdown {
+    --breakdown-bg-alpha: 1;
+
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    background-color: rgb(var(--bg-well) / var(--breakdown-bg-alpha));
+    border: 1px solid rgb(var(--border-default));
+    border-radius: 0.75rem;
+}
+
+.dark .solver-breakdown {
+    --breakdown-bg-alpha: 0.6;
+}
+
+.solver-side-heading {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: rgb(var(--accent-hover));
+}
+
+.solver-val-match {
+    color: rgb(var(--accent));
+}
+
+.solver-val-mismatch {
+    color: rgb(var(--status-invalid-text));
+}
+
+.solver-coefficients-breakdown {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(var(--text-control));
+}
+
+.dark .solver-coefficients-breakdown {
+  color: rgb(var(--text-body));
+}
+
+/* Inherits shell --accent background & --text-inverse text from .action-btn-primary */
+.solver-quiz-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .solver-card {
+        padding: 2rem;
+    }
+
+    .solver-form {
+        flex-direction: row;
+    }
+
+    .solver-submit-btn {
+        width: auto;
+    }
+
+    .solver-output-eq,
+    .solver-equation-row {
+        font-size: 1.5rem;
+    }
+
+    .solver-solution-header {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .solver-breakdown {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ==========================================================================
+   CUSTOM SOLVER ERROR ALERT (showCustomError)
+   ========================================================================== */
+
+.solver-error {
+    padding: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    color: rgb(var(--status-invalid-text));
+    background-color: rgb(var(--status-invalid) / 0.1);
+    border: 1px solid rgb(var(--status-invalid) / 0.4);
+    border-radius: 0.5rem;
+}
+
+.solver-error i {
+    margin-right: 0.5rem;
 }

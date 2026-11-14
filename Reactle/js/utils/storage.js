@@ -1,90 +1,129 @@
-const KEYS = {
-    STATS: 'reactle_stats',
-    DAILY_STREAK: 'reactle_daily_streak',
-    DAILY_HISTORY: 'reactle_daily_history',
+import { getTodayDateString, shiftDateString } from './helpers.js';
+
+/**
+ * Guarded storage. Every localStorage call is wrapped, so a browser with storage
+ * blocked (private modes, strict settings, quota) never throws. When storage is
+ * unavailable, values live in memory for the current page only.
+ * The key names are unchanged, so existing players keep their data.
+ */
+export const KEYS = {
+    // Reactle keeps its original keys, so existing players keep their numbers
+    STATS: {
+        reactle: { correct: 'reactle_correct', attempts: 'reactle_attempts', streak: 'reactle_streak' },
+        nuclear: { correct: 'nuclear_correct', attempts: 'nuclear_attempts', streak: 'nuclear_streak' }
+    },
+    DAILY_HISTORY: { reactle: 'reactle_daily_history', nuclear: 'nuclear_daily_history' },
     THEME: 'reactle_theme',
+    LEGACY_THEME: 'theme',      // read once for old installs, then removed
     SOUND: 'reactle_sound',
-    MATRIX: 'reactle_matrix_badge'
+    MATRIX: 'reactle_show_matrix_badge'
 };
 
+const memory = new Map();
+
+function safeGet(key) {
+    try {
+        const value = localStorage.getItem(key);
+        if (value !== null) return value;
+    } catch (e) { /* storage blocked */ }
+    return memory.has(key) ? memory.get(key) : null;
+}
+
+function safeSet(key, value) {
+    const text = String(value);
+    memory.set(key, text);
+    try { localStorage.setItem(key, text); } catch (e) { /* kept in memory only */ }
+}
+
+function safeRemove(key) {
+    memory.delete(key);
+    try { localStorage.removeItem(key); } catch (e) { /* ignore */ }
+}
+
+function readBool(key, fallback) {
+    const v = safeGet(key);
+    return v === null ? fallback : v === 'true';
+}
+
+function readInt(key) {
+    const n = parseInt(safeGet(key), 10);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function statKeys(game) {
+    const keys = KEYS.STATS[game];
+    if (!keys) throw new Error(`Unknown game "${game}". Use 'reactle' or 'nuclear'.`);
+    return keys;
+}
+
+function historyKey(game) {
+    const key = KEYS.DAILY_HISTORY[game];
+    if (!key) throw new Error(`Unknown game "${game}". Use 'reactle' or 'nuclear'.`);
+    return key;
+}
+
+function readHistory(game) {
+    try {
+        const parsed = JSON.parse(safeGet(historyKey(game)) || '{}');
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch (e) {
+        return {};   // corrupted value: start clean instead of crashing the page
+    }
+}
+
 export const Storage = {
-  // Theme Settings
-  getTheme() {
-    return localStorage.getItem('reactle_theme');
-  },
-  setTheme(theme) {
-    localStorage.setItem('reactle_theme', theme);
-  },
+    // Theme
+    getTheme() {
+        return safeGet(KEYS.THEME) || safeGet(KEYS.LEGACY_THEME);
+    },
+    setTheme(theme) {
+        safeSet(KEYS.THEME, theme);
+        safeRemove(KEYS.LEGACY_THEME);   // the page-load script prefers the old key if it lingers
+    },
 
-  // Sound Settings
-  getSound() {
-    const sound = localStorage.getItem('reactle_sound');
-    return sound !== null ? sound === 'true' : true;
-  },
-  setSound(enabled) {
-    localStorage.setItem('reactle_sound', enabled);
-  },
+    // Sound
+    getSound() { return readBool(KEYS.SOUND, true); },
+    setSound(enabled) { safeSet(KEYS.SOUND, enabled); },
 
-  // Matrix Badge Setting
-  getMatrixBadge() {
-    const badge = localStorage.getItem('reactle_show_matrix_badge');
-    return badge !== null ? badge === 'true' : false;
-  },
-  setMatrixBadge(enabled) {
-    localStorage.setItem('reactle_show_matrix_badge', enabled);
-  },
+    // Matrix badge
+    getMatrixBadge() { return readBool(KEYS.MATRIX, false); },
+    setMatrixBadge(enabled) { safeSet(KEYS.MATRIX, enabled); },
 
-  // Game Stats
-  getStats() {
-    return {
-      correct: parseInt(localStorage.getItem('reactle_correct')) || 0,
-      attempts: parseInt(localStorage.getItem('reactle_attempts')) || 0,
-      streak: parseInt(localStorage.getItem('reactle_streak')) || 0
-    };
-  },
-  saveStats(correct, attempts, streak) {
-    localStorage.setItem('reactle_correct', correct);
-    localStorage.setItem('reactle_attempts', attempts);
-    localStorage.setItem('reactle_streak', streak);
-  },
+    // Game stats (shared by both games, as before)
+    getStats(game) {
+        const k = statKeys(game);
+        return { correct: readInt(k.correct), attempts: readInt(k.attempts), streak: readInt(k.streak) };
+    },
+    saveStats(game, correct, attempts, streak) {
+        const k = statKeys(game);
+        safeSet(k.correct, correct);
+        safeSet(k.attempts, attempts);
+        safeSet(k.streak, streak);
+    },
 
-  // Daily Challenge History
-  getDailyHistory() {
-    return JSON.parse(localStorage.getItem('reactle_daily_history') || '{}');
-  },
-  setDailyHistory(history) {
-    localStorage.setItem('reactle_daily_history', JSON.stringify(history));
-  },
-  getDailyStreak() {
-    const history = JSON.parse(localStorage.getItem('reactle_daily_history') || '{}');
-    const dates = Object.keys(history)
-        .filter(d => history[d].completed)
-        .sort((a, b) => new Date(b) - new Date(a));
+    // Daily challenge
+    // Each game keeps its own history, so each has its own daily puzzle and streak
+    getDailyHistory(game) { return readHistory(game); },
+    setDailyHistory(game, history) { safeSet(historyKey(game), JSON.stringify(history)); },
 
-    if (dates.length === 0) return 0;
+    getDailyStreak(game) {
+        const history = readHistory(game);
+        const dates = Object.keys(history)
+            .filter(d => history[d] && history[d].completed)
+            .sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+        if (dates.length === 0) return 0;
 
-    // If the latest completion isn't today or yesterday, streak is broken
-    if (dates[0] !== todayStr && dates[0] !== yesterdayStr) {
-        return 0;
-    }
+        const todayStr = getTodayDateString();
+        const yesterdayStr = shiftDateString(todayStr, -1);
+        if (dates[0] !== todayStr && dates[0] !== yesterdayStr) return 0;
 
-    let streak = 0;
-    let checkDate = new Date(dates[0]);
-
-    for (let i = 0; i < dates.length; i++) {
-        const dateStr = checkDate.toISOString().split('T')[0];
-        if (history[dateStr] && history[dateStr].completed) {
+        let streak = 0;
+        let checkDate = dates[0];
+        while (history[checkDate] && history[checkDate].completed) {
             streak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-            break;
+            checkDate = shiftDateString(checkDate, -1);
         }
+        return streak;
     }
-    return streak;
-  }
 };

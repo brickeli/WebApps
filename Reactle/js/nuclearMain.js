@@ -3,16 +3,19 @@
  * Handles nuclear decay & transmutation balancing, UI interactions, and state updates.
  */
 
+import './core/shell.js';
 import { Storage } from './utils/storage.js';
-import { parseNuclearEquation, checkNuclearBalance } from './engine/nuclearParser.js';
+import { parseNuclearEquation } from './engine/nuclearParser.js';
+import { checkNuclearCoefficients } from './engine/nuclearCheck.js';
 import { renderNuclearMatrix } from './ui/nuclearUI.js';
 import { NUCLEAR_EQUATIONS } from './data/nuclearEquations.js';
 import { PERIODIC_TABLE } from './data/periodicTable.js';
 import { initModeDropdown, toggleNavMenu, toggleMatrixAccordion, toggleFilterAccordion, toggleModal, showElementTooltip, hideElementTooltip } from './ui/components.js';
 import { populateFilterDropdowns, onFilterChange } from './ui/filters.js';
-import { initTheme, toggleTheme, initUtilitiesDropdown } from './ui/theme.js';
-import { playSound, setAudioEnabled } from './engine/audio.js';
-import { hashDateString, getTodayDateString, startDailyCountdownTimer, getDailyChallengeNumber, getRandomDifferentItem } from './utils/helpers.js';
+import { initSettings } from './core/settings.js';
+import { initA11y } from './ui/a11y.js';
+import { createScoreboard, createModeSwitcher, shareDailyResult as shareResult, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL  } from './core/game-common.js';
+import { playSound } from './engine/audio.js';
 
 // Global array to track active input elements across the equation
 let inputsArray = [];
@@ -25,12 +28,12 @@ const state = {
     dailyEquation: null,
     currentEquation: null,
     userCoefficients: [],
-    scoreCorrect: 0,
-    scoreAttempts: 0,
     hintStep: 0,
     showMatrixBadge: false,
     isMatrixAccordionOpen: true
 };
+
+const scoreboard = createScoreboard('nuclear');
 
 // --- DOM Elements ---
 const DOM = {
@@ -57,6 +60,20 @@ const DOM = {
     filterAccordionToggle: document.getElementById('filter-accordion-toggle'),
 };
 
+const modeSwitcher = createModeSwitcher({
+    icons: { daily: 'fa-calendar-day', practice: 'fa-radiation', solver: 'fa-calculator' },
+    onDaily: loadDailyEquation,
+    onPractice: () => {
+        if (!state.practiceEquation) loadNextEquation();
+        else { state.currentEquation = state.practiceEquation; loadNuclearEquation(state.practiceEquation); }
+    }
+});
+
+function switchMode(mode) {
+    state.currentMode = mode;
+    modeSwitcher(mode);
+}
+
 // Expose functions globally for inline HTML event calls
 window.showElementTooltip = showElementTooltip;
 window.hideElementTooltip = hideElementTooltip;
@@ -67,65 +84,17 @@ window.calculateNuclearMatrix = calculateNuclearMatrix;
 
 /* --- Bootstrap Application --- */
 document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
+    initA11y();
+    initSettings({ accent: 'amber', onMatrixChange: calculateNuclearMatrix });
     initModeDropdown();
-    initUtilitiesDropdown();
     initCustomSolverSection();
-    loadSharedSettings();
-    loadScoreStats();
+    scoreboard.load();
     populateFilterDropdowns(NUCLEAR_EQUATIONS);
     setupEventListeners();
 
     toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
-    switchMode('daily');
+    switchMode(getModeFromURL(), { replace: true, silent: true });
 });
-
-// --- Shared Settings Loader ---
-function loadSharedSettings() {
-    const savedTheme = Storage.getTheme();
-    const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.toggle('dark', isDark);
-
-    const themeLabel = document.getElementById('theme-status-label');
-    const themeIcon = document.getElementById('theme-icon');
-    if (themeLabel) themeLabel.textContent = isDark ? 'DARK' : 'LIGHT';
-    if (themeIcon) {
-        themeIcon.className = isDark ? 'fa-solid fa-moon w-4 text-amber-500' : 'fa-solid fa-sun w-4 text-amber-500';
-    }
-
-    const soundEnabled = Storage.getSound();
-    setAudioEnabled(soundEnabled);
-    const soundLabel = document.getElementById('sound-status-label');
-    const soundIcon = document.getElementById('sound-icon');
-    if (soundLabel) {
-        soundLabel.textContent = soundEnabled ? 'ON' : 'OFF';
-        soundLabel.className = soundEnabled ? 'text-xs font-mono font-bold text-amber-600 dark:text-amber-400' : 'text-xs font-mono font-bold text-rose-600';
-    }
-    if (soundIcon) {
-        soundIcon.className = soundEnabled ? 'fa-solid fa-volume-high w-4 text-amber-500' : 'fa-solid fa-volume-xmark w-4 text-slate-500';
-    }
-
-    state.showMatrixBadge = Storage.getMatrixBadge();
-    const matrixLabel = document.getElementById('matrix-badge-status-label');
-    const matrixIcon = document.getElementById('matrix-badge-icon');
-    const statusBadge = document.getElementById('balance-status');
-
-    if (matrixLabel) {
-        matrixLabel.textContent = state.showMatrixBadge ? 'ON' : 'OFF';
-        matrixLabel.className = state.showMatrixBadge ? 'text-xs font-mono font-bold text-amber-600 dark:text-amber-400' : 'text-xs font-mono font-bold text-rose-600';
-    }
-    if (matrixIcon) {
-        matrixIcon.className = state.showMatrixBadge ? 'fa-solid fa-scale-balanced w-4 text-amber-500' : 'fa-solid fa-scale-balanced w-4 text-slate-500';
-    }
-    if (statusBadge) {
-        statusBadge.classList.toggle('hidden', !state.showMatrixBadge);
-    }
-
-    const streakCountEl = document.getElementById('streak-count');
-    if (streakCountEl) {
-        streakCountEl.textContent = Storage.getDailyStreak();
-    }
-}
 
 function setupEventListeners() {
     // --- 1. Navigation & Mode Selection ---
@@ -146,7 +115,7 @@ function setupEventListeners() {
     // --- 2. Accordions & UI Controls ---
     DOM.matrixToggleBtn?.addEventListener('click', () => toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron'));
     DOM.filterAccordionToggle?.addEventListener('click', () => toggleFilterAccordion());
-    document.getElementById('reset-score-btn')?.addEventListener('click', resetScoreboard);
+    document.getElementById('reset-score-btn')?.addEventListener('click', () => scoreboard.reset());
 
     // --- 3. Equation Filters (Category & Difficulty) ---
     const handleFilterUpdate = () => {
@@ -244,162 +213,20 @@ function setupEventListeners() {
     });
 }
 
-function updateDropdownIcon(mode) {
-    const iconEl = document.getElementById('mode-dropdown-icon');
-    if (!iconEl) return;
-
-    const iconMap = {
-        practice: 'fa-solid fa-radiation',
-        daily: 'fa-solid fa-calendar-day',
-        solver: 'fa-solid fa-calculator'
-    };
-
-    iconEl.className = `${iconMap[mode] || 'fa-solid fa-atom'} text-sm`;
-}
-
-function switchMode(mode) {
-    playSound('click');
-    state.currentMode = mode;
-
-    const feedbackBanner = document.getElementById('feedback-banner');
-    if (feedbackBanner) feedbackBanner.classList.add('hidden');
-
-    const dropdown = document.getElementById('mode-dropdown');
-    if (dropdown) dropdown.value = mode;
-    updateDropdownIcon(mode);
-
-    const tabs = {
-        practice: document.getElementById('nav-practice'),
-        daily: document.getElementById('nav-daily'),
-        solver: document.getElementById('nav-solver')
-    };
-
-    const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-amber-600', 'dark:text-amber-300', 'shadow-sm'];
-    const inactiveClasses = ['text-slate-700', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
-
-    Object.keys(tabs).forEach(tabKey => {
-        const btn = tabs[tabKey];
-        if (!btn) return;
-        if (tabKey === mode) {
-            btn.classList.remove(...inactiveClasses);
-            btn.classList.add(...activeClasses);
-        } else {
-            btn.classList.remove(...activeClasses);
-            btn.classList.add(...inactiveClasses);
-        }
-    });
-
-    if (mode === 'solver') {
-        if (DOM.gameView) DOM.gameView.classList.add('hidden');
-        if (DOM.solverView) DOM.solverView.classList.remove('hidden');
-    } else {
-        if (DOM.gameView) DOM.gameView.classList.remove('hidden');
-        if (DOM.solverView) DOM.solverView.classList.add('hidden');
-
-        if (mode === 'daily') {
-            if (DOM.dailyHeaderTag) DOM.dailyHeaderTag.classList.remove('hidden');
-            if (DOM.filterPanel) DOM.filterPanel.classList.add('hidden');
-            loadDailyEquation();
-        } else if (mode === 'practice') {
-            if (DOM.dailyHeaderTag) DOM.dailyHeaderTag.classList.add('hidden');
-            if (DOM.filterPanel) DOM.filterPanel.classList.remove('hidden');
-
-            if (!state.practiceEquation) {
-                loadNextEquation();
-            } else {
-                state.currentEquation = state.practiceEquation;
-                loadNuclearEquation(state.practiceEquation);
-            }
-        }
-    }
-}
-
-function updateScoreboardDisplay() {
-    const correctEl = document.getElementById('score-correct');
-    const attemptsEl = document.getElementById('score-attempts');
-    const accuracyEl = document.getElementById('score-accuracy');
-
-    if (correctEl) correctEl.textContent = state.scoreCorrect;
-    if (attemptsEl) attemptsEl.textContent = state.scoreAttempts;
-
-    if (accuracyEl) {
-        const accuracy = state.scoreAttempts > 0
-            ? Math.round((state.scoreCorrect / state.scoreAttempts) * 100)
-            : 0;
-        accuracyEl.textContent = `${accuracy}%`;
-    }
-}
-
-function resetScoreboard() {
-    playSound('click');
-    state.scoreCorrect = 0;
-    state.scoreAttempts = 0;
-    Storage.saveStats(state.scoreCorrect, state.scoreAttempts, Storage.getDailyStreak());
-    updateScoreboardDisplay();
-}
-
-function loadScoreStats() {
-    const stats = Storage.getStats();
-    state.scoreCorrect = stats.correct || 0;
-    state.scoreAttempts = stats.attempts || 0;
-    updateScoreboardDisplay();
-}
-
 function loadNextEquation() {
-    const cat = document.getElementById('category-filter-desktop')?.value || 'ALL';
-    const diff = document.getElementById('difficulty-filter-desktop')?.value || 'ALL';
-
-    let filtered = NUCLEAR_EQUATIONS.filter(eq => {
-        const catMatch = (cat === 'ALL') || (
-            Array.isArray(eq.category)
-                ? eq.category.includes(cat)
-                : eq.category === cat
-        );
-        const diffMatch = (diff === 'ALL' || eq.difficulty === diff);
-        return catMatch && diffMatch;
-    });
-
-    if (filtered.length === 0) filtered = NUCLEAR_EQUATIONS;
-
-    state.practiceEquation = getRandomDifferentItem(filtered, state.practiceEquation);
+    state.practiceEquation = pickPractice(NUCLEAR_EQUATIONS, state.practiceEquation);
     state.currentEquation = state.practiceEquation;
-
     loadNuclearEquation(state.practiceEquation);
 }
 
 function loadDailyEquation() {
-    const todayStr = getTodayDateString();
-    const hash = hashDateString(todayStr);
-    const index = hash % NUCLEAR_EQUATIONS.length;
-
-    state.dailyEquation = NUCLEAR_EQUATIONS[index];
-    state.currentEquation = state.dailyEquation;
-
-    const feedbackBanner = document.getElementById('feedback-banner');
-    if (feedbackBanner) feedbackBanner.classList.add('hidden');
-
-    loadNuclearEquation(state.dailyEquation);
-
-    const history = Storage.getDailyHistory();
-    const todayRecord = history[todayStr];
-
-    if (todayRecord && todayRecord.completed) {
-        if (DOM.checkBtn) DOM.checkBtn.classList.add('hidden');
-        if (DOM.hintBtn) DOM.hintBtn.classList.add('hidden');
-        if (DOM.shareBtn) DOM.shareBtn.classList.remove('hidden');
-        if (DOM.goToPracticeBtn) DOM.goToPracticeBtn.classList.remove('hidden');
-
-        showInsightCard();
-        if (DOM.dailyHeaderTag) startDailyCountdownTimer(DOM.dailyHeaderTag);
-    } else {
-        if (DOM.dailyHeaderTag) {
-            DOM.dailyHeaderTag.innerHTML = `<i class="fa-solid fa-calendar text-amber-500 mr-1"></i> Today's Daily Reaction`;
-        }
-        if (DOM.checkBtn) DOM.checkBtn.classList.remove('hidden');
-        if (DOM.hintBtn) DOM.hintBtn.classList.remove('hidden');
-        if (DOM.shareBtn) DOM.shareBtn.classList.add('hidden');
-        if (DOM.goToPracticeBtn) DOM.goToPracticeBtn.classList.add('hidden');
-    }
+    loadDaily({
+        game: 'nuclear',
+        list: NUCLEAR_EQUATIONS,
+        accent: 'amber',
+        render: loadNuclearEquation,
+        showInsight: showInsightCard
+    });
 }
 
 function calculateNuclearMatrix() {
@@ -408,7 +235,6 @@ function calculateNuclearMatrix() {
     const parsed = parseNuclearEquation(state.currentEquation);
     const showBadge = Storage.getMatrixBadge() ?? true;
 
-    // ✅ FIXED: Pass parsed equation directly
     renderNuclearMatrix(
         parsed,
         state.userCoefficients,
@@ -431,11 +257,7 @@ function loadNuclearEquation(equationData) {
     }
 
     if (DOM.feedbackBanner) DOM.feedbackBanner.classList.add('hidden');
-    if (DOM.checkBtn) DOM.checkBtn.classList.remove('hidden');
-    if (DOM.nextBtn) DOM.nextBtn.classList.add('hidden');
-    if (DOM.shareBtn) DOM.shareBtn.classList.add('hidden');
-    if (DOM.goToPracticeBtn) DOM.goToPracticeBtn.classList.add('hidden');
-    if (DOM.hintBtn) DOM.hintBtn.classList.remove('hidden');
+    setControls('ready');
 
     const parsed = parseNuclearEquation(equationData);
     state.userCoefficients = new Array(parsed.reactants.length + parsed.products.length).fill(1);
@@ -453,7 +275,7 @@ function renderNuclearBoard(parsedEq) {
     inputsArray = [];
 
     const boardWrapper = document.createElement('div');
-    boardWrapper.className = 'flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 text-lg md:text-xl font-bold text-slate-700 dark:text-slate-100';
+    boardWrapper.className = 'equation-board';
 
     parsedEq.reactants.forEach((term, idx) => {
         const termEl = createNuclearTermHTML(term, idx, 'reactant');
@@ -461,14 +283,14 @@ function renderNuclearBoard(parsedEq) {
 
         if (idx < parsedEq.reactants.length - 1) {
             const plusSpan = document.createElement('span');
-            plusSpan.className = 'text-slate-500 font-bold mx-1';
+            plusSpan.className = 'equation-plus';
             plusSpan.textContent = '+';
             boardWrapper.appendChild(plusSpan);
         }
     });
 
     const arrowIcon = document.createElement('i');
-    arrowIcon.className = 'fa-solid fa-arrow-right text-amber-500 mx-2 text-2xl';
+    arrowIcon.className = 'fa-solid fa-arrow-right equation-arrow';
     boardWrapper.appendChild(arrowIcon);
 
     parsedEq.products.forEach((term, idx) => {
@@ -478,7 +300,7 @@ function renderNuclearBoard(parsedEq) {
 
         if (idx < parsedEq.products.length - 1) {
             const plusSpan = document.createElement('span');
-            plusSpan.className = 'text-slate-500 font-bold mx-1';
+            plusSpan.className = 'equation-plus';
             plusSpan.textContent = '+';
             boardWrapper.appendChild(plusSpan);
         }
@@ -495,16 +317,19 @@ function renderNuclearBoard(parsedEq) {
 
 function createNuclearTermHTML(term, index, type) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 p-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm';
+    wrapper.className = 'term-card';
 
     const input = document.createElement('input');
     const coeff = state.userCoefficients[index];
     input.type = 'number';
+    input.id = `coeff-${type}-${index}`;
+    input.name = `coeff-${type}-${index}`;
+    input.autocomplete = 'off';
     input.min = '1';
     input.max = '99';
     input.placeholder = '1';
     input.value = (coeff && coeff > 1) ? coeff : '';
-    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/40 dark:focus:ring-amber-400/40 outline-none transition-all';
+    input.className = 'term-coeff-input';
 
     input.addEventListener('input', (e) => {
         playSound('click');
@@ -521,21 +346,20 @@ function createNuclearTermHTML(term, index, type) {
         slotBtn.type = 'button';
 
         if (term.selectedParticle) {
-            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
-
+            slotBtn.className = 'particle-slot-btn is-selected';
             slotBtn.innerHTML = `
-                <span class="text-xs flex flex-col items-end leading-none font-sans font-normal opacity-80">
+                <span class="particle-slot-nums">
                     <span>${term.selectedParticle.mass}</span>
                     <span>${term.selectedParticle.charge >= 0 ? '+' : ''}${term.selectedParticle.charge}</span>
                 </span>
-                <span class="text-lg font-bold">${term.selectedParticle.symbol}</span>
+                <span class="particle-slot-symbol">${term.selectedParticle.symbol}</span>
             `;
 
             slotBtn.addEventListener('mouseenter', (e) => showElementTooltip(e, term.selectedParticle.symbol));
             slotBtn.addEventListener('mouseleave', hideElementTooltip);
         } else {
-            slotBtn.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-dashed border-amber-500/50 hover:border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 transition-all font-mono font-bold text-sm sm:text-base cursor-pointer';
-            slotBtn.innerHTML = `<i class="fa-solid fa-circle-question text-amber-500 mr-1"></i> Choose`;
+            slotBtn.className = 'particle-slot-btn is-empty';
+            slotBtn.innerHTML = `<i class="fa-solid fa-circle-question particle-slot-icon"></i> Choose`;
         }
 
         slotBtn.addEventListener('click', (e) => {
@@ -549,28 +373,18 @@ function createNuclearTermHTML(term, index, type) {
     } else {
         // --- Standard Fixed Isotope Display ---
         const label = document.createElement('div');
-        label.className = 'flex items-center font-mono cursor-help select-none';
+        label.className = 'nuclide term-nuclide-wrap';
 
         const mass = term.mass !== undefined ? term.mass : '';
         const charge = term.charge !== undefined ? term.charge : '';
         const symbol = term.symbol || '';
-        const netCharge = term.netCharge;
-
-        let netChargeHTML = '';
-        if (netCharge !== null && netCharge !== undefined && netCharge !== 0) {
-            const sign = netCharge > 0 ? '+' : '-';
-            const absVal = Math.abs(netCharge);
-            const displayVal = absVal === 1 ? sign : `${absVal}${sign}`;
-            // netChargeHTML = `<sup class="text-[10px] sm:text-xs font-bold text-amber-500 ml-0.5">${displayVal}</sup>`;
-        }
 
         label.innerHTML = `
-            <span class="inline-flex flex-col text-[10px] sm:text-xs text-right mr-1 leading-tight text-slate-500 dark:text-slate-300 font-bold">
+            <span class="nuclide-nums">
                 <span>${mass}</span>
                 <span>${charge >= 0 && charge !== '' ? '+' + charge : charge}</span>
             </span>
-            <span class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100">${symbol}</span>
-            ${netChargeHTML}
+            <span class="nuclide-symbol">${symbol}</span>
         `;
 
         label.addEventListener('mouseenter', (e) => showElementTooltip(e, symbol));
@@ -596,9 +410,9 @@ function createNuclearTermHTML(term, index, type) {
 function checkNuclearBalanceHandler() {
     if (!state.currentEquation) return;
 
-    state.scoreAttempts++;
-
-    const isCoeffBalanced = checkNuclearBalance(state.currentEquation, state.userCoefficients);
+    // same rules as Reactle: balanced AND in the smallest whole numbers
+    const result = checkNuclearCoefficients(state.currentEquation, state.userCoefficients);
+    const isCoeffBalanced = result.balanced && result.reduced;
 
     let isParticleSelectionCorrect = true;
     inputsArray.forEach(item => {
@@ -617,52 +431,30 @@ function checkNuclearBalanceHandler() {
 
     if (isBalanced) {
         playSound('correct');
-        state.scoreCorrect++;
 
         if (typeof window.confetti === 'function') {
             window.confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
         }
 
-        showFeedback('<i class="fa-solid fa-circle-check mr-2"></i> Perfect! Mass numbers (A), atomic charges (Z), and subatomic particles are correctly balanced!', 'success');
+        showFeedback('<i class="fa-solid fa-circle-check feedback-icon"></i> Perfect! Mass numbers (A), atomic charges (Z), and subatomic particles are correctly balanced!', 'success');
 
         showInsightCard();
 
-        if (DOM.checkBtn) DOM.checkBtn.classList.add('hidden');
-
-        if (state.currentMode === 'daily') {
-            const todayStr = getTodayDateString();
-            const history = Storage.getDailyHistory();
-
-            history[todayStr] = { completed: true, timestamp: new Date().toISOString() };
-            Storage.setDailyHistory(history);
-
-            if (DOM.nextBtn) DOM.nextBtn.classList.add('hidden');
-            if (DOM.hintBtn) DOM.hintBtn.classList.add('hidden');
-            if (DOM.shareBtn) DOM.shareBtn.classList.remove('hidden');
-            if (DOM.goToPracticeBtn) DOM.goToPracticeBtn.classList.remove('hidden');
-
-            const streakCountEl = document.getElementById('streak-count');
-            if (streakCountEl) streakCountEl.textContent = Storage.getDailyStreak();
-
-            if (DOM.dailyHeaderTag) startDailyCountdownTimer(DOM.dailyHeaderTag);
-        } else {
-            if (DOM.nextBtn) DOM.nextBtn.classList.remove('hidden');
-            if (DOM.shareBtn) DOM.shareBtn.classList.add('hidden');
-            if (DOM.goToPracticeBtn) DOM.goToPracticeBtn.classList.add('hidden');
-            if (DOM.hintBtn) DOM.hintBtn.classList.remove('hidden');
-        }
+        finishSolve('nuclear', state.currentMode);
+    } else if (!isParticleSelectionCorrect) {
+        playSound('wrong');
+        showFeedback('<i class="fa-solid fa-triangle-exclamation feedback-icon"></i> Almost there! Make sure you have selected the correct subatomic particle for the blank slot.', 'error');
+    } else if (result.balanced) {
+        playSound('click');
+        showFeedback(`<i class="fa-solid fa-lightbulb feedback-icon is-accent"></i> Balanced! Can you reduce it to the smallest whole numbers? Every coefficient can be divided by ${result.divisor}.`, 'hint');
     } else {
         playSound('wrong');
-
-        if (!isParticleSelectionCorrect) {
-            showFeedback('<i class="fa-solid fa-triangle-exclamation mr-2"></i> Almost there! Make sure you have selected the correct subatomic particle for the blank slot.', 'error');
-        } else {
-            showFeedback('<i class="fa-solid fa-triangle-exclamation mr-2"></i> Not balanced yet. Check mass numbers and atomic charges in the matrix table above!', 'error');
-        }
+        const clues = result.mismatches.map(m => `${m.label} is ${m.left} on the left and ${m.right} on the right`);
+        showFeedback(`<i class="fa-solid fa-triangle-exclamation feedback-icon"></i> Not balanced yet: ${clues.join('; ')}.`, 'error');
     }
 
-    Storage.saveStats(state.scoreCorrect, state.scoreAttempts, Storage.getDailyStreak());
-    updateScoreboardDisplay();
+    // after the daily history is written, so the streak shown is current
+    scoreboard.recordAttempt(isBalanced);
 }
 
 function showFeedback(msg, type) {
@@ -670,15 +462,7 @@ function showFeedback(msg, type) {
     if (!banner) return;
 
     banner.innerHTML = msg;
-    banner.classList.remove('hidden');
-
-    if (type === 'success') {
-        banner.className = 'mt-6 p-4 rounded-xl text-center font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 animate-bounce';
-    } else if (type === 'error') {
-        banner.className = 'mt-6 p-4 rounded-xl text-center font-semibold text-rose-700 dark:text-rose-300 bg-rose-500/20 border border-rose-500/40';
-    } else if (type === 'hint') {
-        banner.className = 'mt-6 p-4 rounded-xl text-center font-medium bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs sm:text-sm';
-    }
+    banner.className = `feedback-banner is-${type}`;
 }
 
 export function provideNuclearHint() {
@@ -708,22 +492,22 @@ export function provideNuclearHint() {
         toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
         if (reactA !== prodA) {
             const diff = Math.abs(reactA - prodA);
-            hintMessage = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1 (Mass Number A):</strong> Total Mass on the left is <strong>${reactA}</strong> and on the right is <strong>${prodA}</strong>. Adjust coefficients to balance a difference of <strong>${diff}</strong>.`;
+            hintMessage = `<i class="fa-solid fa-lightbulb hint-icon"></i> <strong>Hint 1 (Mass Number A):</strong> Total Mass on the left is <strong>${reactA}</strong> and on the right is <strong>${prodA}</strong>. Adjust coefficients to balance a difference of <strong>${diff}</strong>.`;
         } else {
-            hintMessage = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1 (Mass Number A):</strong> Total Mass Number (A = ${reactA}) is currently balanced!`;
+            hintMessage = `<i class="fa-solid fa-lightbulb hint-icon"></i> <strong>Hint 1 (Mass Number A):</strong> Total Mass Number (A = ${reactA}) is currently balanced!`;
         }
     } else if (state.hintStep === 2) {
         if (reactZ !== prodZ) {
-            hintMessage = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 2 (Atomic Charge Z):</strong> Left side charge is <strong>${reactZ}</strong> vs Right side <strong>${prodZ}</strong>. Adjust coefficients to match total charge.`;
+            hintMessage = `<i class="fa-solid fa-lightbulb hint-icon"></i> <strong>Hint 2 (Atomic Charge Z):</strong> Left side charge is <strong>${reactZ}</strong> vs Right side <strong>${prodZ}</strong>. Adjust coefficients to match total charge.`;
         } else {
-            hintMessage = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 2 (Atomic Charge Z):</strong> Atomic Charge (Z = ${reactZ}) is currently balanced!`;
+            hintMessage = `<i class="fa-solid fa-lightbulb hint-icon"></i> <strong>Hint 2 (Atomic Charge Z):</strong> Atomic Charge (Z = ${reactZ}) is currently balanced!`;
         }
     } else if (state.hintStep === 3) {
         const correctCoeffs = [
             ...parsed.reactants.map(r => r.coeff || 1),
             ...parsed.products.map(p => p.coeff || 1)
         ].join(', ');
-        hintMessage = `<i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-2"></i> <strong>Hint 3 (Solution):</strong> The correct lowest whole-number coefficient ratio is: <strong>${correctCoeffs}</strong>`;
+        hintMessage = `<i class="fa-solid fa-wand-magic-sparkles hint-icon"></i> <strong>Hint 3 (Solution):</strong> The correct lowest whole-number coefficient ratio is: <strong>${correctCoeffs}</strong>`;
     }
 
     showFeedback(hintMessage, 'hint');
@@ -767,22 +551,13 @@ function showInsightCard() {
 }
 
 function shareDailyResult() {
-    playSound('click');
-
-    const currentStreak = Storage.getDailyStreak();
-    const dayNum = getDailyChallengeNumber('2026-01-01');
-
-    const shareText = `Nuclear Reactle Daily #${dayNum} ☢️\n` +
-                      `Streak: ${currentStreak} 🔥 | Solved in Daily Challenge Mode!\n` +
-                      `https://brickeli.github.io/WebApps/Reactle/nuclear.html`;
-
-    if (navigator.share) {
-        navigator.share({ title: 'Nuclear Reactle Daily Challenge', text: shareText }).catch(() => {});
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
-            showFeedback('<i class="fa-solid fa-copy mr-2"></i> Daily result copied to clipboard!', 'hint');
-        });
-    }
+    shareResult({
+        game: 'nuclear',
+        title: 'Nuclear Reactle',
+        emoji: '☢️',
+        url: 'https://brickeli.github.io/WebApps/Reactle/nuclear.html',
+        onCopied: () => showFeedback('<i class="fa-solid fa-copy mr-2"></i> Daily result copied to clipboard!', 'hint')
+    });
 }
 
 /**
@@ -997,75 +772,68 @@ function renderCustomSolution(res) {
     const outputEq = document.getElementById('solver-output-eq');
     if (!resultContainer || !outputEq) return;
 
-    const formatTerm = (t) => {
-        const coeffStr = t.coeff > 1 ? `<span class="text-amber-500 font-bold mr-1">${t.coeff}</span>` : '';
+    const formatTerm = (t, isMissing = false) => {
+        const coeffStr = t.coeff > 1 ? `<span class="solver-term-coeff">${t.coeff}</span>` : '';
         const chargeStr = t.charge >= 0 ? `+${t.charge}` : `${t.charge}`;
 
         return `
-            <span class="inline-flex items-center gap-0.5 dark:text-slate-300">
+            <span class="solver-term ${isMissing ? 'is-missing' : ''}">
                 ${coeffStr}
-                <span class="inline-flex flex-col text-[0.65em] leading-none text-right font-sans font-normal opacity-80 select-none mr-0.5">
+                <span class="solver-term-nums">
                     <span>${t.mass}</span>
                     <span>${chargeStr}</span>
                 </span>
-                <span class="font-bold">${t.symbol}</span>
+                <span class="solver-term-symbol">${t.symbol}</span>
             </span>
         `;
     };
 
-    const reactantsStr = res.reactants.map(formatTerm).join('<span class="mx-2 text-slate-400 dark:text-slate-500">+</span>');
-    let productsStr = res.products.map(formatTerm).join('<span class="mx-2 text-slate-400 dark:text-slate-500">+</span>');
+    const reactantsStr = res.reactants.map((t) => formatTerm(t)).join('<span class="solver-op">+</span>');
+    let productsStr = res.products.map((t) => formatTerm(t)).join('<span class="solver-op">+</span>');
 
     if (!res.isBalanced && res.solvedMissingParticle) {
-        const p = res.solvedMissingParticle;
-        const missingTermStr = `
-            <span class="inline-flex items-center gap-0.5 text-amber-500 animate-pulse">
-                ${p.coeff > 1 ? `<span class="font-bold mr-1">${p.coeff}</span>` : ''}
-                <span class="inline-flex flex-col text-[0.65em] leading-none text-right font-sans font-normal opacity-80 select-none mr-0.5">
-                    <span>${p.mass}</span>
-                    <span>${p.charge >= 0 ? '+' : ''}${p.charge}</span>
-                </span>
-                <span class="font-bold">${p.symbol}</span>
-            </span>
-        `;
-        productsStr += `<span class="mx-2 text-amber-500 font-bold">+</span>${missingTermStr}`;
+        const missingTermStr = formatTerm(res.solvedMissingParticle, true);
+        productsStr += `<span class="solver-op is-accent">+</span>${missingTermStr}`;
     }
 
-    const fullBalancedEq = `${reactantsStr} <i class="fa-solid fa-arrow-right text-amber-500 mx-2 text-lg"></i> ${productsStr}`;
+    const fullBalancedEq = `${reactantsStr} <i class="fa-solid fa-arrow-right solver-arrow"></i> ${productsStr}`;
 
     const isBalanced = res.isBalanced;
-    const statusColor = isBalanced ? 'emerald' : 'rose';
+    const statusClass = isBalanced ? 'is-balanced' : 'is-unbalanced';
     const statusIcon = isBalanced ? 'fa-circle-check' : 'fa-triangle-exclamation';
     const statusTitle = isBalanced ? 'Reaction is Balanced!' : 'Unbalanced Reaction!';
 
+    const massMatchClass = res.initialReactA === res.initialProdA ? 'solver-val-match' : 'solver-val-mismatch';
+    const chargeMatchClass = res.initialReactZ === res.initialProdZ ? 'solver-val-match' : 'solver-val-mismatch';
+
     resultContainer.classList.remove('hidden');
     outputEq.innerHTML = `
-        <div class="space-y-4 text-base">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <div class="flex items-center gap-2 font-bold text-${statusColor}-600 dark:text-${statusColor}-400">
+        <div class="solver-solution">
+            <div class="solver-solution-header">
+                <div class="solver-status ${statusClass}">
                     <i class="fa-solid ${statusIcon}"></i> ${statusTitle}
                 </div>
                 ${!isBalanced && res.solvedMissingParticle ? `
-                    <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 font-mono font-semibold">
+                    <span class="solver-missing-badge">
                         Missing Particle: +${res.solvedMissingParticle.coeff > 1 ? res.solvedMissingParticle.coeff : ''}${res.solvedMissingParticle.symbol}
                     </span>
                 ` : ''}
             </div>
 
-            <div class="text-xl sm:text-2xl font-mono p-4 flex flex-wrap gap-y-2">
+            <div class="solver-equation-row">
                 ${fullBalancedEq}
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono bg-slate-100 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="solver-breakdown">
                 <div>
-                    <span class="text-amber-600 block mb-1">Reactants (Left Side):</span>
-                    <div>Total Mass Number (A): <strong class="text-amber-500">${res.initialReactA}</strong></div>
-                    <div>Total Atomic Charge (Z): <strong class="text-amber-500">${res.initialReactZ}</strong></div>
+                    <span class="solver-side-heading">Reactants (Left Side):</span>
+                    <div>Total Mass Number (A): <strong class="solver-val-match">${res.initialReactA}</strong></div>
+                    <div>Total Atomic Charge (Z): <strong class="solver-val-match">${res.initialReactZ}</strong></div>
                 </div>
                 <div>
-                    <span class="text-amber-600 block mb-1">Products (Right Side):</span>
-                    <div>Total Mass Number (A): <strong class="${res.initialReactA === res.initialProdA ? 'text-amber-500' : 'text-rose-600'}">${res.initialProdA}</strong></div>
-                    <div>Total Atomic Charge (Z): <strong class="${res.initialReactZ === res.initialProdZ ? 'text-amber-500' : 'text-rose-600'}">${res.initialProdZ}</strong></div>
+                    <span class="solver-side-heading">Products (Right Side):</span>
+                    <div>Total Mass Number (A): <strong class="${massMatchClass}">${res.initialProdA}</strong></div>
+                    <div>Total Atomic Charge (Z): <strong class="${chargeMatchClass}">${res.initialProdZ}</strong></div>
                 </div>
             </div>
         </div>
@@ -1078,8 +846,8 @@ function showCustomError(message) {
     if (resultContainer && outputEq) {
         resultContainer.classList.remove('hidden');
         outputEq.innerHTML = `
-            <div class="p-3 text-sm text-rose-600 bg-rose-500/10 border border-rose-500/40 rounded-lg font-sans font-medium">
-                <i class="fa-solid fa-triangle-exclamation mr-2"></i>${message}
+            <div class="solver-error">
+                <i class="fa-solid fa-triangle-exclamation"></i>${message}
             </div>
         `;
     }

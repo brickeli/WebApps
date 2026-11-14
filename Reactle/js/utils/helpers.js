@@ -21,29 +21,68 @@ export function hashDateString(str, seed = 0x97f29ac1) {
 }
 
 // Returns today's date formatted as 'YYYY-MM-DD'
-export function getTodayDateString() {
-    return new Date().toISOString().split('T')[0];
+// ---------------------------------------------------------------------------
+// Daily puzzle clock. The puzzle day rolls over at midnight US Eastern Time
+// (America/New_York, so it follows EST/EDT) for every player, which keeps the
+// puzzle number and shared results the same worldwide.
+// ---------------------------------------------------------------------------
+export const DAILY_TIME_ZONE = 'America/New_York';
+
+const easternFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: DAILY_TIME_ZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hourCycle: 'h23'
+});
+
+function easternParts(date) {
+    const p = {};
+    easternFormatter.formatToParts(date).forEach(part => { p[part.type] = part.value; });
+    return { y: +p.year, m: +p.month, d: +p.day, h: +p.hour, mi: +p.minute, s: +p.second };
 }
 
-// Calculates the Daily Challenge number relative to a launch date
-export function getDailyChallengeNumber(launchDateStr = '2026-01-01') {
-    const launchDate = new Date(launchDateStr);
-    const today = new Date();
-    return Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+/** Today's puzzle date as 'YYYY-MM-DD' in Eastern Time. */
+export function getTodayDateString(date = new Date()) {
+    const p = easternParts(date);
+    return `${p.y}-${String(p.m).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+}
+
+/** Adds (or subtracts) whole days to a 'YYYY-MM-DD' string. */
+export function shiftDateString(dateStr, days) {
+    const t = new Date(`${dateStr}T12:00:00Z`);
+    t.setUTCDate(t.getUTCDate() + days);
+    return t.toISOString().slice(0, 10);
+}
+
+/** The instant (ms since epoch) at which the Eastern calendar day `dateStr` begins. */
+export function easternMidnight(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const wanted = Date.UTC(y, m - 1, d);
+    let t = wanted;
+    for (let i = 0; i < 2; i++) {   // two passes settle the offset, including on daylight-saving days
+        const p = easternParts(new Date(t));
+        t += wanted - Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi, p.s);
+    }
+    return t;
+}
+
+export function getDailyChallengeNumber(launchDateStr = '2026-01-01', date = new Date()) {
+    const days = (Date.parse(`${getTodayDateString(date)}T00:00:00Z`) - Date.parse(`${launchDateStr}T00:00:00Z`)) / 86400000;
+    return Math.round(days) + 1;
 }
 
 export function startDailyCountdownTimer(containerEl) {
     function updateTimer() {
         const now = new Date();
-        const nextReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-        const diffMs = nextReset - now;
+        const nextReset = easternMidnight(shiftDateString(getTodayDateString(now), 1));
+        const diffMs = Math.max(0, nextReset - now.getTime());
 
         const h = Math.floor(diffMs / (1000 * 60 * 60)).toString().padStart(2, '0');
         const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
         const s = Math.floor((diffMs % (1000 * 60)) / 1000).toString().padStart(2, '0');
 
         if (containerEl) {
-            containerEl.innerHTML = `<i class="fa-solid fa-clock text-amber-500 mr-1"></i> Next Daily in ${h}:${m}:${s}`;
+            containerEl.innerHTML = `<i class="fa-solid fa-clock"></i> Next Daily in ${h}:${m}:${s}`;
         }
     }
     updateTimer();
@@ -51,7 +90,6 @@ export function startDailyCountdownTimer(containerEl) {
     window.dailyTimerInterval = setInterval(updateTimer, 1000);
 }
 
-// Calculates rounded accuracy percentage from correct and attempt counts
 export function calculateAccuracy(correct, attempts) {
     if (!attempts || attempts <= 0) return 0;
     return Math.round((correct / attempts) * 100);

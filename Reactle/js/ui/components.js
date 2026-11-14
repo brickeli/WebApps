@@ -24,13 +24,8 @@ export function toggleNavMenu(forceState) {
 
     isNavMenuOpen = typeof forceState === 'boolean' ? forceState : !isNavMenuOpen;
 
-    if (isNavMenuOpen) {
-        dropdown?.classList.remove('hidden');
-        chevron?.classList.add('rotate-180');
-    } else {
-        dropdown?.classList.add('hidden');
-        chevron?.classList.remove('rotate-180');
-    }
+    dropdown?.classList.toggle('hidden', !isNavMenuOpen);
+    chevron?.classList.toggle('is-open', isNavMenuOpen);
 }
 
 export function toggleFilterAccordion(forceState) {
@@ -40,41 +35,30 @@ export function toggleFilterAccordion(forceState) {
 
     const isOpen = typeof forceState === 'boolean'
         ? forceState
-        : wrapper?.classList.contains('max-h-0');
+        : !wrapper?.classList.contains('is-open');
 
-    if (isOpen) {
-        wrapper?.classList.remove('max-h-0', 'opacity-0');
-        wrapper?.classList.add('max-h-[300px]', 'opacity-100');
-        chevron?.classList.add('rotate-180');
-    } else {
-        wrapper?.classList.remove('max-h-[300px]', 'opacity-100');
-        wrapper?.classList.add('max-h-0', 'opacity-0');
-        chevron?.classList.remove('rotate-180');
-    }
+    wrapper?.classList.toggle('is-open', isOpen);
+    chevron?.classList.toggle('is-open', isOpen);
 }
 
 /**
  * Generic Matrix Accordion Toggle (supports both atom-matrix and nuclear-matrix)
  */
- export function toggleMatrixAccordion(wrapperId = 'matrix-wrapper', chevronId = 'matrix-chevron', forceState) {
-     playSound('click');
-     const wrapper = document.getElementById(wrapperId);
-     const chevron = document.getElementById(chevronId);
-     if (!wrapper) return;
+export function toggleMatrixAccordion(wrapperId = 'matrix-wrapper', chevronId = 'matrix-chevron', forceState) {
+    playSound('click');
+    const wrapper = document.getElementById(wrapperId);
+    const chevron = document.getElementById(chevronId);
+    if (!wrapper) return;
 
-     const isCurrentlyClosed = wrapper.classList.contains('max-h-0') || wrapper.classList.contains('hidden');
-     const shouldOpen = typeof forceState === 'boolean' ? forceState : isCurrentlyClosed;
+    const isCurrentlyClosed = wrapper.classList.contains('is-collapsed') || wrapper.classList.contains('hidden');
+    const shouldOpen = typeof forceState === 'boolean' ? forceState : isCurrentlyClosed;
 
-     if (shouldOpen) {
-         wrapper.classList.remove('hidden', 'max-h-0', 'opacity-0');
-         wrapper.classList.add('max-h-[600px]', 'opacity-100');
-         chevron?.classList.add('rotate-180');
-     } else {
-         wrapper.classList.remove('max-h-[600px]', 'opacity-100');
-         wrapper.classList.add('hidden', 'max-h-0', 'opacity-0');
-         chevron?.classList.remove('rotate-180');
-     }
- }
+    wrapper.classList.toggle('hidden', !shouldOpen);
+    wrapper.classList.toggle('is-expanded', shouldOpen);
+    wrapper.classList.toggle('is-collapsed', !shouldOpen);
+    chevron?.classList.toggle('is-open', shouldOpen);
+}
+
 // --- HEADER APP DROPDOWN (IDEMPOTENT INITIALIZATION) ---
 let modeDropdownInitialized = false;
 
@@ -92,15 +76,13 @@ export function initModeDropdown() {
         if (isOpening) {
             menu.classList.remove('hidden');
             requestAnimationFrame(() => {
-                menu.classList.remove('opacity-0', 'scale-95');
-                menu.classList.add('opacity-100', 'scale-100');
+                menu.classList.add('is-open');
             });
-            if (chevron) chevron.classList.add('rotate-180');
+            chevron?.classList.add('is-open');
             btn.setAttribute('aria-expanded', 'true');
         } else {
-            menu.classList.remove('opacity-100', 'scale-100');
-            menu.classList.add('opacity-0', 'scale-95');
-            if (chevron) chevron.classList.remove('rotate-180');
+            menu.classList.remove('is-open');
+            chevron?.classList.remove('is-open');
             btn.setAttribute('aria-expanded', 'false');
             setTimeout(() => {
                 menu.classList.add('hidden');

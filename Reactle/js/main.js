@@ -1,83 +1,65 @@
+import './core/shell.js';
 import { EQUATION_DATABASE } from './data/equations.js';
 import { PERIODIC_TABLE } from './data/periodicTable.js';
 import { Storage } from './utils/storage.js';
-import { hashDateString, startDailyCountdownTimer, formatSubscripts, getTodayDateString, getDailyChallengeNumber, calculateAccuracy, getRandomDifferentItem } from './utils/helpers.js';
-import { playSound, setAudioEnabled } from './engine/audio.js';
+import { formatSubscripts } from './utils/helpers.js';
+import { playSound } from './engine/audio.js';
 import { parseFormula } from './engine/parser.js';
 import { computeCoefficients } from './engine/solver.js';
-import { populateFilterDropdowns } from './ui/filters.js';
-import { initTheme, toggleTheme, updateThemeUI } from './ui/theme.js';
-import {
-    showElementTooltip,
-    hideElementTooltip,
-    toggleModal,
-    toggleNavMenu,
-    toggleFilterAccordion,
-    toggleMatrixAccordion,
-    initModeDropdown,
-    isNavOpen
-} from './ui/components.js';
+import { checkCoefficients } from './engine/check.js';
+import { populateFilterDropdowns, onFilterChange } from './ui/filters.js';
+import { initA11y } from './ui/a11y.js';
+import { initSettings } from './core/settings.js';
+import { createScoreboard, createModeSwitcher, shareDailyResult as shareResult, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL } from './core/game-common.js';
+import { showElementTooltip, hideElementTooltip, toggleModal, toggleNavMenu, toggleFilterAccordion, toggleMatrixAccordion, initModeDropdown, isNavOpen } from './ui/components.js';
 
 // Application State
 let currentMode = 'daily';
 let practiceEquation = null;
-let dailyEquation = null;
 let currentEquation = null;
 let inputsArray = [];
-let scoreCorrect = 0;
-let scoreAttempts = 0;
-let streak = 0;
-let soundEnabled = true;
-let showMatrixBadge = false;
 let hintStage = 0;
+
+const scoreboard = createScoreboard('reactle');
+
+const switchMode = createModeSwitcher({
+    icons: { daily: 'fa-calendar-day', practice: 'fa-vial', solver: 'fa-calculator' },
+    onDaily: loadDailyEquation,
+    onPractice: () => {
+        if (!practiceEquation) loadNextEquation();
+        else { currentEquation = practiceEquation; renderEquationCard(practiceEquation); }
+    }
+});
 
 // Expose functions globally for inline HTML event calls
 window.showElementTooltip = showElementTooltip;
 window.hideElementTooltip = hideElementTooltip;
-window.switchMode = switchMode;
+window.switchMode = (mode) => { currentMode = mode; switchMode(mode); };
 window.toggleModal = toggleModal;
 window.toggleNavMenu = toggleNavMenu;
 window.solveCustomEquation = solveCustomEquation;
 
 /* Bootstrap Application */
 window.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    loadStats();
-    loadMatrixBadgeSetting();
-    updateScoreboardDisplay();
-    updateSoundIcon();
+    initA11y();
+    initSettings({ accent: 'chemistry', onMatrixChange: calculateAtomMatrix });
+    scoreboard.load();
     populateFilterDropdowns(EQUATION_DATABASE);
     setupEventListeners();
     initModeDropdown();
 
-    switchMode('daily');
+    window.switchMode(getModeFromURL(), { replace: true, silent: true });
 });
-
-function saveStats() {
-    Storage.saveStats(scoreCorrect, scoreAttempts, streak);
-}
-
-function updateScoreboardDisplay() {
-    document.getElementById('score-correct').innerText = scoreCorrect;
-    document.getElementById('score-attempts').innerText = scoreAttempts;
-    document.getElementById('streak-count').innerText = streak;
-
-    const accuracy = calculateAccuracy(scoreCorrect, scoreAttempts);
-    document.getElementById('score-accuracy').innerText = `${accuracy}%`;
-}
 
 function setupEventListeners() {
     // Mode Selectors
-    document.getElementById('nav-practice')?.addEventListener('click', () => switchMode('practice'));
-    document.getElementById('nav-daily')?.addEventListener('click', () => switchMode('daily'));
-    document.getElementById('nav-solver')?.addEventListener('click', () => switchMode('solver'));
-    document.getElementById('mode-dropdown')?.addEventListener('change', (e) => switchMode(e.target.value));
+    document.getElementById('nav-practice')?.addEventListener('click', () => window.switchMode('practice'));
+    document.getElementById('nav-daily')?.addEventListener('click', () => window.switchMode('daily'));
+    document.getElementById('nav-solver')?.addEventListener('click', () => window.switchMode('solver'));
+    document.getElementById('mode-dropdown')?.addEventListener('change', (e) => window.switchMode(e.target.value));
 
     // Nav Settings Menu
     document.getElementById('nav-menu-btn')?.addEventListener('click', () => toggleNavMenu());
-    document.getElementById('toggle-sound-btn')?.addEventListener('click', toggleSound);
-    document.getElementById('toggle-theme-btn')?.addEventListener('click', toggleTheme);
-    document.getElementById('toggle-matrix-badge-btn')?.addEventListener('click', toggleMatrixBadgeSetting);
     document.getElementById('open-help-modal-btn')?.addEventListener('click', () => {
         toggleModal('help-modal');
         toggleNavMenu(false);
@@ -100,9 +82,9 @@ function setupEventListeners() {
     document.getElementById('check-btn')?.addEventListener('click', checkAnswer);
     document.getElementById('next-btn')?.addEventListener('click', loadNextEquation);
     document.getElementById('share-btn')?.addEventListener('click', shareDailyResult);
-    document.getElementById('go-to-practice-btn')?.addEventListener('click', () => switchMode('practice'));
+    document.getElementById('go-to-practice-btn')?.addEventListener('click', () => window.switchMode('practice'));
     document.getElementById('hint-btn')?.addEventListener('click', triggerHint);
-    document.getElementById('reset-score-btn')?.addEventListener('click', resetScoreboard);
+    document.getElementById('reset-score-btn')?.addEventListener('click', () => scoreboard.reset());
 
     // Custom Solver
     document.getElementById('solve-custom-btn')?.addEventListener('click', solveCustomEquation);
@@ -119,141 +101,27 @@ function setupEventListeners() {
     document.getElementById('modal-confirm-btn')?.addEventListener('click', () => toggleModal('help-modal'));
 
     // Reaction Filters
-    document.getElementById('category-filter-desktop')?.addEventListener('change', (e) => onFilterChange(e.target.value, 'cat'));
-    document.getElementById('category-filter-mobile')?.addEventListener('change', (e) => onFilterChange(e.target.value, 'cat'));
-    document.getElementById('difficulty-filter-desktop')?.addEventListener('change', (e) => onFilterChange(e.target.value, 'diff'));
-    document.getElementById('difficulty-filter-mobile')?.addEventListener('change', (e) => onFilterChange(e.target.value, 'diff'));
-}
-
-/* --- Game View Management --- */
-function updateDropdownIcon(mode) {
-    const iconEl = document.getElementById('mode-dropdown-icon');
-    if (!iconEl) return;
-
-    const iconMap = {
-        daily: 'fa-solid fa-calendar-day',
-        practice: 'fa-solid fa-vial',
-        solver: 'fa-solid fa-calculator'
-    };
-
-    iconEl.className = `${iconMap[mode] || 'fa-solid fa-vial'} text-sm`;
-}
-
-function switchMode(mode) {
-    playSound('click');
-    currentMode = mode;
-
-    // Sync mobile dropdown selection and icon
-    const dropdown = document.getElementById('mode-dropdown');
-    if (dropdown) dropdown.value = mode;
-    updateDropdownIcon(mode);
-
-    const gameView = document.getElementById('game-view');
-    const solverView = document.getElementById('solver-view');
-    const dailyTag = document.getElementById('daily-header-tag');
-    const filterPanel = document.getElementById('filter-controls-panel');
-
-    const tabs = {
-        practice: document.getElementById('nav-practice'),
-        daily: document.getElementById('nav-daily'),
-        solver: document.getElementById('nav-solver')
-    };
-
-    const activeClasses = ['bg-white', 'dark:bg-slate-700', 'text-chemistry-700', 'dark:text-chemistry-300', 'shadow-sm'];
-    const inactiveClasses = ['text-slate-700', 'dark:text-slate-400', 'hover:text-slate-900', 'dark:hover:text-slate-200'];
-
-    Object.keys(tabs).forEach(tabKey => {
-        const btn = tabs[tabKey];
-        if (!btn) return;
-        if (tabKey === mode) {
-            btn.classList.remove(...inactiveClasses);
-            btn.classList.add(...activeClasses);
-        } else {
-            btn.classList.remove(...activeClasses);
-            btn.classList.add(...inactiveClasses);
-        }
+    const refresh = () => { if (currentMode === 'practice') loadNextEquation(); };
+    [['category-filter-desktop', 'cat'], ['category-filter-mobile', 'cat'],
+     ['difficulty-filter-desktop', 'diff'], ['difficulty-filter-mobile', 'diff']].forEach(([id, type]) => {
+        document.getElementById(id)?.addEventListener('change', (e) => onFilterChange(e.target.value, type, refresh));
     });
-
-    if (mode === 'solver') {
-        gameView.classList.add('hidden');
-        solverView.classList.remove('hidden');
-    } else {
-        gameView.classList.remove('hidden');
-        solverView.classList.add('hidden');
-
-        if (mode === 'daily') {
-            dailyTag.classList.remove('hidden');
-            if (filterPanel) filterPanel.classList.add('hidden');
-            loadDailyEquation();
-        } else if (mode === 'practice') {
-            dailyTag.classList.add('hidden');
-            if (filterPanel) filterPanel.classList.remove('hidden');
-
-            if (!practiceEquation) {
-                loadNextEquation();
-            } else {
-                currentEquation = practiceEquation;
-                renderEquationCard(practiceEquation);
-            }
-        }
-    }
 }
 
 function loadNextEquation() {
-    const cat = document.getElementById('category-filter-desktop')?.value || 'ALL';
-    const diff = document.getElementById('difficulty-filter-desktop')?.value || 'ALL';
-
-    let filtered = EQUATION_DATABASE.filter(eq => {
-        const catMatch = (cat === 'ALL') || (
-            Array.isArray(eq.category)
-                ? eq.category.includes(cat)
-                : eq.category === cat
-        );
-        const diffMatch = (diff === 'ALL' || eq.difficulty === diff);
-        return catMatch && diffMatch;
-    });
-
-    if (filtered.length === 0) filtered = EQUATION_DATABASE;
-
-    practiceEquation = getRandomDifferentItem(filtered, practiceEquation);
+    practiceEquation = pickPractice(EQUATION_DATABASE, practiceEquation);
     currentEquation = practiceEquation;
-
     renderEquationCard(practiceEquation);
 }
 
 function loadDailyEquation() {
-    const todayStr = getTodayDateString();
-    const hash = hashDateString(todayStr);
-    const index = hash % EQUATION_DATABASE.length;
-
-    dailyEquation = EQUATION_DATABASE[index];
-    currentEquation = dailyEquation;
-
-    renderEquationCard(dailyEquation);
-
-    const history = Storage.getDailyHistory();
-    const todayRecord = history[todayStr];
-    const dailyTag = document.getElementById('daily-header-tag');
-    const checkBtn = document.getElementById('check-btn');
-    const shareBtn = document.getElementById('share-btn');
-    const goToPracticeBtn = document.getElementById('go-to-practice-btn');
-    const hintBtn = document.getElementById('hint-btn');
-
-    if (todayRecord && todayRecord.completed) {
-        checkBtn.classList.add('hidden');
-        if (hintBtn) hintBtn.classList.add('hidden');
-        if (shareBtn) shareBtn.classList.remove('hidden');
-        if (goToPracticeBtn) goToPracticeBtn.classList.remove('hidden');
-
-        showInsightCard();
-        startDailyCountdownTimer(dailyTag);
-    } else {
-        dailyTag.innerHTML = `<i class="fa-solid fa-calendar text-chemistry-500 mr-1"></i> Today's Daily Reaction`;
-        checkBtn.classList.remove('hidden');
-        if (hintBtn) hintBtn.classList.remove('hidden');
-        if (shareBtn) shareBtn.classList.add('hidden');
-        if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
-    }
+    loadDaily({
+        game: 'reactle',
+        list: EQUATION_DATABASE,
+        accent: 'chemistry',
+        render: renderEquationCard,
+        showInsight: showInsightCard
+    });
 }
 
 function renderEquationCard(eq) {
@@ -268,16 +136,7 @@ function renderEquationCard(eq) {
 
     document.getElementById('insight-card').classList.add('hidden');
     document.getElementById('feedback-banner').classList.add('hidden');
-    document.getElementById('check-btn').classList.remove('hidden');
-    document.getElementById('next-btn').classList.add('hidden');
-
-    // Button Dynamics
-    const shareBtn = document.getElementById('share-btn');
-    if (shareBtn) shareBtn.classList.add('hidden');
-    const goToPracticeBtn = document.getElementById('go-to-practice-btn');
-    if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
-    const hintBtn = document.getElementById('hint-btn');
-    if (hintBtn) hintBtn.classList.remove('hidden');
+    setControls('ready');
 
     document.getElementById('hint-btn-text').innerText = 'Hint';
     toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
@@ -285,40 +144,37 @@ function renderEquationCard(eq) {
     const container = document.getElementById('equation-container');
     container.innerHTML = '';
 
+    const boardWrapper = document.createElement('div');
+    boardWrapper.className = 'equation-board';
+
     // Reactants
-    const reactantsGroup = document.createElement('div');
-    reactantsGroup.className = 'flex items-center flex-wrap justify-center gap-2 sm:gap-3';
     eq.reactants.forEach((r, idx) => {
-        reactantsGroup.appendChild(createMoleculeInputGroup(r, idx, 'reactant'));
+        boardWrapper.appendChild(createMoleculeInputGroup(r, idx, 'reactant'));
         if (idx < eq.reactants.length - 1) {
             const plus = document.createElement('span');
-            plus.className = 'text-slate-500 font-bold mx-1';
+            plus.className = 'equation-plus';
             plus.textContent = '+';
-            reactantsGroup.appendChild(plus);
+            boardWrapper.appendChild(plus);
         }
     });
 
     // Arrow
-    const arrow = document.createElement('div');
-    arrow.className = 'fa-solid fa-arrow-right text-chemistry-500 dark:text-chemistry-400 font-bold mx-2 text-2xl';
-    arrow.innerHTML = '';
+    const arrow = document.createElement('i');
+    arrow.className = 'fa-solid fa-arrow-right equation-arrow';
+    boardWrapper.appendChild(arrow);
 
     // Products
-    const productsGroup = document.createElement('div');
-    productsGroup.className = 'flex items-center flex-wrap justify-center gap-2 sm:gap-3';
     eq.products.forEach((p, idx) => {
-        productsGroup.appendChild(createMoleculeInputGroup(p, idx, 'product'));
+        boardWrapper.appendChild(createMoleculeInputGroup(p, idx, 'product'));
         if (idx < eq.products.length - 1) {
             const plus = document.createElement('span');
-            plus.className = 'text-slate-500 font-bold mx-1';
+            plus.className = 'equation-plus';
             plus.textContent = '+';
-            productsGroup.appendChild(plus);
+            boardWrapper.appendChild(plus);
         }
     });
 
-    container.appendChild(reactantsGroup);
-    container.appendChild(arrow);
-    container.appendChild(productsGroup);
+    container.appendChild(boardWrapper);
 
     if (inputsArray.length > 0) {
         setTimeout(() => inputsArray[0].inputEl.focus(), 50);
@@ -329,14 +185,17 @@ function renderEquationCard(eq) {
 
 function createMoleculeInputGroup(molData, index, type) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-800 p-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm';
+    wrapper.className = 'term-card';
 
     const input = document.createElement('input');
     input.type = 'number';
+    input.id = `coeff-${type}-${index}`;
+    input.name = `coeff-${type}-${index}`;
+    input.autocomplete = 'off';
     input.min = '1';
     input.max = '99';
     input.placeholder = '1';
-    input.className = 'w-12 h-10 sm:w-14 sm:h-11 text-center text-lg sm:text-xl font-bold font-mono bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-lg focus:border-chemistry-500 dark:focus:border-chemistry-400 focus:ring-2 focus:ring-chemistry-500/40 dark:focus:ring-chemistry-400/40 outline-none transition-all';
+    input.className = 'term-coeff-input';
 
     input.addEventListener('input', () => {
         playSound('click');
@@ -354,7 +213,7 @@ function createMoleculeInputGroup(molData, index, type) {
     });
 
     const label = document.createElement('span');
-    label.className = 'text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100';
+    label.className = 'molecule-formula';
     label.innerHTML = molData.formula;
 
     wrapper.appendChild(input);
@@ -407,39 +266,26 @@ export function calculateAtomMatrix() {
         const elementName = PERIODIC_TABLE[elem]?.name || elem;
 
         const card = document.createElement('div');
-        card.className = `p-2.5 rounded-xl border flex items-center justify-between gap-2 min-w-0 transition-all ${
-            isMatch
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
-        }`;
+        card.className = `atom-matrix-card ${isMatch ? 'is-balanced' : 'is-unbalanced'}`;
 
         card.addEventListener('mouseenter', (e) => showElementTooltip(e, elem));
         card.addEventListener('mouseleave', () => hideElementTooltip());
         card.addEventListener('touchstart', (e) => showElementTooltip(e, elem), { passive: true });
         card.addEventListener('touchend', () => hideElementTooltip());
 
-        const countMarkup = isMatch
-            ? `<div class="font-mono text-xs sm:text-sm font-bold flex items-center gap-1 shrink-0 whitespace-nowrap text-emerald-600 dark:text-emerald-400">
-                <span>${rCount}</span>
-                <span class="text-slate-400 dark:text-slate-500 font-normal">|</span>
-                <span>${pCount}</span>
-                <i class="fa-solid fa-check text-emerald-500 text-xs"></i>
-               </div>`
-            : `<div class="font-mono text-xs sm:text-sm font-bold flex items-center gap-1 shrink-0 whitespace-nowrap">
-                <span class="text-rose-500">${rCount}</span>
-                <span class="text-slate-400 dark:text-slate-500 font-normal">|</span>
-                <span class="text-rose-500">${pCount}</span>
-                <i class="fa-solid fa-xmark text-rose-500 text-xs"></i>
-               </div>`;
+        const statusIcon = isMatch ? 'fa-check' : 'fa-xmark';
 
         card.innerHTML = `
-            <div class="flex items-center gap-2 min-w-0">
-                <span class="w-6 h-6 shrink-0 rounded-md bg-white dark:bg-slate-800 shadow-sm flex font-bold items-center justify-center font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
-                    ${elem}
-                </span>
-                <span class="text-xs font-medium truncate">${elementName}</span>
-            </div>
-            ${countMarkup}
+          <div class="species-card-main">
+            <span class="species-badge">${elem}</span>
+            <span class="species-label">${elementName}</span>
+          </div>
+          <div class="atom-matrix-counts">
+            <span class="atom-count-val">${rCount}</span>
+            <span class="atom-count-sep">|</span>
+            <span class="atom-count-val">${pCount}</span>
+            <i class="fa-solid ${statusIcon} atom-count-icon"></i>
+          </div>
         `;
 
         matrixContainer.appendChild(card);
@@ -447,84 +293,72 @@ export function calculateAtomMatrix() {
 
     const statusBadge = document.getElementById('balance-status');
     if (statusBadge) {
-        if (isFullyBalanced) {
-            statusBadge.innerText = 'Balanced!';
-            statusBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 ${showMatrixBadge ? '' : 'hidden'}`;
-        } else {
-            statusBadge.innerText = 'Unbalanced';
-            statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 ${showMatrixBadge ? '' : 'hidden'}`;
+        const showBadge = Storage.getMatrixBadge();
+        statusBadge.classList.toggle('hidden', !showBadge);
+        if (showBadge) {
+            if (isFullyBalanced) {
+                statusBadge.innerText = 'Balanced!';
+                statusBadge.className = 'status-badge is-balanced';
+            } else {
+                statusBadge.innerText = 'Unbalanced';
+                statusBadge.className = 'status-badge';
+            }
         }
     }
 }
 
 function checkAnswer() {
-    scoreAttempts++;
-    let isCorrect = true;
-
-    inputsArray.forEach(item => {
-        const userVal = parseInt(item.inputEl.value) || 1;
-        if (userVal !== item.expectedCoeff) {
-            isCorrect = false;
-        }
+    // an empty box counts as 1, matching the "1" placeholder and the atom matrix
+    const coeffs = inputsArray.map(item => {
+        const v = parseInt(item.inputEl.value, 10);
+        return Number.isFinite(v) && v > 0 ? v : 1;
     });
+    const result = checkCoefficients(
+        inputsArray.map(item => ({ raw: item.rawFormula, type: item.type })),
+        coeffs
+    );
+    // any balanced answer in the smallest whole numbers is correct
+    const isCorrect = result.balanced && result.reduced;
 
     const feedback = document.getElementById('feedback-banner');
+    if (!feedback) return;
     feedback.classList.remove('hidden');
 
     if (isCorrect) {
         playSound('correct');
-        scoreCorrect++;
 
         if (typeof confetti === 'function') {
             confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
         }
 
-        feedback.className = 'mt-6 p-4 rounded-xl text-center font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 animate-bounce';
-        feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Perfect! Equation is correctly balanced!`;
+        feedback.className = 'feedback-banner is-success';
+        feedback.innerHTML = `<i class="fa-solid fa-circle-check feedback-icon" aria-hidden="true"></i> Perfect! Equation is correctly balanced!`;
 
-        document.getElementById('check-btn').classList.add('hidden');
-
-        if (currentMode === 'daily') {
-            const todayStr = getTodayDateString();
-            const history = Storage.getDailyHistory();
-
-            history[todayStr] = { completed: true, timestamp: new Date().toISOString() };
-            Storage.setDailyHistory(history);
-
-            document.getElementById('next-btn').classList.add('hidden');
-            const hintBtn = document.getElementById('hint-btn');
-            if (hintBtn) hintBtn.classList.add('hidden');
-
-            const shareBtn = document.getElementById('share-btn');
-            if (shareBtn) shareBtn.classList.remove('hidden');
-
-            const goToPracticeBtn = document.getElementById('go-to-practice-btn');
-            if (goToPracticeBtn) goToPracticeBtn.classList.remove('hidden');
-
-            const dailyTag = document.getElementById('daily-header-tag');
-            startDailyCountdownTimer(dailyTag);
-        } else {
-            document.getElementById('next-btn').classList.remove('hidden');
-
-            const shareBtn = document.getElementById('share-btn');
-            if (shareBtn) shareBtn.classList.add('hidden');
-
-            const goToPracticeBtn = document.getElementById('go-to-practice-btn');
-            if (goToPracticeBtn) goToPracticeBtn.classList.add('hidden');
-
-            const hintBtn = document.getElementById('hint-btn');
-            if (hintBtn) hintBtn.classList.remove('hidden');
-        }
-        saveStats();
-        updateScoreboardDisplay();
+        finishSolve('reactle', currentMode);
+        scoreboard.recordAttempt(true);
         showInsightCard();
     } else {
-        playSound('wrong');
-        saveStats();
-        updateScoreboardDisplay();
+        playSound(result.balanced ? 'click' : 'wrong');
+        scoreboard.recordAttempt(false);
 
-        feedback.className = 'mt-6 p-4 rounded-xl text-center font-semibold text-rose-700 dark:text-rose-300 bg-rose-500/20 border border-rose-500/30';
-        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Not quite balanced yet. Check atom counts in the matrix table above!`;
+        const icon = document.createElement('i');
+        const message = document.createElement('span');
+        if (result.balanced) {
+            // balanced, but not yet in the smallest whole numbers
+            feedback.className = 'feedback-banner is-hint';
+            icon.className = 'fa-solid fa-lightbulb feedback-icon is-accent';
+            message.textContent = `Balanced! Can you reduce it to the smallest whole numbers? Every coefficient can be divided by ${result.divisor}.`;
+        } else {
+            feedback.className = 'feedback-banner is-error';
+            icon.className = 'fa-solid fa-triangle-exclamation feedback-icon';
+            const clues = result.mismatches.slice(0, 2).map(x => (
+                x.element === 'charge'
+                    ? `charge is ${x.left} on the left and ${x.right} on the right`
+                    : `${x.element} is ${x.left} on the left and ${x.right} on the right`
+            ));
+            message.textContent = `Not quite balanced yet: ${clues.join('; ')}. The atom matrix above shows every element.`;
+        }
+        feedback.replaceChildren(icon, message);
     }
 }
 
@@ -544,40 +378,35 @@ function showInsightCard() {
 }
 
 function shareDailyResult() {
-    playSound('click');
-
-    const currentStreak = Storage.getDailyStreak();
-    const dayNum = getDailyChallengeNumber('2026-01-01');
-
-    const shareText = `Reactle Daily #${dayNum} 🧪\n` +
-                      `Streak: ${currentStreak} 🔥 | Solved in Daily Challenge Mode!\n` +
-                      `https://brickeli.github.io/WebApps/Reactle/index.html`;
-
-    if (navigator.share) {
-        navigator.share({ title: 'Reactle Daily Challenge', text: shareText }).catch(() => {});
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
+    shareDailyResultCommon({
+        game: 'reactle',
+        title: 'Reactle',
+        emoji: '🧪',
+        url: 'https://brickeli.github.io/WebApps/Reactle/index.html',
+        onCopied: () => {
             const feedback = document.getElementById('feedback-banner');
             if (feedback) {
                 feedback.classList.remove('hidden');
-                feedback.className = 'mt-6 p-3 rounded-xl text-center font-bold text-chemistry-700 dark:text-chemistry-300 bg-chemistry-500/20 border border-chemistry-500/30';
-                feedback.innerHTML = `<i class="fa-solid fa-copy mr-2"></i> Daily result copied to clipboard!`;
+                feedback.className = 'feedback-banner';
+                feedback.innerHTML = `<i class="fa-solid fa-copy feedback-icon is-accent" aria-hidden="true"></i> Daily result copied to clipboard!`;
             }
-        });
-    }
+        }
+    });
 }
 
 function triggerHint() {
     playSound('click');
     hintStage++;
     const feedback = document.getElementById('feedback-banner');
-    feedback.classList.remove('hidden');
+    if (!feedback) return;
+
+    feedback.className = 'feedback-banner is-hint';
 
     if (hintStage === 1) {
         toggleMatrixAccordion('matrix-wrapper', 'matrix-chevron', true);
-        feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
-        feedback.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> <strong>Hint 1:</strong> Matrix expanded! Focus on balancing oxygen or hydrogen atoms last!`;
-        document.getElementById('hint-btn-text').innerText = 'Reveal Coefficient';
+        feedback.innerHTML = `<i class="fa-solid fa-lightbulb feedback-icon is-accent" aria-hidden="true"></i> <strong>Hint 1:</strong> Matrix expanded! Focus on balancing oxygen or hydrogen atoms last!`;
+        const hintBtnText = document.getElementById('hint-btn-text');
+        if (hintBtnText) hintBtnText.innerText = 'Reveal Coefficient';
     } else if (hintStage >= 2) {
         const unrevealed = inputsArray.find(item => parseInt(item.inputEl.value) !== item.expectedCoeff);
         if (unrevealed) {
@@ -585,8 +414,7 @@ function triggerHint() {
             unrevealed.inputEl.classList.add('glow-active');
             calculateAtomMatrix();
         }
-        feedback.className = 'mt-6 p-4 rounded-xl text-center font-medium text-amber-800 dark:text-amber-200 bg-amber-500/20 border border-amber-500/30';
-        feedback.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-500 mr-2"></i> <strong>Hint 2:</strong> Revealed a missing coefficient in the equation!`;
+        feedback.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles feedback-icon is-accent" aria-hidden="true"></i> <strong>Hint 2:</strong> Revealed a missing coefficient in the equation!`;
     }
 }
 
@@ -636,114 +464,13 @@ function solveCustomEquation() {
             alert("Could not automatically compute coefficients for this specific equation.");
         }
     } catch(err) {
-        alert("Error parsing reaction: " + err.message);
+        alert(err.message);
     }
 }
 
 function playCustomAsQuiz() {
     if (window.customQuizData) {
-        switchMode('practice');
+        window.switchMode('practice');
         renderEquationCard(window.customQuizData);
     }
-}
-
-function toggleSound() {
-    soundEnabled = !soundEnabled;
-    Storage.setSound(soundEnabled);
-    setAudioEnabled(soundEnabled);
-    updateSoundIcon();
-}
-
-function updateSoundIcon() {
-    const soundIcon = document.getElementById('sound-icon');
-    const soundLabel = document.getElementById('sound-status-label');
-
-    if (soundEnabled) {
-        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-high w-4 text-chemistry-500';
-        if (soundLabel) {
-            soundLabel.innerText = 'ON';
-            soundLabel.className = 'text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400';
-        }
-    } else {
-        if (soundIcon) soundIcon.className = 'fa-solid fa-volume-xmark w-4 text-slate-500';
-        if (soundLabel) {
-            soundLabel.innerText = 'OFF';
-            soundLabel.className = 'text-xs font-mono font-bold text-rose-500';
-        }
-    }
-}
-
-function loadMatrixBadgeSetting() {
-    showMatrixBadge = Storage.getMatrixBadge();
-    updateMatrixBadgeUI();
-}
-
-function toggleMatrixBadgeSetting() {
-    playSound('click');
-    showMatrixBadge = !showMatrixBadge;
-    Storage.setMatrixBadge(showMatrixBadge);
-    updateMatrixBadgeUI();
-    calculateAtomMatrix();
-}
-
-function updateMatrixBadgeUI() {
-    const statusBadge = document.getElementById('balance-status');
-    const labelEl = document.getElementById('matrix-badge-status-label');
-    const iconEl = document.getElementById('matrix-badge-icon');
-
-    if (showMatrixBadge) {
-        if (statusBadge) statusBadge.classList.remove('hidden');
-        if (labelEl) {
-            labelEl.innerText = 'ON';
-            labelEl.className = 'text-xs font-mono font-bold text-chemistry-600 dark:text-chemistry-400';
-        }
-        if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-chemistry-500';
-    } else {
-        if (statusBadge) statusBadge.classList.add('hidden');
-        if (labelEl) {
-            labelEl.innerText = 'OFF';
-            labelEl.className = 'text-xs font-mono font-bold text-rose-500';
-        }
-        if (iconEl) iconEl.className = 'fa-solid fa-scale-balanced w-4 text-slate-500';
-    }
-}
-
-function onFilterChange(value, type) {
-    const catDesk = document.getElementById('category-filter-desktop');
-    const catMob = document.getElementById('category-filter-mobile');
-    const diffDesk = document.getElementById('difficulty-filter-desktop');
-    const diffMob = document.getElementById('difficulty-filter-mobile');
-
-    if (type === 'cat') {
-        if (catDesk) catDesk.value = value;
-        if (catMob) catMob.value = value;
-    } else if (type === 'diff') {
-        if (diffDesk) diffDesk.value = value;
-        if (diffMob) diffMob.value = value;
-    }
-
-    const catLabel = catDesk?.value === 'ALL' ? 'All Categories' : catDesk?.value;
-    const diffLabel = diffDesk?.value === 'ALL' ? '' : ` • ${diffDesk?.value}`;
-    const summaryEl = document.getElementById('filter-active-summary');
-    if (summaryEl) summaryEl.innerText = `(${catLabel}${diffLabel})`;
-
-    if (currentMode === 'practice') loadNextEquation();
-}
-
-function resetScoreboard() {
-    playSound('click');
-    scoreCorrect = 0;
-    scoreAttempts = 0;
-    streak = 0;
-    saveStats();
-    updateScoreboardDisplay();
-}
-
-function loadStats() {
-    const stats = Storage.getStats();
-    scoreCorrect = stats.correct;
-    scoreAttempts = stats.attempts;
-    streak = Storage.getDailyStreak();
-    soundEnabled = Storage.getSound();
-    setAudioEnabled(soundEnabled);
 }

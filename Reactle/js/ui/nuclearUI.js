@@ -45,18 +45,15 @@ function extractSymbol(term) {
  */
  function createSpeciesCard(symbol) {
      const card = document.createElement('div');
-     card.className = 'p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-100/60 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-800/80 hover:border-amber-500/40 transition-all cursor-help select-none flex items-center justify-between text-xs sm:text-sm font-medium group';
+     card.className = 'species-card';
 
      if (symbol === '?') {
+         card.classList.add('is-placeholder');
          card.innerHTML = `
-             <div class="flex items-center gap-2 text-xs w-full justify-between opacity-70">
-                 <div class="flex items-center gap-2 min-w-0">
-                     <span class="w-6 h-6 shrink-0 rounded-md bg-amber-500/10 border border-dashed border-amber-500/40 flex items-center justify-center font-mono font-bold text-amber-500">
-                         ?
-                     </span>
-                     <span class="text-slate-600 dark:text-slate-400 italic truncate">
-                         Select Particle
-                     </span>
+             <div class="species-card-inner">
+                 <div class="species-card-main">
+                     <span class="species-badge is-placeholder">?</span>
+                     <span class="species-label is-placeholder">Select Particle</span>
                  </div>
              </div>
          `;
@@ -67,16 +64,12 @@ function extractSymbol(term) {
      const fullName = itemData ? itemData.name : symbol;
 
      card.innerHTML = `
-         <div class="flex items-center gap-2 text-xs w-full justify-between">
-             <div class="flex items-center gap-2 min-w-0">
-                 <span class="w-6 h-6 shrink-0 rounded-md bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center font-mono border border-slate-200 dark:border-slate-700 font-bold text-slate-800 dark:text-slate-100 group-hover:border-amber-500/50 group-hover:text-amber-500 transition-colors">
-                     ${symbol}
-                 </span>
-                 <span class="text-slate-700 font-medium dark:text-slate-200 group-hover:text-amber-500 transition-colors truncate">
-                     ${fullName}
-                 </span>
+         <div class="species-card-inner">
+             <div class="species-card-main">
+                 <span class="species-badge">${symbol}</span>
+                 <span class="species-label">${fullName}</span>
              </div>
-             <i class="fa-solid fa-circle-info text-slate-400 dark:text-slate-600 group-hover:text-amber-500 text-xs transition-colors shrink-0 ml-1"></i>
+             <i class="fa-solid fa-circle-info species-info-icon"></i>
          </div>
      `;
 
@@ -171,23 +164,13 @@ export function renderNuclearMatrix(parsedEquation, userCoefficients = [], showM
     const massProducts = document.getElementById('mass-products');
 
     if (massCard) {
-        massCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
-            isMassBalanced
-                ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
-                : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
-        }`;
+        massCard.className = `conservation-card ${isMassBalanced ? 'is-balanced' : 'is-unbalanced'}`;
     }
     if (massIcon) {
-        massIcon.className = `fa-solid ${isMassBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
+        massIcon.className = `conservation-icon fa-solid ${isMassBalanced ? 'fa-circle-check' : 'fa-scale-balanced'}`;
     }
-    if (massReactants) {
-        massReactants.textContent = reactA;
-        massReactants.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-    }
-    if (massProducts) {
-        massProducts.textContent = prodA;
-        massProducts.className = `text-xl sm:text-2xl font-black ${isMassBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-    }
+    if (massReactants) massReactants.textContent = reactA;
+    if (massProducts) massProducts.textContent = prodA;
 
     // 3. Update Atomic Charge (Z) Card DOM
     const chargeCard = document.getElementById('charge-card');
@@ -196,33 +179,23 @@ export function renderNuclearMatrix(parsedEquation, userCoefficients = [], showM
     const chargeProducts = document.getElementById('charge-products');
 
     if (chargeCard) {
-        chargeCard.className = `p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border transition-all duration-200 ${
-            isChargeBalanced
-                ? 'border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.08)]'
-                : 'border-rose-500/40 dark:border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.08)]'
-        }`;
+        chargeCard.className = `conservation-card ${isChargeBalanced ? 'is-balanced' : 'is-unbalanced'}`;
     }
     if (chargeIcon) {
-        chargeIcon.className = `fa-solid ${isChargeBalanced ? 'fa-circle-check text-emerald-500' : 'fa-scale-balanced text-rose-500'} text-xs`;
+        chargeIcon.className = `conservation-icon fa-solid ${isChargeBalanced ? 'fa-circle-check' : 'fa-scale-balanced'}`;
     }
     if (chargeReactants) {
         chargeReactants.textContent = reactZ > 0 ? `+${reactZ}` : reactZ;
-        chargeReactants.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
     }
     if (chargeProducts) {
         chargeProducts.textContent = prodZ > 0 ? `+${prodZ}` : prodZ;
-        chargeProducts.className = `text-xl sm:text-2xl font-black ${isChargeBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
     }
 
     // 4. Update Header Status Badge
     const statusBadge = document.getElementById('balance-status');
     if (statusBadge) {
         statusBadge.innerText = isFullyBalanced ? 'Balanced!' : 'Unbalanced';
-        statusBadge.className = `text-xs font-semibold px-2.5 py-0.5 rounded-full ${
-            isFullyBalanced
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-        } ${showMatrixBadge ? '' : 'hidden'}`;
+        statusBadge.className = `status-badge ${isFullyBalanced ? 'is-balanced' : ''} ${showMatrixBadge ? '' : 'hidden'}`.trim();
     }
 
     // 5. Update Species Grid
@@ -247,23 +220,23 @@ export function renderNuclearMatrix(parsedEquation, userCoefficients = [], showM
  * @returns {string} Formatted HTML string
  */
 export function formatIsotopeHTML(symbol, mass, charge, netCharge = null) {
-    let netChargeHTML = '';
+   let netChargeHTML = '';
 
-    if (netCharge !== null && netCharge !== undefined && netCharge !== 0 && netCharge !== charge) {
-        const sign = netCharge > 0 ? '+' : '-';
-        const absVal = Math.abs(netCharge);
-        const displayVal = absVal === 1 ? sign : `${absVal}${sign}`;
-        netChargeHTML = `<sup class="text-[10px] sm:text-xs font-bold text-amber-500 ml-0.5">${displayVal}</sup>`;
-    }
+   if (netCharge !== null && netCharge !== undefined && netCharge !== 0 && netCharge !== charge) {
+       const sign = netCharge > 0 ? '+' : '-';
+       const absVal = Math.abs(netCharge);
+       const displayVal = absVal === 1 ? sign : `${absVal}${sign}`;
+       netChargeHTML = `<sup class="nuclide-charge">${displayVal}</sup>`;
+   }
 
-    return `
-        <span class="inline-flex items-center font-mono leading-none">
-            <span class="inline-flex flex-col text-[10px] sm:text-xs text-right mr-1 leading-tight text-slate-500 dark:text-slate-300 font-bold">
-                <span>${mass ?? '?'}</span>
-                <span>${charge ?? '?'}</span>
-            </span>
-            <span class="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-slate-100">${symbol}</span>
-            ${netChargeHTML}
-        </span>
-    `;
+   return `
+       <span class="nuclide">
+           <span class="nuclide-nums">
+               <span>${mass ?? '?'}</span>
+               <span>${charge ?? '?'}</span>
+           </span>
+           <span class="nuclide-symbol">${symbol}</span>
+           ${netChargeHTML}
+       </span>
+   `;
 }
