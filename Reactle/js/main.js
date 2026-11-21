@@ -10,7 +10,7 @@ import { checkCoefficients } from './engine/check.js';
 import { populateFilterDropdowns, onFilterChange } from './ui/filters.js';
 import { initA11y } from './ui/a11y.js';
 import { initSettings } from './core/settings.js';
-import { createScoreboard, createModeSwitcher, shareDailyResult as shareResult, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL } from './core/game-common.js';
+import { createScoreboard, createModeSwitcher, shareDailyResult as shareDailyResultCommon, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL } from './core/gameCommon.js';
 import { showElementTooltip, hideElementTooltip, toggleModal, toggleNavMenu, toggleFilterAccordion, toggleMatrixAccordion, initModeDropdown, isNavOpen } from './ui/components.js';
 
 // Application State

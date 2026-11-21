@@ -81,6 +81,14 @@ export const Storage = {
         safeRemove(KEYS.LEGACY_THEME);   // the page-load script prefers the old key if it lingers
     },
 
+    // High Contrast
+    getHighContrast() {
+    return localStorage.getItem('reactle_high_contrast') === 'true';
+    },
+    setHighContrast(enabled) {
+        localStorage.setItem('reactle_high_contrast', String(Boolean(enabled)));
+    },
+
     // Sound
     getSound() { return readBool(KEYS.SOUND, true); },
     setSound(enabled) { safeSet(KEYS.SOUND, enabled); },

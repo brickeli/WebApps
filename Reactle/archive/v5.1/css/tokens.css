@@ -1,0 +1,133 @@
+/* Base Fonts & Transitions */
+@import "googlefonts.css";
+
+/* ==========================================================================
+   DESIGN TOKENS — BASE PALETTE & SEMANTIC ROLES
+   Usage: rgb(var(--token)) or rgb(var(--token) / 0.5)
+   ========================================================================== */
+
+:root {
+    /* 1. Raw Palette (each RGB triplet defined once) */
+    --white: 255 255 255;
+    --neutral-50: 248 250 252;
+    --neutral-100: 241 245 249;
+    --neutral-200: 226 232 240;
+    --neutral-300: 203 213 225;
+    --neutral-400: 148 163 184;
+    --neutral-500: 100 116 139;
+    --neutral-600: 71 85 105;
+    --neutral-700: 51 65 85;
+    --neutral-800: 30 41 59;
+    --neutral-900: 15 23 42;
+    --neutral-950: 2 6 23;
+
+    --emerald-400: 52 211 153;
+    --emerald-500: 16 185 129;
+    --emerald-600: 5 150 105;
+
+    --chemistry-400: 45 212 191;
+    --chemistry-500: 20 184 166;
+    --chemistry-600: 13 148 136;
+    --chemistry-700: 15 118 110;
+
+    --nuclear-400: 251 191 36;
+    --nuclear-500: 245 158 11;
+    --nuclear-600: 217 119 6;
+    --nuclear-700: 180 83 9;
+
+    --rose-400: 251 113 133;
+    --rose-500: 244 63 94;
+    --rose-600: 225 29 72;
+
+    /* 2. Semantic Surface, Border & Text Tokens (Light Theme) */
+    --bg-base: var(--white);
+    --bg-subtle: var(--neutral-50);
+    --bg-well: var(--neutral-100);
+    --bg-muted: var(--neutral-200);
+    --bg-muted-hover: var(--neutral-300);
+    --bg-elevated: var(--white);
+    --bg-scrim: var(--neutral-950);
+
+    --status-valid: var(--emerald-500);
+    --status-valid-text: var(--emerald-600);
+
+    --status-invalid: var(--rose-500);
+    --status-invalid-text: var(--rose-600);
+
+    --border-default: var(--neutral-200);
+    --border-subtle: var(--neutral-100);
+    --border-strong: var(--neutral-300);
+
+    --text-primary: var(--neutral-800);
+    --text-strong: var(--neutral-900);
+    --text-body: var(--neutral-600);
+    --text-secondary: var(--neutral-500);
+    --text-muted: var(--neutral-400);
+    --text-muted-hover: var(--neutral-600);
+    --text-control: var(--neutral-700);
+    --text-inverse: var(--neutral-950);
+
+    /* 3. Brand Accent Tokens */
+    --accent: var(--nuclear-500);
+    --accent-hover: var(--nuclear-600);
+    --accent-deep: var(--nuclear-700);
+    --accent-text: var(--nuclear-600);
+
+    /* 4. Elevation */
+    --shadow-lg: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.dark {
+    --bg-base: var(--neutral-900);
+    --bg-subtle: var(--neutral-800);
+    --bg-muted: var(--neutral-800);
+    --bg-well: var(--neutral-900);
+    --bg-muted-hover: var(--neutral-700);
+    --bg-elevated: var(--neutral-700);
+
+    --border-default: var(--neutral-800);
+    --border-subtle: var(--neutral-800);
+    --border-strong: var(--neutral-700);
+
+    --status-valid-text: var(--emerald-400);
+    --status-invalid-text: var(--rose-400);
+
+    --text-primary: var(--neutral-100);
+    --text-strong: var(--neutral-200);
+    --text-body: var(--neutral-300);
+    --text-secondary: var(--neutral-400);
+    --text-muted-hover: var(--neutral-200);
+    --text-control: var(--neutral-400);
+
+    --accent-text: var(--nuclear-400);
+}
+
+/* ==========================================================================
+   SHELL OVERRIDES — REACTLE & NUCLEAR REACTLE
+   ========================================================================== */
+
+[data-shell="reactle"] {
+    --accent: var(--chemistry-500);
+    --accent-hover: var(--chemistry-600);
+    --accent-deep: var(--chemistry-700);
+    --accent-text: var(--chemistry-600);
+    --text-inverse: var(--white);
+}
+
+.dark[data-shell="reactle"],
+.dark [data-shell="reactle"] {
+    --accent-text: var(--chemistry-400);
+}
+
+[data-shell="nuclear"] {
+    --accent: var(--nuclear-500);
+    --accent-hover: var(--nuclear-600);
+    --accent-deep: var(--nuclear-700);
+    --accent-text: var(--nuclear-600);
+    --text-inverse: var(--neutral-950);
+}
+
+.dark[data-shell="nuclear"],
+.dark [data-shell="nuclear"] {
+    --accent-text: var(--nuclear-400);
+}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./nuclear-favicon.svg">
+    <title>Nuclear Reactle - Nuclear Equation Balancer</title>
+    <!-- Inline Anti-FOUC Script (Executes before page render) -->
+    <script>
+            (function() {
+                try {
+                    var saved = localStorage.getItem('theme') || localStorage.getItem('reactle_theme');
+                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (saved === 'dark' || (!saved && prefersDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {}
+            })();
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Custom CSS Styles -->
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/a11y.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-shell="nuclear" class="app-shell">
+    <!-- Shared Navigation Header -->
+    <div id="shell-header"></div>
+    <!-- Main Content Body -->
+    <main class="app-main">
+      <!-- Desktop Mode Navigation Tabs -->
+      <nav class="mode-nav" aria-label="Game Modes">
+          <button id="nav-practice" class="mode-tab is-active" type="button">
+              <i class="fa-solid fa-radiation"></i><span>Practice</span>
+          </button>
+          <button id="nav-daily" class="mode-tab" type="button">
+              <i class="fa-solid fa-calendar-day"></i><span>Daily Challenge</span>
+          </button>
+          <button id="nav-solver" class="mode-tab" type="button">
+              <i class="fa-solid fa-calculator"></i><span>Custom Solver</span>
+          </button>
+      </nav>
+
+      <!-- Mobile Mode Select Dropdown -->
+      <div class="mode-mobile">
+          <label for="mode-dropdown" class="sr-only">Select Mode</label>
+          <div class="mode-select-wrap">
+              <div class="mode-select-icon-left">
+                  <i id="mode-dropdown-icon" class="fa-solid fa-atom"></i>
+              </div>
+
+              <select id="mode-dropdown" class="mode-select">
+                  <option value="practice" class="mode-select-option">Practice Mode</option>
+                  <option value="daily" class="mode-select-option">Daily Challenge</option>
+                  <option value="solver" class="mode-select-option">Custom Solver</option>
+              </select>
+
+              <div class="mode-select-icon-right">
+                  <i class="fa-solid fa-chevron-down"></i>
+              </div>
+          </div>
+      </div>
+
+      <!-- Practice & Daily Game View -->
+      <div id="game-view">
+        <div id="filter-controls-panel" class="filter-panel glass-panel">
+            <!-- Mobile Filter Accordion -->
+            <div class="filter-mobile">
+                <button id="filter-accordion-toggle" class="filter-accordion-toggle" type="button">
+                    <div class="filter-accordion-info">
+                        <i class="fa-solid fa-filter filter-accordion-icon"></i>
+                        <span>Filter Reactions</span>
+                        <span id="filter-active-summary" class="filter-active-summary">(All Categories)</span>
+                    </div>
+                    <i id="filter-accordion-chevron" class="filter-accordion-chevron fa-solid fa-chevron-down"></i>
+                </button>
+
+                <div id="filter-accordion-wrapper" class="filter-accordion-wrapper max-h-0 opacity-0">
+                    <div class="filter-grid-mobile">
+                        <div>
+                            <label for="category-filter-mobile" class="filter-label">REACTION TYPE</label>
+                            <select id="category-filter-mobile" class="filter-select">
+                                <!-- Populated dynamically by populateFilterDropdowns() -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="difficulty-filter-mobile" class="filter-label">DIFFICULTY</label>
+                            <select id="difficulty-filter-mobile" class="filter-select">
+                                <!-- Populated dynamically by populateFilterDropdowns() -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Filter Dropdowns -->
+            <div class="filter-desktop">
+                <div>
+                    <label for="category-filter-desktop" class="filter-label">REACTION TYPE</label>
+                    <select id="category-filter-desktop" class="filter-select">
+                        <!-- Populated dynamically by populateFilterDropdowns() -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="difficulty-filter-desktop" class="filter-label">DIFFICULTY</label>
+                    <select id="difficulty-filter-desktop" class="filter-select">
+                        <!-- Populated dynamically by populateFilterDropdowns() -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Scoreboard Strip -->
+            <div class="score-strip">
+                <div class="score-stat">
+                    <span class="score-label">SOLVED</span>
+                    <span id="score-correct" class="score-value is-accent">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-stat">
+                    <span class="score-label">ATTEMPTS</span>
+                    <span id="score-attempts" class="score-value">0</span>
+                </div>
+                <div class="score-divider"></div>
+                <div class="score-stat">
+                    <span class="score-label">ACCURACY</span>
+                    <span id="score-accuracy" class="score-value is-accent">0%</span>
+                </div>
+                <button id="reset-score-btn" class="score-reset-btn" type="button" title="Reset Score Stats">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+
+          <!-- Main Reaction Card -->
+          <div id="main-card" class="reaction-card glass-panel">
+              <div class="reaction-card-header">
+                  <div class="reaction-badges">
+                      <span id="badge-category" class="reaction-badge reaction-badge-accent">
+                          Alpha Decay
+                      </span>
+                      <span id="badge-difficulty" class="reaction-badge reaction-badge-neutral">
+                          Medium
+                      </span>
+                  </div>
+                  <span id="daily-header-tag" class="daily-header-tag hidden">
+                      <i class="fa-solid fa-atom"></i> Balance Mass (A) & Charge (Z)
+                  </span>
+              </div>
+
+              <!-- Primary Equation Display Container -->
+              <div id="nuclear-equation-container" class="equation-stage"></div>
+
+              <!-- Live Mass & Charge Balance Matrix Accordion -->
+              <div class="matrix-section">
+                  <button id="matrix-toggle" class="matrix-toggle" type="button">
+                      <div class="matrix-toggle-info">
+                          <div class="matrix-toggle-badge">
+                              <i class="fa-solid fa-scale-balanced"></i>
+                          </div>
+                          <div>
+                              <h3 class="matrix-toggle-title">Mass (A) & Atomic Charge (Z) Matrix</h3>
+                              <p class="matrix-toggle-subtitle">Check for balanced equations</p>
+                          </div>
+                      </div>
+                      <div class="matrix-toggle-controls">
+                          <span id="balance-status" class="status-badge hidden">
+                              Unbalanced
+                          </span>
+                          <i id="matrix-chevron" class="matrix-chevron fa-solid fa-chevron-up"></i>
+                      </div>
+                  </button>
+
+                  <div id="matrix-wrapper" class="matrix-wrapper">
+                      <div id="matrix-container" class="matrix-body">
+                          <!-- Conservation Cards Grid -->
+                          <div class="conservation-grid">
+                              <!-- Mass Number (A) Card -->
+                              <div id="mass-card" class="conservation-card is-unbalanced">
+                                  <div class="conservation-header">
+                                      <div class="conservation-title">
+                                          <span>Mass Number (A)</span>
+                                      </div>
+                                      <i id="mass-icon" class="conservation-icon fa-solid fa-scale-balanced"></i>
+                                  </div>
+
+                                  <div class="conservation-values">
+                                      <div>
+                                          <span class="conservation-side-label">Reactants</span>
+                                          <span id="mass-reactants" class="conservation-count">0</span>
+                                      </div>
+                                      <span class="conservation-divider">/</span>
+                                      <div class="conservation-side-right">
+                                          <span class="conservation-side-label">Products</span>
+                                          <span id="mass-products" class="conservation-count">0</span>
+                                      </div>
+                                  </div>
+                              </div>
+
+                              <!-- Atomic Charge (Z) Card -->
+                              <div id="charge-card" class="conservation-card is-unbalanced">
+                                  <div class="conservation-header">
+                                      <div class="conservation-title">
+                                          <span>Atomic Charge (Z)</span>
+                                      </div>
+                                      <i id="charge-icon" class="conservation-icon fa-solid fa-scale-balanced"></i>
+                                  </div>
+
+                                  <div class="conservation-values">
+                                      <div>
+                                          <span class="conservation-side-label">Reactants</span>
+                                          <span id="charge-reactants" class="conservation-count">0</span>
+                                      </div>
+                                      <span class="conservation-divider">/</span>
+                                      <div class="conservation-side-right">
+                                          <span class="conservation-side-label">Products</span>
+                                          <span id="charge-products" class="conservation-count">0</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                          <!-- Species Elements & Particles Grid -->
+                          <div>
+                              <h4 class="species-section-title">Reaction Species Info</h4>
+                              <div id="species-cards-grid" class="species-grid"></div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div id="feedback-banner" class="hidden"></div>
+
+              <div class="action-bar">
+                  <button id="check-btn" class="action-btn action-btn-primary">
+                      <i class="fa-solid fa-check"></i> Check Nuclear Balance
+                  </button>
+                  <button id="share-btn" class="action-btn action-btn-gradient hidden">
+                      <i class="fa-solid fa-share-nodes"></i> Share Score
+                  </button>
+                  <button id="next-btn" class="action-btn action-btn-primary">
+                      Next Nuclear Reaction <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                  <button id="go-to-practice-btn" class="action-btn action-btn-outline hidden">
+                      <i class="fa-solid fa-atom"></i> Try Practice Mode
+                  </button>
+                  <button id="hint-btn" class="action-btn action-btn-secondary">
+                      <i class="fa-solid fa-lightbulb action-btn-icon-amber"></i> <span id="hint-btn-text">Hint</span>
+                  </button>
+              </div>
+          </div>
+
+          <div id="insight-card" class="insight-card glass-panel hidden animate-fade-in">
+              <div class="insight-header">
+                  <i class="fa-solid fa-atom"></i>
+                  <span>Nuclear Reaction Insight</span>
+              </div>
+              <div id="insight-formula" class="insight-formula"></div>
+              <p id="insight-text" class="insight-text"></p>
+          </div>
+      </div>
+
+      <!-- Custom Solver View -->
+      <div id="solver-view" class="solver-view hidden">
+          <div class="solver-card glass-panel">
+              <div>
+                  <h2 class="solver-title">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Automatic Nuclear Equation Balancer
+                  </h2>
+                  <p class="solver-subtitle">
+                      Type any nuclear decay or transmutation reaction (e.g., <code class="solver-code">U235 + n -> Ba141 + Kr92 + 3n</code>).
+                  </p>
+              </div>
+
+              <div class="solver-form">
+                  <input id="custom-input" class="solver-input" type="text" placeholder="e.g., U235 + n1 -> Ba141 + Kr92 + n1">
+                  <button id="solve-custom-btn" class="solver-submit-btn" type="button">
+                      <i class="fa-solid fa-calculator"></i> Balance Reaction
+                  </button>
+              </div>
+
+              <div class="solver-examples">
+                  <span class="solver-examples-label">Try examples:</span>
+                  <button class="custom-example-btn solver-example-btn" type="button" data-expr="Ra226 -> Rn222 + He4">Ra226 -> Rn222 + He4</button>
+                  <button class="custom-example-btn solver-example-btn" type="button" data-expr="N14 + He4 -> O17 + p1">N14 + He4 -> O17 + p1</button>
+              </div>
+
+              <div id="solver-result" class="solver-result hidden">
+                  <h3 class="solver-result-heading">Balanced Result</h3>
+                  <div id="solver-output-eq" class="solver-output-eq"></div>
+              </div>
+          </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <div id="shell-footer"></div>
+    <div id="shell-dialogs"></div>
+
+    <!-- Subatomic Particle Selector Modal -->
+    <div id="particle-picker-modal" class="particle-modal hidden">
+        <div class="particle-modal-dialog">
+            <div class="particle-modal-header">
+                <h3 class="particle-modal-title">
+                    <i class="fa-solid fa-atom particle-modal-icon"></i> Select Particle
+                </h3>
+                <button id="close-particle-modal-btn" type="button" class="particle-modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="particle-modal-subtitle">
+                Choose the subatomic particle or light nuclide required to balance the nuclear reaction:
+            </p>
+
+            <div class="particle-grid">
+                <button type="button" class="particle-option-btn" data-symbol="n" data-mass="1" data-charge="0">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>1</sup><sub>0</sub></span>n
+                    </div>
+                    <div>
+                        <div class="particle-name">Neutron</div>
+                        <div class="particle-meta">A:1 | Z:0</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn" data-symbol="p" data-mass="1" data-charge="1">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>1</sup><sub>1</sub></span>p
+                    </div>
+                    <div>
+                        <div class="particle-name">Proton</div>
+                        <div class="particle-meta">A:1 | Z:+1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn" data-symbol="α" data-mass="4" data-charge="2">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>4</sup><sub>2</sub></span>α
+                    </div>
+                    <div>
+                        <div class="particle-name">Alpha (He)</div>
+                        <div class="particle-meta">A:4 | Z:+2</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn" data-symbol="β⁻" data-mass="0" data-charge="-1">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>0</sup><sub>-1</sub></span>β⁻
+                    </div>
+                    <div>
+                        <div class="particle-name">Beta-minus</div>
+                        <div class="particle-meta">A:0 | Z:-1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn" data-symbol="β⁺" data-mass="0" data-charge="1">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>0</sup><sub>+1</sub></span>β⁺
+                    </div>
+                    <div>
+                        <div class="particle-name">Positron</div>
+                        <div class="particle-meta">A:0 | Z:+1</div>
+                    </div>
+                </button>
+
+                <button type="button" class="particle-option-btn" data-symbol="γ" data-mass="0" data-charge="0">
+                    <div class="particle-badge">
+                        <span class="particle-nuclide-nums"><sup>0</sup><sub>0</sub></span>γ
+                    </div>
+                    <div>
+                        <div class="particle-name">Gamma Ray</div>
+                        <div class="particle-meta">A:0 | Z:0</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- App Entry Point Module -->
+    <script type="module" src="./js/nuclearMain.js"></script>
+</body>
+</html>

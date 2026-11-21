@@ -113,6 +113,8 @@ export function initModeDropdown() {
             window.location.href = './index.html';
         } else if (targetMode === 'nuclear' && !currentPath.endsWith('nuclear.html')) {
             window.location.href = './nuclear.html';
+        } else if (targetMode === 'lab' && !currentPath.endsWith('lab.html')) {
+            window.location.href = './lab.html';
         }
     });
 }

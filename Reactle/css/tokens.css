@@ -6,6 +6,11 @@
    Usage: rgb(var(--token)) or rgb(var(--token) / 0.5)
    ========================================================================== */
 
+ .hidden,
+ [hidden] {
+     display: none !important;
+ }
+
 :root {
     /* 1. Raw Palette (each RGB triplet defined once) */
     --white: 255 255 255;
@@ -25,19 +30,36 @@
     --emerald-500: 16 185 129;
     --emerald-600: 5 150 105;
 
+    --chemistry-300: 94 234 212;
     --chemistry-400: 45 212 191;
     --chemistry-500: 20 184 166;
     --chemistry-600: 13 148 136;
     --chemistry-700: 15 118 110;
+    --chemistry-800: 17 94 89;
 
+    --nuclear-300: 252 211 77;
     --nuclear-400: 251 191 36;
     --nuclear-500: 245 158 11;
     --nuclear-600: 217 119 6;
     --nuclear-700: 180 83 9;
+    --nuclear-800: 146 64 14;
+
+    --lab-300: 196 181 253;
+    --lab-400: 167 139 250;
+    --lab-500: 139 92 246;
+    --lab-600: 124 58 237;
+    --lab-700: 109 40 217;
+    --lab-800: 91 33 182;
 
     --rose-400: 251 113 133;
     --rose-500: 244 63 94;
     --rose-600: 225 29 72;
+
+    /* High-Contrast Semantic Additions (Colorblind-safe Blue & Orange-Red) */
+    --hc-valid-light: 12 95 194;       /* Deep Cobalt Blue (7.1:1 on white) */
+    --hc-valid-dark: 96 165 250;      /* Sky Blue 400 (8.6:1 on black) */
+    --hc-invalid-light: 194 27 12;    /* Burnt Orange 700 (5.2:1 on white) */
+    --hc-invalid-dark: 251 146 60;    /* Bright Orange 400 (9.4:1 on black) */
 
     /* 2. Semantic Surface, Border & Text Tokens (Light Theme) */
     --bg-base: var(--white);
@@ -103,7 +125,7 @@
 }
 
 /* ==========================================================================
-   SHELL OVERRIDES — REACTLE & NUCLEAR REACTLE
+   SHELL OVERRIDES
    ========================================================================== */
 
 [data-shell="reactle"] {
@@ -130,4 +152,138 @@
 .dark[data-shell="nuclear"],
 .dark [data-shell="nuclear"] {
     --accent-text: var(--nuclear-400);
+}
+
+[data-shell~="lab"] {
+    --accent: var(--lab-500);
+    --accent-hover: var(--lab-600);
+    --accent-deep: var(--lab-700);
+    --accent-text: var(--lab-600);
+    --text-inverse: var(--white);
+}
+
+.dark[data-shell~="lab"],
+.dark [data-shell~="lab"] {
+    --accent-text: var(--lab-400);
+}
+
+
+/* ==========================================================================
+   HIGH CONTRAST OVERRIDES (LIGHT & DARK)
+   ========================================================================== */
+
+/* Light High Contrast */
+[data-shell~="high-contrast"] {
+    --bg-base: var(--white);
+    --bg-subtle: var(--white);
+    --bg-well: var(--neutral-100);
+    --bg-muted: var(--neutral-200);
+    --bg-muted-hover: var(--neutral-300);
+    --bg-elevated: var(--white);
+    --bg-scrim: var(--neutral-950);
+
+    --border-default: var(--neutral-200);
+    --border-subtle: var(--neutral-700);
+    --border-strong: var(--neutral-950);
+
+    --status-valid: var(--hc-valid-light);
+    --status-valid-text: var(--hc-valid-light);
+    --status-invalid: var(--hc-invalid-light);
+    --status-invalid-text: var(--hc-invalid-light);
+
+    --text-primary: var(--neutral-950);
+    --text-strong: var(--neutral-950);
+    --text-body: var(--neutral-950);
+    --text-secondary: var(--neutral-800);
+    --text-muted: var(--neutral-700);
+    --text-muted-hover: var(--neutral-950);
+    --text-control: var(--neutral-950);
+    --text-inverse: var(--white);
+
+    --shadow-lg: 0 0 0 2px rgb(var(--neutral-950));
+}
+
+/* Dark High Contrast */
+.dark[data-shell~="high-contrast"],
+.dark [data-shell~="high-contrast"] {
+    --bg-base: var(--neutral-950);
+    --bg-subtle: var(--neutral-950);
+    --bg-well: var(--neutral-950);
+    --bg-muted: var(--neutral-900);
+    --bg-muted-hover: var(--neutral-800);
+    --bg-elevated: var(--neutral-950);
+
+    --border-default: var(--white);
+    --border-subtle: var(--neutral-300);
+    --border-strong: var(--white);
+
+    --status-valid: var(--hc-valid-dark);
+    --status-valid-text: var(--hc-valid-dark);
+    --status-invalid: var(--hc-invalid-dark);
+    --status-invalid-text: var(--hc-invalid-dark);
+
+    --text-primary: var(--white);
+    --text-strong: var(--white);
+    --text-body: var(--neutral-100);
+    --text-secondary: var(--neutral-200);
+    --text-muted: var(--neutral-300);
+    --text-muted-hover: var(--white);
+    --text-control: var(--white);
+    --text-inverse: var(--neutral-950);
+
+    --shadow-lg: 0 0 0 2px rgb(var(--white));
+}
+
+/* Shell-Specific High Contrast Accents — Reactle */
+[data-shell~="reactle"][data-shell~="high-contrast"] {
+    --accent: var(--chemistry-700);
+    --accent-hover: var(--chemistry-800);
+    --accent-deep: var(--neutral-950);
+    --accent-text: var(--chemistry-800);
+    --text-inverse: var(--white);
+}
+
+.dark[data-shell~="reactle"][data-shell~="high-contrast"],
+.dark [data-shell~="reactle"][data-shell~="high-contrast"] {
+    --accent: var(--chemistry-300);
+    --accent-hover: var(--chemistry-400);
+    --accent-deep: var(--white);
+    --accent-text: var(--chemistry-300);
+    --text-inverse: var(--neutral-950);
+}
+
+/* Shell-Specific High Contrast Accents — Nuclear */
+[data-shell~="nuclear"][data-shell~="high-contrast"] {
+    --accent: var(--nuclear-700);
+    --accent-hover: var(--nuclear-800);
+    --accent-deep: var(--neutral-950);
+    --accent-text: var(--nuclear-800);
+    --text-inverse: var(--white);
+}
+
+.dark[data-shell~="nuclear"][data-shell~="high-contrast"],
+.dark [data-shell~="nuclear"][data-shell~="high-contrast"] {
+    --accent: var(--nuclear-300);
+    --accent-hover: var(--nuclear-400);
+    --accent-deep: var(--white);
+    --accent-text: var(--nuclear-300);
+    --text-inverse: var(--neutral-950);
+}
+
+/* Shell-Specific High Contrast Accents — Lab */
+[data-shell~="lab"][data-shell~="high-contrast"] {
+    --accent: var(--lab-700);
+    --accent-hover: var(--lab-800);
+    --accent-deep: var(--neutral-950);
+    --accent-text: var(--lab-800);
+    --text-inverse: var(--white);
+}
+
+.dark[data-shell~="lab"][data-shell~="high-contrast"],
+.dark [data-shell~="lab"][data-shell~="high-contrast"] {
+    --accent: var(--lab-300);
+    --accent-hover: var(--lab-400);
+    --accent-deep: var(--white);
+    --accent-text: var(--lab-300);
+    --text-inverse: var(--neutral-950);
 }

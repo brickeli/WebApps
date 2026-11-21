@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="labGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#5B21B6" />
+    </linearGradient>
+    <clipPath id="flaskClip">
+      <path d="M 35 19 H 43 V 27 L 52 44 C 53.5 47 51.5 50 48.5 50 H 29.5 C 26.5 50 24.5 47 26 44 L 35 27 Z" />
+    </clipPath>
+    <clipPath id="tubeClip">
+      <path d="M 16 19 H 24 V 43 A 4 4 0 0 1 16 43 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Rounded Square Background -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#labGrad)" />
+
+  <!-- Test Tube (Left) -->
+  <g>
+    <!-- Liquid Fill -->
+    <rect x="14" y="29" width="12" height="20" fill="#FFFFFF" clip-path="url(#tubeClip)" />
+    <!-- Tube Outline -->
+    <path d="M 16 18 H 24 V 43 A 4 4 0 0 1 16 43 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round" />
+    <!-- Rim -->
+    <line x1="14" y1="18" x2="26" y2="18" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+  </g>
+
+  <!-- Erlenmeyer Flask (Right) -->
+  <g>
+    <!-- Background Mask to separate overlapping flask from test tube -->
+    <path d="M 35 18 H 43 V 27 L 52 44 C 53.5 47 51.5 50 48.5 50 H 29.5 C 26.5 50 24.5 47 26 44 L 35 27 Z" fill="url(#labGrad)" stroke="url(#labGrad)" stroke-width="5.5" stroke-linejoin="round" />
+
+    <!-- Liquid Fill -->
+    <rect x="23" y="38" width="32" height="14" fill="#FFFFFF" clip-path="url(#flaskClip)" />
+
+    <!-- Flask Outline -->
+    <path d="M 35 18 H 43 V 27 L 52 44 C 53.5 47 51.5 50 48.5 50 H 29.5 C 26.5 50 24.5 47 26 44 L 35 27 Z" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round" />
+    <!-- Rim -->
+    <line x1="33" y1="18" x2="45" y2="18" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" />
+  </g>
+</svg>

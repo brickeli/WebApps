@@ -123,7 +123,7 @@
               <div class="score-strip">
                   <div class="score-stat">
                       <span class="score-label">SOLVED</span>
-                      <span id="score-correct" class="score-value" style="color: rgb(var(--status-valid-text));">0</span>
+                      <span id="score-correct" class="score-value is-accent">0</span>
                   </div>
                   <div class="score-divider"></div>
                   <div class="score-stat">
@@ -201,24 +201,20 @@
 
               <!-- Interactive Action Controls -->
               <div class="action-bar">
-                  <button id="check-btn" class="action-btn action-btn-primary action-btn-gradient" type="button">
-                      <i class="fa-solid fa-check" aria-hidden="true"></i> Check Balance
+                  <button id="check-btn" class="action-btn action-btn-primary">
+                      <i class="fa-solid fa-check"></i> Check Balance
                   </button>
-
-                  <button id="share-btn" class="action-btn action-btn-primary action-btn-gradient hidden" type="button" style="background-image: linear-gradient(to right, rgb(var(--nuclear-500)), rgb(var(--nuclear-600)));">
-                      <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Share Score
+                  <button id="share-btn" class="action-btn action-btn-gradient hidden">
+                      <i class="fa-solid fa-share-nodes"></i> Share Score
                   </button>
-
-                  <button id="next-btn" class="action-btn action-btn-primary action-btn-gradient" type="button">
-                      Next Equation <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  <button id="next-btn" class="action-btn action-btn-primary">
+                      Next Reaction <i class="fa-solid fa-arrow-right"></i>
                   </button>
-
-                  <button id="go-to-practice-btn" class="action-btn action-btn-outline hidden" type="button">
-                      <i class="fa-solid fa-flask" aria-hidden="true"></i> Try Practice Mode
+                  <button id="go-to-practice-btn" class="action-btn action-btn-outline hidden">
+                      <i class="fa-solid fa-atom"></i> Try Practice Mode
                   </button>
-
-                  <button id="hint-btn" class="action-btn action-btn-secondary" type="button">
-                      <i class="fa-solid fa-lightbulb hint-icon" aria-hidden="true"></i> <span id="hint-btn-text">Hint</span>
+                  <button id="hint-btn" class="action-btn action-btn-secondary">
+                      <i class="fa-solid fa-lightbulb action-btn-icon-amber"></i> <span id="hint-btn-text">Hint</span>
                   </button>
               </div>
           </div>

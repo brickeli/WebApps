@@ -39,21 +39,36 @@ const PAGES = {
                 <li><strong>Balance Mass Number (A):</strong> Ensure the sum of superscripts (mass) on the left side matches the right side.</li>
                 <li><strong>Balance Atomic Charge (Z):</strong> Ensure the sum of subscripts (protons/charge) on the left side matches the right side.</li>
             </ul>`
+    },
+    lab: {
+        icon: 'fa-flask-vial',
+        title: 'Lab Bench',
+        subtitle: 'Calculators &amp; Reference',
+        matrixLabel: 'Workshop Tools',
+        footer: 'Reactle Lab Bench &copy; 2026 - Interactive Chemistry Calculators, Reference Data &amp; Study Guides.',
+        helpTitle: 'How to Use the Lab Bench',
+        helpBody: `
+            <p><strong>Goal:</strong> Use the interactive calculators and reference guides to support your chemistry problem-solving and lab work.</p>
+            <ul class="modal-list">
+                <li><strong>Browse or Filter:</strong> Use the search bar or category pills (<em>Calculators</em>, <em>Reference</em>, <em>Organic</em>) on the directory screen to find a tool.</li>
+                <li><strong>Quick-Switch Tools:</strong> Once inside a tool, use the top dropdown menu to jump directly between calculators without losing your place.</li>
+                <li><strong>Shareable Links:</strong> Every tool updates the page URL automatically, so you can bookmark or share direct links to any calculator.</li>
+            </ul>`,
+      helpConfirm: 'Got it, Open Lab Bench',
     }
 };
 
 function modeOption(id, current) {
+    const p = PAGES[id];
+    if (!p) return '';
     const isActive = id === current;
-    const label = id === 'reactle' ? 'Reactle' : 'Nuclear Reactle';
-    const sub = id === 'reactle' ? 'Chemical Equation Balancer' : 'Decay &amp; Transmutation';
-    const icon = id === 'reactle' ? 'fa-flask' : 'fa-radiation';
 
     return `
         <button id="opt-${id}" class="mode-option ${isActive ? 'is-active' : ''}" data-mode="${id}" type="button">
-            <div class="mode-option-badge is-${id}"><i class="fa-solid ${icon}" aria-hidden="true"></i></div>
+            <div class="mode-option-badge is-${id}"><i class="fa-solid ${p.icon}" aria-hidden="true"></i></div>
             <div>
-                <div class="mode-option-title">${label}</div>
-                <div class="mode-option-sub">${sub}</div>
+                <div class="mode-option-title">${p.title}</div>
+                <div class="mode-option-sub">${p.subtitle}</div>
             </div>
         </button>`;
 }
@@ -67,6 +82,9 @@ function settingsItem(btnId, iconId, icon, isMutedIcon, label, statusId, statusT
 }
 
 function headerHTML(p, key) {
+    const isGame = key !== 'lab';
+    const helpLabel = isGame ? 'How to Play' : 'Lab Bench Guide';
+
     return `
     <header class="shell-header glass-panel">
         <div class="shell-header-inner">
@@ -87,15 +105,17 @@ function headerHTML(p, key) {
                     <div class="brand-menu-list">
                         ${modeOption('reactle', key)}
                         ${modeOption('nuclear', key)}
+                        ${modeOption('lab', key)}
                     </div>
                 </div>
             </div>
 
             <div class="header-actions">
+                ${isGame ? `
                 <div id="streak-badge" class="streak-badge">
                     <i class="fa-solid fa-fire" aria-hidden="true"></i>
                     <span id="streak-count">0</span>
-                </div>
+                </div>` : ''}
                 <div class="settings-dropdown">
                     <button id="nav-menu-btn" class="settings-trigger" type="button" title="App Settings &amp; Info">
                         <i class="fa-solid fa-sliders settings-trigger-icon" aria-hidden="true"></i>
@@ -103,11 +123,12 @@ function headerHTML(p, key) {
                     </button>
                     <div id="nav-menu-dropdown" class="settings-menu glass-panel hidden">
                         ${settingsItem('toggle-theme-btn', 'theme-icon', 'fa-moon', false, 'Theme Mode', 'theme-status-label', 'DARK', 'is-neutral')}
+                        ${settingsItem('toggle-high-contrast-btn', 'high-contrast-icon', 'fa-circle-half-stroke', true, 'High Contrast', 'high-contrast-status-label', 'OFF', 'is-off')}
                         ${settingsItem('toggle-sound-btn', 'sound-icon', 'fa-volume-high', false, 'Sound FX', 'sound-status-label', 'ON', 'is-accent')}
-                        ${settingsItem('toggle-matrix-badge-btn', 'matrix-badge-icon', 'fa-scale-balanced', true, p.matrixLabel, 'matrix-badge-status-label', 'OFF', 'is-off')}
+                        ${isGame ? settingsItem('toggle-matrix-badge-btn', 'matrix-badge-icon', 'fa-scale-balanced', true, p.matrixLabel, 'matrix-badge-status-label', 'OFF', 'is-off') : ''}
                         <div class="settings-divider"></div>
                         <button id="open-help-modal-btn" class="settings-item settings-item-help" type="button">
-                            <i class="fa-solid fa-circle-question settings-item-icon" aria-hidden="true"></i> How to Play
+                            <i class="fa-solid fa-circle-question settings-item-icon" aria-hidden="true"></i> ${helpLabel}
                         </button>
                     </div>
                 </div>
@@ -129,6 +150,7 @@ function dialogsHTML(p) {
             <div class="modal-body">${p.helpBody}</div>
             <div class="modal-footer">
                 <button id="modal-confirm-btn" class="modal-confirm-btn" type="button">Got it, Let's Play!</button>
+                <button id="modal-confirm-btn" class="modal-confirm-btn" type="button"> ${p.helpConfirm || "Got it, Let's Play!"} </button>
             </div>
         </div>
     </div>
@@ -155,7 +177,8 @@ function footerHTML(p) {
 }
 
 function mount() {
-    const key = document.body?.dataset.shell;
+    const tokens = (document.body?.dataset.shell || '').split(/\s+/);
+    const key = tokens.find((token) => PAGES[token]);
     const page = PAGES[key];
     if (!page) return;
     const swap = (id, html) => {

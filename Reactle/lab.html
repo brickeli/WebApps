@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-y-scroll">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./labBench-favicon.svg">
+    <title>Reactle Lab Bench - Calculators &amp; Chemistry Reference</title>
+
+    <!-- Inline Anti-FOUC Script (Matches index.html) -->
+    <script>
+        (function() {
+            try {
+                var saved = localStorage.getItem('theme') || localStorage.getItem('reactle_theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (saved === 'dark' || (!saved && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS Styles (Exact cascade order from index.html + lab.css) -->
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/a11y.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body data-shell="lab" class="app-shell">
+    <!-- Shared Navigation Bar (Populated by shell.js) -->
+    <div id="shell-header"></div>
+
+    <!-- Main Content Body (Uses shared .app-main layout wrapper) -->
+    <main class="app-main">
+        <!-- VIEW 1: LAB BENCH DIRECTORY -->
+        <section id="lab-directory-view" aria-labelledby="lab-dir-heading">
+            <header class="lab-hero">
+                <span class="lab-eyebrow">
+                    <i class="fa-solid fa-flask-vial" aria-hidden="true"></i>
+                    Interactive Workshop
+                </span>
+                <h1 id="lab-dir-heading" class="lab-heading">Lab Bench</h1>
+                <p class="lab-subtitle">
+                    Quick-access calculators, periodic reference data, and organic chemistry guides.
+                </p>
+            </header>
+
+            <!-- Search & Category Filter Controls -->
+            <div class="lab-controls glass-panel" role="region" aria-label="Filter Lab Bench tools">
+                <div class="lab-search-wrap">
+                    <label for="lab-search-input" class="sr-only">Search tools</label>
+                    <i class="fa-solid fa-magnifying-glass lab-search-icon" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        id="lab-search-input"
+                        name="lab-search"
+                        class="lab-search-input"
+                        placeholder="Search calculators, periodic table, pH..."
+                        autocomplete="off"
+                    />
+                </div>
+
+                <div class="lab-filter-pills" role="tablist" aria-label="Tool categories">
+                    <button type="button" class="lab-pill is-active" data-category="all" role="tab" aria-selected="true">
+                        All Tools
+                    </button>
+                    <button type="button" class="lab-pill" data-category="calculator" role="tab" aria-selected="false">
+                        Calculators
+                    </button>
+                    <button type="button" class="lab-pill" data-category="reference" role="tab" aria-selected="false">
+                        Reference
+                    </button>
+                    <button type="button" class="lab-pill" data-category="organic" role="tab" aria-selected="false">
+                        Organic
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Tool Directory Grid -->
+            <div id="lab-tools-grid" class="lab-grid" aria-live="polite"></div>
+        </section>
+
+        <!-- VIEW 2: ACTIVE TOOL WORKSPACE (Hidden until ?tool=<id> is selected) -->
+        <section id="lab-workspace-view" class="lab-workspace hidden" aria-live="polite">
+            <nav class="lab-breadcrumb" aria-label="Lab Bench navigation">
+                <button type="button" id="lab-back-btn" class="lab-back-btn">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    Back to Lab Bench
+                </button>
+
+                <div class="lab-quick-jump">
+                    <label for="lab-tool-switcher" class="sr-only">Switch tool</label>
+                    <select id="lab-tool-switcher" name="lab-tool-switcher" class="lab-select"></select>
+                </div>
+            </nav>
+
+            <!-- Selected Tool Module Mounts Here -->
+            <div id="lab-tool-mount" class="lab-tool-mount"></div>
+        </section>
+
+        <section class="lab-cta-section" aria-labelledby="lab-cta-heading">
+          <div class="lab-cta-header">
+            <h2 id="lab-cta-heading">Explore More Study &amp; Science Tools</h2>
+            <p>Continue practicing with free, interactive browser-based tools built for chemistry and anatomy prep.</p>
+          </div>
+
+          <div class="lab-cta-grid">
+            <!-- Reactle -->
+            <a href="index.html" class="lab-cta-card">
+              <div class="lab-cta-icon lab-cta-icon--chem" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 3h6M10 3v5.5L4.5 18a2 2 0 0 0 1.7 3h11.6a2 2 0 0 0 1.7-3L14 8.5V3" />
+                  <path d="M7.5 14h9" />
+                </svg>
+              </div>
+              <div class="lab-cta-content">
+                <h3>Reactle <span class="lab-cta-arrow fa-solid fa-arrow-right" aria-hidden="true"></span></h3>
+                <p>Daily challenges, practice drills, and a live atom-matrix solver for chemical equations.</p>
+              </div>
+            </a>
+
+            <!-- Nuclear Reactle -->
+            <a href="nuclear.html" class="lab-cta-card">
+              <div class="lab-cta-icon lab-cta-icon--nuclear" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M12 2a10 10 0 0 1 8.66 5l-4.33 2.5A5 5 0 0 0 12 7V2z" />
+                  <path d="M20.66 17A10 10 0 0 1 12 22v-5a5 5 0 0 0 4.33-2.5l4.33 2.5z" />
+                  <path d="M3.34 17A10 10 0 0 1 3.34 7l4.33 2.5a5 5 0 0 0 0 5L3.34 17z" />
+                </svg>
+              </div>
+              <div class="lab-cta-content">
+                <h3>Nuclear Reactle <span class="lab-cta-arrow fa-solid fa-arrow-right" aria-hidden="true"></span></h3>
+                <p>Balance alpha, beta, positron, and fission reactions by tracking mass (A) and charge (Z).</p>
+              </div>
+            </a>
+
+            <!-- TEAS Anatomy Mapper -->
+            <a href="https://hennessyshane.com" target="_blank" rel="noopener noreferrer" class="lab-cta-card">
+              <div class="lab-cta-icon lab-cta-icon--anatomy" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="5" r="2" />
+                  <path d="M12 9v6m-4-4h8m-5 4-1.5 6m4.5-6 1.5 6" />
+                </svg>
+              </div>
+              <div class="lab-cta-content">
+                <h3>TEAS Anatomy Mapper <span class="lab-cta-arrow" aria-hidden="true">&#8599;</span></h3>
+                <p>Interactive SVG organ-system explorer with high-yield physiology and pathology notes.</p>
+              </div>
+            </a>
+          </div>
+        </section>
+    </main>
+
+    <!-- Shared Footer & Dialogs (Populated by shell.js) -->
+    <div id="shell-footer"></div>
+    <div id="shell-dialogs"></div>
+
+    <!-- Modular Application Script Entry Point -->
+    <script type="module" src="./js/labMain.js"></script>
+</body>
+</html>

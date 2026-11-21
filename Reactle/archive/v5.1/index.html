@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-y-scroll">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="./reactle-favicon.svg">
+    <title>Reactle - The Interactive Chemical Equation Balancer</title>
+    <!-- Inline Anti-FOUC Script (Executes before page render) -->
+    <script>
+            (function() {
+                try {
+                    var saved = localStorage.getItem('theme') || localStorage.getItem('reactle_theme');
+                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (saved === 'dark' || (!saved && prefersDark)) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {}
+            })();
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Custom CSS Styles -->
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/a11y.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-shell="reactle" class="app-shell">
+    <!-- Navigation Bar -->
+    <div id="shell-header"></div>
+
+    <!-- Main Content Body -->
+    <main class="app-main">
+      <!-- Desktop Mode Selector Tabs -->
+      <nav class="mode-nav">
+          <button id="nav-practice" class="mode-tab is-active" type="button">
+              <i class="fa-solid fa-flask" aria-hidden="true"></i> Practice
+          </button>
+          <button id="nav-daily" class="mode-tab" type="button">
+              <i class="fa-solid fa-calendar-day" aria-hidden="true"></i> Daily Challenge
+          </button>
+          <button id="nav-solver" class="mode-tab" type="button">
+              <i class="fa-solid fa-calculator" aria-hidden="true"></i> Custom Solver
+          </button>
+      </nav>
+
+      <!-- Tablet & Mobile Mode Selector Dropdown -->
+      <div class="mode-mobile">
+          <label for="mode-dropdown" class="sr-only">Select Mode</label>
+          <div class="mode-select-wrap">
+              <!-- Floating Left Icon -->
+              <div class="mode-select-icon-left">
+                  <i id="mode-dropdown-icon" class="fa-solid fa-vial" aria-hidden="true"></i>
+              </div>
+
+              <select id="mode-dropdown" class="mode-select">
+                  <option value="daily" class="mode-select-option">Daily Challenge</option>
+                  <option value="practice" class="mode-select-option">Practice Mode</option>
+                  <option value="solver" class="mode-select-option">Custom Solver</option>
+              </select>
+
+              <div class="mode-select-icon-right">
+                  <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </div>
+          </div>
+      </div>
+
+      <!-- PRACTICE & DAILY GAME VIEW -->
+      <div id="game-view">
+          <!-- Controls & Filters Bar -->
+          <div id="filter-controls-panel" class="filter-panel glass-panel">
+              <!-- TABLET / MOBILE ACCORDION FILTER CONTAINER -->
+              <div class="filter-mobile">
+                <button id="filter-accordion-toggle" class="filter-accordion-toggle" type="button">
+                    <div class="filter-accordion-info">
+                        <i class="fa-solid fa-filter filter-accordion-icon" aria-hidden="true"></i>
+                        <span>Filter Reactions</span>
+                        <span id="filter-active-summary" class="filter-active-summary">(All Categories)</span>
+                    </div>
+                    <i id="filter-accordion-chevron" class="fa-solid fa-chevron-down filter-accordion-chevron" aria-hidden="true"></i>
+                </button>
+
+                <div id="filter-accordion-wrapper" class="filter-accordion-wrapper">
+                    <div class="filter-grid-mobile">
+                        <div>
+                            <label for="category-filter-mobile" class="filter-label">REACTION TYPE</label>
+                            <select id="category-filter-mobile" class="filter-select">
+                                <!-- Options populated dynamically via JavaScript -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="difficulty-filter-mobile" class="filter-label">DIFFICULTY</label>
+                            <select id="difficulty-filter-mobile" class="filter-select">
+                                <!-- Options populated dynamically via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+              </div>
+
+              <!-- DESKTOP INLINE FILTERS -->
+              <div class="filter-desktop">
+                  <div>
+                      <label for="category-filter-desktop" class="filter-label">REACTION TYPE</label>
+                      <select id="category-filter-desktop" class="filter-select">
+                          <!-- Options populated dynamically via JavaScript -->
+                      </select>
+                  </div>
+
+                  <div>
+                      <label for="difficulty-filter-desktop" class="filter-label">DIFFICULTY</label>
+                      <select id="difficulty-filter-desktop" class="filter-select">
+                          <!-- Options populated dynamically via JavaScript -->
+                      </select>
+                  </div>
+              </div>
+
+              <!-- Scorecard / Stats -->
+              <div class="score-strip">
+                  <div class="score-stat">
+                      <span class="score-label">SOLVED</span>
+                      <span id="score-correct" class="score-value" style="color: rgb(var(--status-valid-text));">0</span>
+                  </div>
+                  <div class="score-divider"></div>
+                  <div class="score-stat">
+                      <span class="score-label">ATTEMPTS</span>
+                      <span id="score-attempts" class="score-value">0</span>
+                  </div>
+                  <div class="score-divider"></div>
+                  <div class="score-stat">
+                      <span class="score-label">ACCURACY</span>
+                      <span id="score-accuracy" class="score-value is-accent">0%</span>
+                  </div>
+                  <button id="reset-score-btn" class="score-reset-btn" type="button" title="Reset Score Stats">
+                      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                  </button>
+              </div>
+          </div>
+
+          <!-- Primary Equation Card -->
+          <div id="main-card" class="reaction-card glass-panel">
+
+              <!-- Category & Difficulty Badges -->
+              <div class="reaction-card-header">
+                  <div class="reaction-badges">
+                      <span id="badge-category" class="reaction-badge reaction-badge-accent">
+                          Synthesis
+                      </span>
+                      <span id="badge-difficulty" class="reaction-badge reaction-badge-neutral">
+                          Easy
+                      </span>
+                  </div>
+                  <span id="daily-header-tag" class="daily-header-tag hidden">
+                      <i class="fa-solid fa-calendar" aria-hidden="true"></i> Today's Daily Reaction
+                  </span>
+              </div>
+
+              <!-- Equation Area -->
+              <div id="equation-container" class="equation-stage">
+                  <!-- Dynamic Chemical Elements Injected Here -->
+              </div>
+
+              <!-- Real-time Atom Balance Table Visualizer -->
+              <div class="matrix-section">
+                  <button id="matrix-toggle" class="matrix-toggle" type="button">
+                      <div class="matrix-toggle-info">
+                          <div class="matrix-toggle-badge">
+                              <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                          </div>
+                          <div>
+                              <h3 class="matrix-toggle-title">
+                                  Real-time Atom Count Matrix
+                              </h3>
+                              <p class="matrix-toggle-subtitle">Check for balanced equations</p>
+                          </div>
+                      </div>
+
+                      <div class="matrix-toggle-controls">
+                          <span id="balance-status" class="status-badge hidden">
+                              Unbalanced
+                          </span>
+                          <i id="matrix-chevron" class="fa-solid fa-chevron-up matrix-chevron" aria-hidden="true"></i>
+                      </div>
+                  </button>
+
+                  <div id="matrix-wrapper" class="matrix-wrapper">
+                      <div class="matrix-body">
+                          <div id="atom-count-matrix" class="species-grid">
+                              <!-- Atom count cards dynamically injected here -->
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- Hint & Feedback Banner -->
+              <div id="feedback-banner" class="feedback-banner hidden"></div>
+
+              <!-- Interactive Action Controls -->
+              <div class="action-bar">
+                  <button id="check-btn" class="action-btn action-btn-primary action-btn-gradient" type="button">
+                      <i class="fa-solid fa-check" aria-hidden="true"></i> Check Balance
+                  </button>
+
+                  <button id="share-btn" class="action-btn action-btn-primary action-btn-gradient hidden" type="button" style="background-image: linear-gradient(to right, rgb(var(--nuclear-500)), rgb(var(--nuclear-600)));">
+                      <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> Share Score
+                  </button>
+
+                  <button id="next-btn" class="action-btn action-btn-primary action-btn-gradient" type="button">
+                      Next Equation <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  </button>
+
+                  <button id="go-to-practice-btn" class="action-btn action-btn-outline hidden" type="button">
+                      <i class="fa-solid fa-flask" aria-hidden="true"></i> Try Practice Mode
+                  </button>
+
+                  <button id="hint-btn" class="action-btn action-btn-secondary" type="button">
+                      <i class="fa-solid fa-lightbulb hint-icon" aria-hidden="true"></i> <span id="hint-btn-text">Hint</span>
+                  </button>
+              </div>
+          </div>
+
+          <!-- Post-Solve Reaction Explanation Card -->
+          <div id="insight-card" class="insight-card glass-panel hidden">
+              <div class="insight-header">
+                  <i class="fa-solid fa-flask-vial" aria-hidden="true"></i> Chemical Insight & Explanation
+              </div>
+              <p id="insight-text" class="insight-text"></p>
+              <div class="text-xs text-slate-500 font-mono pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between">
+                  <span id="insight-formula" class="insight-formula" style="margin: 0; font-size: inherit;"></span>
+                  <span>Conservation of Mass Preserved</span>
+              </div>
+          </div>
+      </div>
+
+      <!-- CUSTOM SOLVER VIEW -->
+      <div id="solver-view" class="solver-view hidden">
+          <div class="solver-card glass-panel">
+              <div>
+                  <h2 class="solver-title">
+                      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Automatic Equation Balancer & Quiz Generator
+                  </h2>
+                  <p class="solver-subtitle">
+                      Type any chemical reaction using standard chemical symbols. Use <code class="solver-code">+</code> between compounds and <code class="solver-code">-&gt;</code> or <code class="solver-code">=</code> for reaction direction.
+                  </p>
+              </div>
+
+              <!-- Input Box -->
+              <div class="solver-form">
+                  <input id="custom-input" type="text" placeholder="e.g., C6H12O6 + O2 -> CO2 + H2O" class="solver-input">
+                  <button id="solve-custom-btn" class="solver-submit-btn action-btn-gradient" type="button">
+                      <i class="fa-solid fa-calculator" aria-hidden="true"></i> Balance Equation
+                  </button>
+              </div>
+
+              <!-- Example Pills -->
+              <div class="solver-examples">
+                  <span class="solver-examples-label">Try examples:</span>
+                  <button class="solver-example-btn custom-example-btn" type="button" data-expr="Fe + O2 -> Fe2O3">Fe + O2 -> Fe2O3</button>
+                  <button class="solver-example-btn custom-example-btn" type="button" data-expr="KClO3 -> KCl + O2">KClO3 -> KCl + O2</button>
+                  <button class="solver-example-btn custom-example-btn" type="button" data-expr="Al + HCl -> AlCl3 + H2">Al + HCl -> AlCl3 + H2</button>
+              </div>
+
+              <!-- Output Results Panel -->
+              <div id="solver-result" class="solver-result hidden">
+                  <h3 class="solver-result-heading">Balanced Result</h3>
+                  <div id="solver-output-eq" class="solver-output-eq"></div>
+                  <div id="solver-coefficients-breakdown" class="solver-coefficients-breakdown"></div>
+                  <button id="play-custom-quiz-btn" class="action-btn action-btn-primary solver-quiz-btn" type="button">
+                      <i class="fa-solid fa-gamepad" aria-hidden="true"></i> Play This Reaction as a Quiz!
+                  </button>
+              </div>
+          </div>
+      </div>
+  </main>
+
+    <!-- Footer -->
+    <div id="shell-footer"></div>
+    <div id="shell-dialogs"></div>
+
+    <!-- Modular Application Script Entry Point -->
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>

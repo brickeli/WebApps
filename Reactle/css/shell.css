@@ -43,11 +43,11 @@ input, button, textarea, select {
 
 /* Glassmorphism Surface Base */
 .glass-panel {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(12px);
 }
 .dark .glass-panel {
-    background: rgba(30, 41, 59, 0.85);
+    background: rgba(30, 41, 59, 0.9);
     backdrop-filter: blur(12px);
 }
 
@@ -196,26 +196,47 @@ input[type=number] {
     color: transparent;
 }
 
-[data-shell="reactle"] .brand-title {
-    background-image: linear-gradient(to right, rgb(var(--chemistry-600)), #14b8a6);
+[data-shell~="reactle"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--chemistry-600)), rgb(var(--chemistry-500)));
 }
 
-.dark [data-shell="reactle"] .brand-title {
-    background-image: linear-gradient(to right, rgb(var(--chemistry-500)), #5eead4);
+.dark[data-shell~="reactle"] .brand-title,
+.dark [data-shell~="reactle"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--chemistry-500)), rgb(var(--chemistry-300)));
 }
 
-[data-shell="nuclear"] .brand-title {
+[data-shell~="nuclear"] .brand-title {
     font-size: 1rem;
     line-height: 1.25rem;
     background-image: linear-gradient(to right, rgb(var(--nuclear-500)), rgb(var(--nuclear-400)));
 }
 
-.dark [data-shell="nuclear"] .brand-title {
-    background-image: linear-gradient(to right, rgb(var(--nuclear-400)), #fde047);
+.dark[data-shell~="nuclear"] .brand-title,
+.dark [data-shell~="nuclear"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--nuclear-400)), rgb(var(--nuclear-300)));
+}
+
+[data-shell~="lab"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--lab-600)), rgb(var(--lab-400)));
+}
+
+.dark[data-shell~="lab"] .brand-title,
+.dark [data-shell~="lab"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--lab-400)), rgb(var(--lab-300)));
+}
+
+/* High Contrast Overrides (Applies to both Reactle & Nuclear automatically via semantic tokens) */
+[data-shell~="high-contrast"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--accent-deep)), rgb(var(--accent-text)));
+}
+
+.dark[data-shell~="high-contrast"] .brand-title,
+.dark [data-shell~="high-contrast"] .brand-title {
+    background-image: linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent-deep)));
 }
 
 @media (min-width: 640px) {
-    [data-shell="nuclear"] .brand-title {
+    [data-shell~="nuclear"] .brand-title {
         font-size: 1.25rem;
         line-height: 1.75rem;
     }
@@ -337,6 +358,11 @@ input[type=number] {
 .mode-option-badge.is-nuclear {
     color: #020617;
     background-image: linear-gradient(to top right, rgb(var(--nuclear-500)), rgb(var(--nuclear-400)));
+}
+
+.mode-option-badge.is-lab {
+    color: #ffffff;
+    background-image: linear-gradient(to top right, rgb(var(--lab-500)), rgb(var(--lab-600)));
 }
 
 .mode-option-title {

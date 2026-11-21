@@ -8,6 +8,19 @@ import { playSound, setAudioEnabled } from '../engine/audio.js';
 
 const $ = (id) => document.getElementById(id);
 
+function applyHighContrastShell(enabled) {
+    const shellEl = document.querySelector('[data-shell]') || document.documentElement;
+    const current = (shellEl.getAttribute('data-shell') || '')
+        .split(/\s+/)
+        .filter((token) => token && token !== 'high-contrast');
+
+    if (enabled) {
+        current.push('high-contrast');
+    }
+
+    shellEl.setAttribute('data-shell', current.join(' '));
+}
+
 export function initSettings({ onMatrixChange } = {}) {
     const paintTheme = () => {
         const dark = document.documentElement.classList.contains('dark');
@@ -19,6 +32,21 @@ export function initSettings({ onMatrixChange } = {}) {
         const icon = $('theme-icon');
         if (icon) {
             icon.className = `fa-solid ${dark ? 'fa-moon' : 'fa-sun'} settings-item-icon`;
+        }
+    };
+
+    const paintHighContrast = () => {
+        const enabled = Storage.getHighContrast();
+        applyHighContrastShell(enabled);
+
+        const label = $('high-contrast-status-label');
+        if (label) {
+            label.textContent = enabled ? 'ON' : 'OFF';
+            label.className = `settings-status ${enabled ? 'is-accent' : 'is-off'}`;
+        }
+        const icon = $('high-contrast-icon');
+        if (icon) {
+            icon.className = `fa-solid fa-circle-half-stroke settings-item-icon ${enabled ? '' : 'is-muted'}`;
         }
     };
 
@@ -55,6 +83,7 @@ export function initSettings({ onMatrixChange } = {}) {
     document.documentElement.classList.toggle('dark', dark);
     setAudioEnabled(Storage.getSound());
     paintTheme();
+    paintHighContrast();
     paintSound();
     paintMatrix();
 
@@ -64,6 +93,13 @@ export function initSettings({ onMatrixChange } = {}) {
         const nowDark = document.documentElement.classList.toggle('dark');
         Storage.setTheme(nowDark ? 'dark' : 'light');
         paintTheme();
+    });
+    $('toggle-high-contrast-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const next = !Storage.getHighContrast();
+        Storage.setHighContrast(next);
+        playSound('click');
+        paintHighContrast();
     });
     $('toggle-sound-btn')?.addEventListener('click', (e) => {
         e.stopPropagation();

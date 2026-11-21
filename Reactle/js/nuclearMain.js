@@ -14,7 +14,7 @@ import { initModeDropdown, toggleNavMenu, toggleMatrixAccordion, toggleFilterAcc
 import { populateFilterDropdowns, onFilterChange } from './ui/filters.js';
 import { initSettings } from './core/settings.js';
 import { initA11y } from './ui/a11y.js';
-import { createScoreboard, createModeSwitcher, shareDailyResult as shareResult, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL  } from './core/game-common.js';
+import { createScoreboard, createModeSwitcher, shareDailyResult as shareResult, pickPractice, loadDaily, setControls, finishSolve, getModeFromURL  } from './core/gameCommon.js';
 import { playSound } from './engine/audio.js';
 
 // Global array to track active input elements across the equation
