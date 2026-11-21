@@ -760,11 +760,17 @@
 
 /* Selected Element Inspector */
 .pt-inspector {
+    position: sticky;
+    top: 4.5rem; /* Clears your sticky top navbar; adjust if needed */
+    z-index: 15;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
+    border-color: rgb(var(--cat-rgb, var(--border-default)) / 0.65);
+    box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.25);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, padding 0.2s ease;
 }
 
 .pt-insp-main {
@@ -948,6 +954,29 @@
 .pt-mobile-bar,
 .pt-mobile-list {
     display: none;
+}
+
+@media (max-width: 640px) {
+    .pt-inspector {
+        top: 3.75rem;
+        padding: 0.85rem 1rem;
+        gap: 0.75rem;
+    }
+
+    .pt-insp-specs {
+        width: 100%;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .pt-insp-specs .lab-stat {
+        padding: 0.4rem 0.5rem;
+    }
+
+    .pt-insp-specs .lab-stat-val {
+        font-size: 0.85rem;
+        overflow-wrap: break-word;
+    }
 }
 
 @media (max-width: 899px) {

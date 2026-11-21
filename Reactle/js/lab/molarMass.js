@@ -284,9 +284,42 @@ export function mountTool(container) {
                 <div class="lab-panel glass-panel">
                     <h3 class="lab-section-title">Elemental Composition Breakdown</h3>
                     <div class="mm-table-wrap">
-                        <table class="mm-table">
-                            ...
-                        </table>
+                      <table class="mm-table">
+                          <thead>
+                              <tr>
+                                  <th scope="col">Element</th>
+                                  <th scope="col" class="is-num">Atoms</th>
+                                  <th scope="col" class="is-num">Atomic Mass (g/mol)</th>
+                                  <th scope="col" class="is-num">Subtotal (g/mol)</th>
+                                  <th scope="col" class="is-num">Mass %</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              ${res.breakdown
+                                  .map(
+                                      (row) => `
+                                  <tr>
+                                      <td>
+                                          <span class="mm-el-badge">${row.symbol}</span>
+                                          <span>${row.name}</span>
+                                      </td>
+                                      <td class="is-num">${row.count}</td>
+                                      <td class="is-num">${row.atomicMass.toFixed(3)}</td>
+                                      <td class="is-num"><strong>${row.subtotal.toFixed(3)}</strong></td>
+                                      <td class="is-num">
+                                          <div class="mm-pct-cell">
+                                              <div class="mm-pct-bar" aria-hidden="true">
+                                                  <div class="mm-pct-fill" style="width: ${Math.min(100, row.percent).toFixed(1)}%;"></div>
+                                              </div>
+                                              <span>${row.percent.toFixed(2)}%</span>
+                                          </div>
+                                      </td>
+                                  </tr>
+                              `
+                                  )
+                                  .join('')}
+                          </tbody>
+                      </table>
                     </div>
                 </div>
             `;

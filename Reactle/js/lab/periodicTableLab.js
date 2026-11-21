@@ -66,7 +66,7 @@ export function mountTool(container) {
     let selectedSymbol = 'C';
     const selectedCategories = new Set(); // Empty Set = All Elements
     let searchQuery = '';
-    let mobileLayout = 'list'; // 'list' | 'grid'
+    let mobileLayout = 'grid'; // 'list' | 'grid'
 
     container.innerHTML = `
         <div class="lab-stack">
@@ -161,20 +161,20 @@ export function mountTool(container) {
             <div id="pt-inspector" class="lab-panel pt-inspector glass-panel" aria-live="polite"></div>
 
             <!-- Desktop 18-Column Grid + Mobile Responsive Card List -->
-            <div id="pt-board-wrap" class="lab-panel pt-board-wrap glass-panel">
+            <div id="pt-board-wrap" class="lab-panel pt-board-wrap is-full-grid glass-panel">
                 <div class="pt-mobile-bar">
                     <span id="pt-mobile-hint" class="pt-mobile-hint">
-                        <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i>
-                        Tap an element to inspect
+                        <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+                        Swipe to pan
                     </span>
                     <button
                         type="button"
                         id="pt-layout-toggle"
                         class="pt-layout-toggle"
-                        aria-pressed="false"
+                        aria-pressed="true"
                     >
-                        <i class="fa-solid fa-table-cells" aria-hidden="true"></i>
-                        <span>Full 18-Col Table</span>
+                        <i class="fa-solid fa-list" aria-hidden="true"></i>
+                        <span>Compact List</span>
                     </button>
                 </div>
 
