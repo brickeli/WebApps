@@ -182,9 +182,9 @@ function resolveQuickTip(formula, breakdown) {
 }
 
 export function mountTool(container) {
-    container.innerHTML = `
+  container.innerHTML = `
         <div class="lab-stack">
-            <!-- Input Card -->
+            <!-- Header & Formula Input -->
             <div class="lab-panel glass-panel">
                 <span class="lab-eyebrow">
                     <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
@@ -195,28 +195,34 @@ export function mountTool(container) {
                     Enter any element symbol or chemical formula—supports parentheses and hydrates (e.g., <code>CuSO4·5H2O</code>).
                 </p>
 
-                <form id="mm-form" class="mm-form" novalidate>
-                    <label for="mm-formula-input" class="sr-only">Chemical Formula</label>
-                    <input
-                        type="text"
-                        id="mm-formula-input"
-                        name="formula"
-                        class="lab-input is-mono"
-                        placeholder="e.g., C6H12O6, Fe2(SO4)3, or Au"
-                        autocomplete="off"
-                        spellcheck="false"
-                        value="C6H12O6"
-                    />
-                    <button type="submit" class="lab-btn-primary">
-                        <i class="fa-solid fa-calculator" aria-hidden="true"></i>
-                        Calculate
-                    </button>
+                <form id="mm-form" class="mm-form mt-md" novalidate>
+                    <div class="mm-input-group">
+                        <label for="mm-formula-input" class="sr-only">Chemical Formula</label>
+                        <input
+                            type="text"
+                            id="mm-formula-input"
+                            name="formula"
+                            class="lab-input is-mono mm-formula-input"
+                            placeholder="e.g., C6H12O6, Fe2(SO4)3, or Au"
+                            autocomplete="off"
+                            spellcheck="false"
+                            value="C6H12O6"
+                        />
+                        <button
+                            type="submit"
+                            class="lab-btn-primary mm-submit-btn"
+                            aria-label="Calculate molar mass"
+                            title="Calculate molar mass"
+                        >
+                            <i class="fa-solid fa-calculator" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </form>
 
-                <div class="lab-presets mt-sm">
-                    <span class="lab-presets-label">Quick examples:</span>
+                <div class="lab-pill-row mt-sm">
+                    <span class="lab-pill-label">Quick examples:</span>
                     ${PRESET_EXAMPLES.map(
-                        (ex) => `<button type="button" class="lab-preset-btn" data-formula="${ex.formula}">${ex.label}</button>`
+                        (ex) => `<button type="button" class="lab-pill is-compact" data-formula="${ex.formula}">${ex.label}</button>`
                     ).join('')}
                 </div>
 
@@ -227,6 +233,7 @@ export function mountTool(container) {
             <div id="mm-results" class="lab-stack"></div>
         </div>
     `;
+    
     const form = container.querySelector('#mm-form');
     const input = container.querySelector('#mm-formula-input');
     const errorEl = container.querySelector('#mm-error');
@@ -363,7 +370,7 @@ export function mountTool(container) {
         }
     });
 
-    container.querySelectorAll('.lab-preset-btn').forEach((btn) => {
+    container.querySelectorAll('.lab-pill').forEach((btn) => {
         btn.addEventListener('click', () => {
             input.value = btn.dataset.formula;
             renderCalculation(input.value, true);

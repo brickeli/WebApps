@@ -1,4 +1,5 @@
 import { playSound } from '../engine/audio.js';
+import { renderLabTabs, bindLabTabs } from '../labMain.js';
 
 const CONVERSION_CATEGORIES = {
     pressure: {
@@ -64,6 +65,12 @@ const CONVERSION_CATEGORIES = {
     }
 };
 
+const UC_TABS = Object.entries(CONVERSION_CATEGORIES).map(([value, cat]) => ({
+    value,
+    label: cat.label,
+    icon: cat.icon
+}));
+
 const MW_PRESETS = [
     { label: 'H₂O (18.02)', value: 18.015 },
     { label: 'NaCl (58.44)', value: 58.44 },
@@ -101,23 +108,8 @@ export function mountTool(container) {
                     Bidirectional conversions for laboratory pressure, temperature, solution concentration, and reaction energy.
                 </p>
 
-                <div class="lab-tabs mt-md" role="tablist" aria-label="Unit categories">
-                    ${Object.entries(CONVERSION_CATEGORIES)
-                        .map(
-                            ([key, cat]) => `
-                        <button
-                            type="button"
-                            class="lab-tab ${key === activeCatKey ? 'is-active' : ''}"
-                            data-cat="${key}"
-                            role="tab"
-                            aria-selected="${key === activeCatKey}"
-                        >
-                            <i class="fa-solid ${cat.icon}" aria-hidden="true"></i>
-                            <span>${cat.label}</span>
-                        </button>
-                    `
-                        )
-                        .join('')}
+                <div class="mt-md">
+                    ${renderLabTabs({ idPrefix: 'uc', ariaLabel: 'Unit categories', tabs: UC_TABS, activeValue: activeCatKey })}
                 </div>
             </div>
 
@@ -130,9 +122,9 @@ export function mountTool(container) {
                             <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
                             Solute Molar Mass (g/mol) — used for M &harr; g/L &amp; mg/L
                         </label>
-                        <div class="lab-presets">
+                        <div class="lab-pill-row">
                             ${MW_PRESETS.map(
-                                (p) => `<button type="button" class="lab-preset-btn uc-mw-preset" data-mw="${p.value}">${p.label}</button>`
+                                (p) => `<button type="button" class="lab-pill is-compact uc-mw-preset" data-mw="${p.value}">${p.label}</button>`
                             ).join('')}
                         </div>
                     </div>
@@ -151,16 +143,18 @@ export function mountTool(container) {
                 <div class="uc-converter-row">
                     <div class="lab-field">
                         <label for="uc-from-val" class="lab-label">From</label>
-                        <input
-                            type="number"
-                            id="uc-from-val"
-                            name="from-value"
-                            class="lab-input is-mono"
-                            step="any"
-                            value="1"
-                        />
-                        <label for="uc-from-unit" class="sr-only">From Unit</label>
-                        <select id="uc-from-unit" name="from-unit" class="lab-select"></select>
+                        <div class="uc-input-combo">
+                            <input
+                                type="number"
+                                id="uc-from-val"
+                                name="from-value"
+                                class="lab-input is-mono"
+                                step="any"
+                                value="1"
+                            />
+                            <label for="uc-from-unit" class="sr-only">From Unit</label>
+                            <select id="uc-from-unit" name="from-unit" class="lab-select"></select>
+                        </div>
                     </div>
 
                     <button type="button" id="uc-swap-btn" class="uc-swap-btn" title="Swap units" aria-label="Swap units">
@@ -169,15 +163,17 @@ export function mountTool(container) {
 
                     <div class="lab-field">
                         <label for="uc-to-val" class="lab-label">To</label>
-                        <input
-                            type="number"
-                            id="uc-to-val"
-                            name="to-value"
-                            class="lab-input is-mono"
-                            step="any"
-                        />
-                        <label for="uc-to-unit" class="sr-only">To Unit</label>
-                        <select id="uc-to-unit" name="to-unit" class="lab-select"></select>
+                        <div class="uc-input-combo">
+                            <input
+                                type="number"
+                                id="uc-to-val"
+                                name="to-value"
+                                class="lab-input is-mono"
+                                step="any"
+                            />
+                            <label for="uc-to-unit" class="sr-only">To Unit</label>
+                            <select id="uc-to-unit" name="to-unit" class="lab-select"></select>
+                        </div>
                     </div>
                 </div>
 
@@ -192,7 +188,7 @@ export function mountTool(container) {
             </div>
         </div>
     `;
-    const tabBtns = container.querySelectorAll('.lab-tab');
+
     const mwBar = container.querySelector('#uc-mw-bar');
     const mwInput = container.querySelector('#uc-mw-input');
     const fromValInput = container.querySelector('#uc-from-val');
@@ -280,8 +276,10 @@ export function mountTool(container) {
                             <span class="uc-equiv-sym">${u.symbol}</span>
                             <i class="fa-regular fa-copy uc-equiv-copy-icon" aria-hidden="true"></i>
                         </div>
-                        <div class="uc-equiv-val">${formatted}</div>
-                        <div class="uc-equiv-name">${u.name}</div>
+                        <div class="uc-equiv-bottom">
+                          <div class="uc-equiv-val">${formatted}</div>
+                          <div class="uc-equiv-name">${u.symbol}</div>
+                        </div>
                     </button>
                 `;
             })
@@ -296,23 +294,14 @@ export function mountTool(container) {
         toUnitId = cat.defaultTo;
         lastEdited = 'from';
 
-        tabBtns.forEach((btn) => {
-            const active = btn.dataset.cat === catKey;
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-selected', String(active));
-        });
-
         fromValInput.value = cat.defaultValue;
         populateUnitSelects();
         recalculate();
     }
 
     // Event Listeners
-    tabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            playSound('click');
-            switchCategory(btn.dataset.cat);
-        });
+    bindLabTabs(container, UC_TABS, (newCat) => {
+        switchCategory(newCat);
     });
 
     fromValInput.addEventListener('input', () => {

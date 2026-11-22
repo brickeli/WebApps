@@ -165,7 +165,7 @@ export function mountTool(container) {
                 <div class="pt-mobile-bar">
                     <span id="pt-mobile-hint" class="pt-mobile-hint">
                         <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
-                        Swipe to pan
+                        Pinch to zoom &amp; swipe to pan
                     </span>
                     <button
                         type="button"
@@ -185,6 +185,7 @@ export function mountTool(container) {
             </div>
         </div>
     `;
+    
     const searchInput = container.querySelector('#pt-search-input');
     const dropdownEl = container.querySelector('#pt-filter-dropdown');
     const filterTrigger = container.querySelector('#pt-filter-trigger');
@@ -250,6 +251,7 @@ export function mountTool(container) {
 
     function renderInspector() {
         const el = ELEMENTS_LIST.find((item) => item.symbol === selectedSymbol) || ELEMENTS_LIST[0];
+        inspectorEl.className = `lab-panel pt-inspector glass-panel pt-cat-${el.slug}`;
         inspectorEl.innerHTML = `
             <div class="pt-insp-main">
                 <div class="pt-insp-tile pt-cat-${el.slug}">
@@ -282,7 +284,7 @@ export function mountTool(container) {
                 </div>
                 <div class="lab-stat">
                     <span class="lab-stat-label">Group</span>
-                    <strong class="lab-stat-val">${el.group === 'f-block' ? 'Lanthanide/Actinide' : el.group}</strong>
+                    <strong class="lab-stat-val">${el.group === 'f-block' ? el.category : el.group}</strong>
                 </div>
             </div>
         `;

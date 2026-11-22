@@ -1,4 +1,10 @@
 import { playSound } from '../engine/audio.js';
+import { renderLabTabs, bindLabTabs } from '../labMain.js';
+
+const FG_TABS = [
+    { value: 'explore', label: 'Explore Structures', icon: 'fa-compass' },
+    { value: 'quiz', label: 'Spot the Group Quiz', icon: 'fa-brain' }
+];
 
 const FUNCTIONAL_GROUPS = [
     {
@@ -421,59 +427,48 @@ export function mountTool(container) {
         <div class="lab-stack">
             <!-- Header & View Mode Switcher -->
             <div class="lab-panel glass-panel">
-                <div class="lab-tool-header mb-md">
-                    <div>
-                        <span class="lab-eyebrow">
-                            <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
-                            Organic Chemistry
-                        </span>
-                        <h2 class="lab-heading">Functional Groups Studio</h2>
-                        <p class="lab-subtitle">
-                            Recognize the reactive atom clusters (highlighted in violet) that give organic molecules their smells, acidity, and reactivity.
-                        </p>
-                    </div>
+                <span class="lab-eyebrow">
+                    <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
+                    Organic Chemistry
+                </span>
+                <h2 class="lab-heading">Functional Groups Studio</h2>
+                <p class="lab-subtitle">
+                    Recognize the reactive atom clusters (highlighted in violet) that give organic molecules their smells, acidity, and reactivity.
+                </p>
 
-                    <div class="lab-tabs" role="tablist" aria-label="Functional groups mode">
-                        <button type="button" class="lab-tab is-active" data-view="explore" role="tab" aria-selected="true">
-                            <i class="fa-solid fa-compass" aria-hidden="true"></i>
-                            <span>Explore Structures</span>
-                        </button>
-                        <button type="button" class="lab-tab" data-view="quiz" role="tab" aria-selected="false">
-                            <i class="fa-solid fa-brain" aria-hidden="true"></i>
-                            <span>Spot the Group Quiz</span>
-                        </button>
-                    </div>
+                <div class="mt-md">
+                    ${renderLabTabs({ idPrefix: 'fg', ariaLabel: 'Functional groups mode', tabs: FG_TABS, activeValue: viewMode })}
                 </div>
+            </div>
 
-                <!-- Explore Filter & Search Bar -->
-                <div id="fg-explore-controls" class="fg-controls">
-                    <div class="lab-search-wrap">
-                        <label for="fg-search" class="sr-only">Search functional groups</label>
-                        <i class="fa-solid fa-magnifying-glass lab-search-icon" aria-hidden="true"></i>
-                        <input
-                            type="search"
-                            id="fg-search"
-                            name="fg-search"
-                            class="lab-search-input"
-                            placeholder="Search name, -ol, -oic acid, vinegar..."
-                            autocomplete="off"
-                        />
-                    </div>
-                    <div class="lab-chip-row" role="tablist" aria-label="Filter by chemical family">
-                        ${FAMILIES.map(
-                            (fam) => `
-                            <button
-                                type="button"
-                                class="lab-chip ${fam === 'All' ? 'is-active' : ''}"
-                                data-family="${fam}"
-                                role="tab"
-                                aria-selected="${fam === 'All'}"
-                            >
-                                ${fam}
-                            </button>
-                        `
-                        ).join('')}
-                    </div>
+            <!-- Explore Filter & Search Bar -->
+            <div id="fg-explore-controls" class="lab-panel glass-panel fg-controls">
+                <div class="lab-search-wrap">
+                    <label for="fg-search" class="sr-only">Search functional groups</label>
+                    <i class="fa-solid fa-magnifying-glass lab-search-icon" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        id="fg-search"
+                        name="fg-search"
+                        class="lab-search-input"
+                        placeholder="Search name, -ol, -oic acid, vinegar..."
+                        autocomplete="off"
+                    />
+                </div>
+                <div class="lab-pill-row" role="tablist" aria-label="Filter by chemical family">
+                    ${FAMILIES.map(
+                        (fam) => `
+                        <button
+                            type="button"
+                            class="lab-pill is-compact ${fam === 'All' ? 'is-active' : ''}"
+                            data-family="${fam}"
+                            role="tab"
+                            aria-selected="${fam === 'All'}"
+                        >
+                            ${fam}
+                        </button>
+                    `
+                    ).join('')}
                 </div>
             </div>
 
@@ -485,7 +480,6 @@ export function mountTool(container) {
         </div>
     `;
 
-    const viewTabs = container.querySelectorAll('.lab-tab');
     const exploreControls = container.querySelector('#fg-explore-controls');
     const familyChips = container.querySelectorAll('[data-family]');
     const searchInput = container.querySelector('#fg-search');
@@ -656,25 +650,17 @@ export function mountTool(container) {
     }
 
     // View Mode Switching (Explore vs Quiz)
-    viewTabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            playSound('click');
-            viewMode = tab.dataset.view;
-            viewTabs.forEach((t) => {
-                const active = t.dataset.view === viewMode;
-                t.classList.toggle('is-active', active);
-                t.setAttribute('aria-selected', String(active));
-            });
+    bindLabTabs(container, FG_TABS, (newView) => {
+        viewMode = newView;
 
-            const isExplore = viewMode === 'explore';
-            exploreControls.classList.toggle('hidden', !isExplore);
-            galleryEl.classList.toggle('hidden', !isExplore);
-            quizWrap.classList.toggle('hidden', isExplore);
+        const isExplore = viewMode === 'explore';
+        exploreControls.classList.toggle('hidden', !isExplore);
+        galleryEl.classList.toggle('hidden', !isExplore);
+        quizWrap.classList.toggle('hidden', isExplore);
 
-            if (!isExplore && !currentQuestion) {
-                generateQuestion();
-            }
-        });
+        if (!isExplore && !currentQuestion) {
+            generateQuestion();
+        }
     });
 
     // Family Filter Chips

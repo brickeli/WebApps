@@ -1,4 +1,12 @@
 import { playSound } from '../engine/audio.js';
+import { renderLabTabs, bindLabTabs } from '../labMain.js';
+
+const PH_TABS = [
+    { value: 'direct', label: 'Interactive pH Explorer', icon: 'fa-sliders' },
+    { value: 'strong', label: 'Strong Acid / Base', icon: 'fa-bolt' },
+    { value: 'weak', label: 'Weak Acid / Base', icon: 'fa-scale-unbalanced' },
+    { value: 'buffer', label: 'Buffer (pKa)', icon: 'fa-shield-halved' }
+];
 
 const EVERYDAY_SAMPLES = [
     { label: 'Battery Acid (0.5)', ph: 0.5 },
@@ -215,23 +223,8 @@ export function mountTool(container) {
                     Drag the pH slider or tap an everyday liquid to see how acidity, ion concentration, and color relate—or switch tabs to solve lab molarity and buffer problems.
                 </p>
 
-                <div class="lab-tabs mt-md" role="tablist" aria-label="Calculation mode">
-                    <button type="button" class="lab-tab is-active" data-mode="direct" role="tab" aria-selected="true">
-                        <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                        <span>Interactive pH Explorer</span>
-                    </button>
-                    <button type="button" class="lab-tab" data-mode="strong" role="tab" aria-selected="false">
-                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                        <span>Strong Acid / Base</span>
-                    </button>
-                    <button type="button" class="lab-tab" data-mode="weak" role="tab" aria-selected="false">
-                        <i class="fa-solid fa-scale-unbalanced" aria-hidden="true"></i>
-                        <span>Weak Acid / Base</span>
-                    </button>
-                    <button type="button" class="lab-tab" data-mode="buffer" role="tab" aria-selected="false">
-                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-                        <span>Buffer (pKa)</span>
-                    </button>
+                <div class="mt-md">
+                    ${renderLabTabs({ idPrefix: 'ph', ariaLabel: 'Calculation mode', tabs: PH_TABS, activeValue: mode })}
                 </div>
             </div>
 
@@ -239,10 +232,10 @@ export function mountTool(container) {
             <div class="lab-panel glass-panel">
                 <!-- MODE 1 (DEFAULT): INTERACTIVE pH EXPLORER -->
                 <div id="ph-panel-direct" class="ph-mode-panel">
-                    <div class="lab-presets mb-md">
-                        <span class="lab-presets-label">Everyday examples:</span>
+                    <div class="lab-pill-row mb-md">
+                        <span class="lab-pill-label">Everyday examples:</span>
                         ${EVERYDAY_SAMPLES.map(
-                            (s) => `<button type="button" class="lab-preset-btn ph-sample-btn" data-ph="${s.ph}">${s.label}</button>`
+                            (s) => `<button type="button" class="lab-pill is-compact ph-sample-btn" data-ph="${s.ph}">${s.label}</button>`
                         ).join('')}
                     </div>
 
@@ -270,10 +263,10 @@ export function mountTool(container) {
 
                 <!-- MODE 2: STRONG ACID / BASE -->
                 <div id="ph-panel-strong" class="ph-mode-panel hidden">
-                    <div class="lab-presets mb-md">
-                        <span class="lab-presets-label">Lab samples:</span>
+                    <div class="lab-pill-row mb-md">
+                        <span class="lab-pill-label">Lab samples:</span>
                         ${STRONG_PRESETS.map(
-                            (p, idx) => `<button type="button" class="lab-preset-btn ph-strong-preset" data-idx="${idx}">${p.label}</button>`
+                            (p, idx) => `<button type="button" class="lab-pill is-compact ph-strong-preset" data-idx="${idx}">${p.label}</button>`
                         ).join('')}
                     </div>
 
@@ -295,10 +288,10 @@ export function mountTool(container) {
 
                 <!-- MODE 3: WEAK ACID / BASE -->
                 <div id="ph-panel-weak" class="ph-mode-panel hidden">
-                    <div class="lab-presets mb-md">
-                        <span class="lab-presets-label">Lab samples:</span>
+                    <div class="lab-pill-row mb-md">
+                        <span class="lab-pill-label">Lab samples:</span>
                         ${WEAK_PRESETS.map(
-                            (p, idx) => `<button type="button" class="lab-preset-btn ph-weak-preset" data-idx="${idx}">${p.label}</button>`
+                            (p, idx) => `<button type="button" class="lab-pill is-compact ph-weak-preset" data-idx="${idx}">${p.label}</button>`
                         ).join('')}
                     </div>
 
@@ -325,10 +318,10 @@ export function mountTool(container) {
 
                 <!-- MODE 4: BUFFER (HENDERSON-HASSELBALCH) -->
                 <div id="ph-panel-buffer" class="ph-mode-panel hidden">
-                    <div class="lab-presets mb-md">
-                        <span class="lab-presets-label">Buffer systems:</span>
+                    <div class="lab-pill-row mb-md">
+                        <span class="lab-pill-label">Buffer systems:</span>
                         ${BUFFER_PRESETS.map(
-                            (p, idx) => `<button type="button" class="lab-preset-btn ph-buf-preset" data-idx="${idx}">${p.label}</button>`
+                            (p, idx) => `<button type="button" class="lab-pill is-compact ph-buf-preset" data-idx="${idx}">${p.label}</button>`
                         ).join('')}
                     </div>
 
@@ -356,7 +349,6 @@ export function mountTool(container) {
         </div>
     `;
 
-    const tabBtns = container.querySelectorAll('.lab-tab');
     const panels = {
         direct: container.querySelector('#ph-panel-direct'),
         strong: container.querySelector('#ph-panel-strong'),
@@ -446,7 +438,7 @@ export function mountTool(container) {
                 </div>
 
                 <!-- Step-by-step equation readout -->
-                <div class="lab-callout mb-md" style="margin-top: 0; margin-bottom: 1rem;">
+                <div class="lab-callout mb-md">
                     <i class="fa-solid fa-calculator" aria-hidden="true"></i>
                     <code>${data.formulaText}</code>
                 </div>
@@ -496,20 +488,12 @@ export function mountTool(container) {
         `;
     }
 
-    tabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            playSound('click');
-            mode = btn.dataset.mode;
-            tabBtns.forEach((b) => {
-                const active = b.dataset.mode === mode;
-                b.classList.toggle('is-active', active);
-                b.setAttribute('aria-selected', String(active));
-            });
-            Object.entries(panels).forEach(([key, el]) => {
-                el.classList.toggle('hidden', key !== mode);
-            });
-            renderResults();
+    bindLabTabs(container, PH_TABS, (newMode) => {
+        mode = newMode;
+        Object.entries(panels).forEach(([key, el]) => {
+            el.classList.toggle('hidden', key !== mode);
         });
+        renderResults();
     });
 
     [strongType, strongConc, weakType, weakConc, weakK, bufPka, bufAcid, bufBase].forEach((el) => {

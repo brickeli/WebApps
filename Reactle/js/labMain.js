@@ -1,5 +1,6 @@
 import './core/shell.js';
 import { PERIODIC_TABLE } from './data/periodicTable.js';
+import { playSound } from './engine/audio.js';
 import { initSettings } from './core/settings.js';
 import { initModeDropdown, toggleNavMenu, isNavOpen, toggleModal } from './ui/components.js';
 import { LAB_TOOLS } from './lab/labTools.js';
@@ -185,5 +186,158 @@ function bindEvents() {
 
     window.addEventListener('popstate', syncRouteFromURL);
 }
+
+export function renderLabTabs({ idPrefix, ariaLabel, tabs, activeValue }) {
+    const current = tabs.find((t) => t.value === activeValue) || tabs[0];
+
+    return `
+        <div class="lab-tabs-wrap" data-tabs-id="${idPrefix}">
+            <!-- Desktop Pill Bar -->
+            <div class="lab-tabs" role="tablist" aria-label="${ariaLabel}">
+                ${tabs
+                    .map((t) => {
+                        const isActive = t.value === current.value;
+                        return `
+                            <button
+                                type="button"
+                                class="lab-tab ${isActive ? 'is-active' : ''}"
+                                data-tab-val="${t.value}"
+                                role="tab"
+                                aria-selected="${isActive}"
+                            >
+                                <i class="fa-solid ${t.icon}" aria-hidden="true"></i>
+                                <span>${t.label}</span>
+                            </button>
+                        `;
+                    })
+                    .join('')}
+            </div>
+
+            <!-- Mobile Dropdown Selector -->
+            <div class="lab-tabs-dropdown">
+                <button
+                    type="button"
+                    class="lab-tabs-trigger"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-label="${ariaLabel}"
+                >
+                    <span class="lab-tabs-trigger-main">
+                        <i class="fa-solid ${current.icon} lab-tabs-trigger-icon" aria-hidden="true"></i>
+                        <span class="lab-tabs-trigger-text">${current.label}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down lab-tabs-chevron" aria-hidden="true"></i>
+                </button>
+
+                <div class="lab-tabs-menu glass-panel" role="listbox" aria-label="${ariaLabel}" hidden>
+                    ${tabs
+                        .map((t) => {
+                            const isActive = t.value === current.value;
+                            return `
+                                <button
+                                    type="button"
+                                    class="lab-tabs-option ${isActive ? 'is-selected' : ''}"
+                                    data-tab-val="${t.value}"
+                                    role="option"
+                                    aria-selected="${isActive}"
+                                >
+                                    <i class="fa-solid ${t.icon}" aria-hidden="true"></i>
+                                    <span class="lab-tabs-option-text">${t.label}</span>
+                                    <i class="fa-solid fa-check lab-tabs-check" aria-hidden="true"></i>
+                                </button>
+                            `;
+                        })
+                        .join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+export function bindLabTabs(container, tabs, onSelect) {
+    const wrap = container.querySelector('.lab-tabs-wrap');
+    if (!wrap) return;
+
+    const desktopTabs = wrap.querySelectorAll('.lab-tab');
+    const dropdown = wrap.querySelector('.lab-tabs-dropdown');
+    const trigger = wrap.querySelector('.lab-tabs-trigger');
+    const triggerIcon = wrap.querySelector('.lab-tabs-trigger-icon');
+    const triggerText = wrap.querySelector('.lab-tabs-trigger-text');
+    const menu = wrap.querySelector('.lab-tabs-menu');
+    const options = wrap.querySelectorAll('.lab-tabs-option');
+
+    function setOpen(shouldOpen) {
+        menu.hidden = !shouldOpen;
+        trigger.setAttribute('aria-expanded', String(shouldOpen));
+        dropdown.classList.toggle('is-open', shouldOpen);
+    }
+
+    function selectTab(val) {
+        const meta = tabs.find((t) => t.value === val);
+        if (!meta) return;
+
+        desktopTabs.forEach((btn) => {
+            const active = btn.dataset.tabVal === val;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+        });
+
+        options.forEach((opt) => {
+            const active = opt.dataset.tabVal === val;
+            opt.classList.toggle('is-selected', active);
+            opt.setAttribute('aria-selected', String(active));
+        });
+
+        triggerIcon.className = `fa-solid ${meta.icon} lab-tabs-trigger-icon`;
+        triggerText.textContent = meta.label;
+        setOpen(false);
+        onSelect(val);
+    }
+
+    desktopTabs.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            playSound('click');
+            selectTab(btn.dataset.tabVal);
+        });
+    });
+
+    options.forEach((opt) => {
+        opt.addEventListener('click', () => {
+            playSound('click');
+            selectTab(opt.dataset.tabVal);
+        });
+    });
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('click');
+        setOpen(menu.hidden);
+    });
+
+    const handleOutsideClick = (e) => {
+        if (!container.isConnected) {
+            document.removeEventListener('click', handleOutsideClick);
+            return;
+        }
+        if (!dropdown.contains(e.target) && !menu.hidden) {
+            setOpen(false);
+        }
+    };
+
+    const handleKeydown = (e) => {
+        if (!container.isConnected) {
+            document.removeEventListener('keydown', handleKeydown);
+            return;
+        }
+        if (e.key === 'Escape' && !menu.hidden) {
+            setOpen(false);
+            trigger.focus();
+        }
+    };
+
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('keydown', handleKeydown);
+}
+
 
 init();

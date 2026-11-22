@@ -57,22 +57,25 @@ const EXCEPTIONS = {
     103: { adjustments: { '6d': 0, '7p': 1 }, note: 'Lawrencium (Z=103) exhibits a relativistic 7s² 5f¹⁴ 7p¹ ground state.' }
 };
 
-const QUICK_ELEMENTS = [
-    { label: 'C (6)', z: 6 },
-    { label: 'O (8)', z: 8 },
-    { label: 'Ne (10)', z: 10 },
-    { label: 'Cr (24)*', z: 24 },
-    { label: 'Fe (26)', z: 26 },
-    { label: 'Cu (29)*', z: 29 },
-    { label: 'Ag (47)*', z: 47 },
-    { label: 'Au (79)*', z: 79 }
-];
+const CATEGORY_SLUGS = {
+    'Alkali Metal': 'alkali',
+    'Alkaline Earth': 'alkaline',
+    'Transition Metal': 'transition',
+    'Post-Transition Metal': 'post-transition',
+    'Metalloid': 'metalloid',
+    'Nonmetal': 'nonmetal',
+    'Halogen': 'halogen',
+    'Noble Gas': 'noble',
+    'Lanthanide': 'lanthanide',
+    'Actinide': 'actinide'
+};
 
 const ELEMENTS_BY_Z = Object.entries(PERIODIC_TABLE)
     .map(([symbol, data]) => ({
         symbol,
         ...data,
-        z: data.atomicNumber ?? data.z ?? data.number ?? 0
+        z: data.atomicNumber ?? data.z ?? data.number ?? 0,
+        slug: CATEGORY_SLUGS[data.category] || 'nonmetal'
     }))
     .filter((el) => el.z > 0)
     .sort((a, b) => a.z - b.z);
@@ -278,23 +281,7 @@ export function mountTool(container) {
                     Slide across atomic numbers or select an element to watch orbitals fill via the Aufbau principle and Hund’s rule (<code>*</code> marks Aufbau exceptions).
                 </p>
 
-                <div class="lab-presets mt-sm mb-md">
-                    <span class="lab-presets-label">Quick pick:</span>
-                    ${QUICK_ELEMENTS.map(
-                        (q) => `<button type="button" class="lab-preset-btn ec-quick-btn" data-z="${q.z}">${q.label}</button>`
-                    ).join('')}
-                </div>
-
-                <div class="ec-controls-grid">
-                    <div class="lab-field">
-                        <label for="ec-element-select" class="lab-label">Select Element (1–118)</label>
-                        <select id="ec-element-select" name="element-select" class="lab-select">
-                            ${ELEMENTS_BY_Z.map(
-                                (el) => `<option value="${el.z}" ${el.z === currentZ ? 'selected' : ''}>#${el.z} — ${el.name} (${el.symbol})</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-
+                <div class="ec-controls-grid mt-md">
                     <div class="lab-field">
                         <div class="ec-slider-top">
                             <label for="ec-z-slider" class="lab-label">Step Through Atomic Number (Z)</label>
@@ -313,6 +300,14 @@ export function mountTool(container) {
                             value="${currentZ}"
                         />
                     </div>
+                    <div class="lab-field">
+                        <label for="ec-element-select" class="lab-label">Select Element (1–118)</label>
+                        <select id="ec-element-select" name="element-select" class="lab-select">
+                            ${ELEMENTS_BY_Z.map(
+                                (el) => `<option value="${el.z}" ${el.z === currentZ ? 'selected' : ''}>#${el.z} — ${el.name} (${el.symbol})</option>`
+                            ).join('')}
+                        </select>
+                    </div>                    
                 </div>
             </div>
 
@@ -376,7 +371,7 @@ export function mountTool(container) {
             <!-- Notation & Summary Card -->
             <div class="lab-panel glass-panel">
                 <div class="ec-summary-top">
-                    <div class="ec-elem-badge">
+                    <div class="ec-elem-badge pt-cat-${elem.slug}">
                         <span class="ec-elem-z">Z = ${elem.z}</span>
                         <strong class="ec-elem-sym">${elem.symbol}</strong>
                     </div>
@@ -446,10 +441,6 @@ export function mountTool(container) {
     sliderEl.addEventListener('input', (e) => setAtomicNumber(e.target.value, false));
     prevBtn.addEventListener('click', () => setAtomicNumber(currentZ - 1, true));
     nextBtn.addEventListener('click', () => setAtomicNumber(currentZ + 1, true));
-
-    container.querySelectorAll('.ec-quick-btn').forEach((btn) => {
-        btn.addEventListener('click', () => setAtomicNumber(btn.dataset.z, true));
-    });
 
     render();
 }
