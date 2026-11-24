@@ -6,11 +6,11 @@
 .pt-cat-alkali          { --cat-rgb: 225 29 72; }    /* Rose */
 .pt-cat-alkaline        { --cat-rgb: 217 119 6; }    /* Amber-Orange */
 .pt-cat-transition      { --cat-rgb: 37 99 235; }    /* Royal Blue */
-.pt-cat-post-transition { --cat-rgb: 13 148 136; }   /* Teal */
-.pt-cat-metalloid       { --cat-rgb: 5 150 105; }    /* Emerald */
+.pt-cat-post-transition { --cat-rgb: 2 132 199; }    /* Sky Cyan */
+.pt-cat-metalloid       { --cat-rgb: 13 148 136; }   /* Teal */
 .pt-cat-nonmetal        { --cat-rgb: 124 58 237; }   /* Violet */
 .pt-cat-halogen         { --cat-rgb: 192 38 211; }   /* Fuchsia */
-.pt-cat-noble           { --cat-rgb: 2 132 199; }    /* Sky Cyan */
+.pt-cat-noble           { --cat-rgb: 5 150 105; }    /* Emerald */
 .pt-cat-lanthanide      { --cat-rgb: 79 70 229; }    /* Indigo */
 .pt-cat-actinide        { --cat-rgb: 180 83 9; }     /* Rust / Bronze */
 
@@ -18,11 +18,11 @@
 .dark .pt-cat-alkali          { --cat-rgb: 251 113 133; }
 .dark .pt-cat-alkaline        { --cat-rgb: 251 191 36; }
 .dark .pt-cat-transition      { --cat-rgb: 96 165 250; }
-.dark .pt-cat-post-transition { --cat-rgb: 45 212 191; }
-.dark .pt-cat-metalloid       { --cat-rgb: 52 211 153; }
+.dark .pt-cat-post-transition { --cat-rgb: 56 189 248; }
+.dark .pt-cat-metalloid       { --cat-rgb: 45 212 191; }
 .dark .pt-cat-nonmetal        { --cat-rgb: 167 139 250; }
 .dark .pt-cat-halogen         { --cat-rgb: 232 121 249; }
-.dark .pt-cat-noble           { --cat-rgb: 56 189 248; }
+.dark .pt-cat-noble           { --cat-rgb: 52 211 153; }
 .dark .pt-cat-lanthanide      { --cat-rgb: 129 140 248; }
 .dark .pt-cat-actinide        { --cat-rgb: 251 146 60; }
 
