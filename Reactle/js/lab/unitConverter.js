@@ -2,6 +2,77 @@ import { playSound } from '../engine/audio.js';
 import { renderLabTabs, bindLabTabs } from '../labMain.js';
 
 const CONVERSION_CATEGORIES = {
+    base: {
+        label: 'Base / SI',
+        icon: 'fa-ruler-combined',
+        requiresDimension: true,
+        defaultDimension: 'mass',
+        dimensions: {
+            mass: {
+                label: 'Mass (g)',
+                defaultFrom: 'g',
+                defaultTo: 'mg',
+                defaultValue: 1,
+                note: 'SI base unit of mass is the kilogram (kg), though grams (g) and milligrams (mg) are standard for benchtop stoichiometry. 1 g = 1,000 mg = 10⁶ µg.',
+                units: [
+                    { id: 'kg', name: 'Kilograms (SI)', symbol: 'kg', toBase: (v) => v * 1000, fromBase: (b) => b / 1000 },
+                    { id: 'g', name: 'Grams', symbol: 'g', toBase: (v) => v, fromBase: (b) => b },
+                    { id: 'mg', name: 'Milligrams', symbol: 'mg', toBase: (v) => v * 1e-3, fromBase: (b) => b * 1e3 },
+                    { id: 'ug', name: 'Micrograms', symbol: 'µg', toBase: (v) => v * 1e-6, fromBase: (b) => b * 1e6 },
+                    { id: 'ng', name: 'Nanograms', symbol: 'ng', toBase: (v) => v * 1e-9, fromBase: (b) => b * 1e9 },
+                    { id: 'lb', name: 'Pounds', symbol: 'lb', toBase: (v) => v * 453.59237, fromBase: (b) => b / 453.59237 },
+                    { id: 'oz', name: 'Ounces', symbol: 'oz', toBase: (v) => v * 28.349523125, fromBase: (b) => b / 28.349523125 }
+                ]
+            },
+            volume: {
+                label: 'Volume (L)',
+                defaultFrom: 'L',
+                defaultTo: 'mL',
+                defaultValue: 1,
+                note: '1 Liter (L) = 1 dm³ = 1,000 mL. In laboratory glassware and pipetting, 1 mL is strictly equal to 1 cubic centimeter (cm³ or cc).',
+                units: [
+                    { id: 'm3', name: 'Cubic Meters (SI)', symbol: 'm³', toBase: (v) => v * 1000, fromBase: (b) => b / 1000 },
+                    { id: 'L', name: 'Liters', symbol: 'L', toBase: (v) => v, fromBase: (b) => b },
+                    { id: 'mL', name: 'Milliliters', symbol: 'mL', toBase: (v) => v * 1e-3, fromBase: (b) => b * 1e3 },
+                    { id: 'cm3', name: 'Cubic Centimeters', symbol: 'cm³', toBase: (v) => v * 1e-3, fromBase: (b) => b * 1e3 },
+                    { id: 'uL', name: 'Microliters', symbol: 'µL', toBase: (v) => v * 1e-6, fromBase: (b) => b * 1e6 },
+                    { id: 'nL', name: 'Nanoliters', symbol: 'nL', toBase: (v) => v * 1e-9, fromBase: (b) => b * 1e9 },
+                    { id: 'gal', name: 'US Gallons', symbol: 'gal', toBase: (v) => v * 3.785411784, fromBase: (b) => b / 3.785411784 }
+                ]
+            },
+            length: {
+                label: 'Length (m)',
+                defaultFrom: 'm',
+                defaultTo: 'cm',
+                defaultValue: 1,
+                note: 'SI base unit of length is the meter (m). Nanometers (nm) are standard for UV-Vis spectroscopy wavelengths; Angstroms (1 Å = 0.1 nm) are used for bond lengths.',
+                units: [
+                    { id: 'km', name: 'Kilometers', symbol: 'km', toBase: (v) => v * 1000, fromBase: (b) => b / 1000 },
+                    { id: 'm', name: 'Meters (SI)', symbol: 'm', toBase: (v) => v, fromBase: (b) => b },
+                    { id: 'cm', name: 'Centimeters', symbol: 'cm', toBase: (v) => v * 1e-2, fromBase: (b) => b * 1e2 },
+                    { id: 'mm', name: 'Millimeters', symbol: 'mm', toBase: (v) => v * 1e-3, fromBase: (b) => b * 1e3 },
+                    { id: 'um', name: 'Micrometers', symbol: 'µm', toBase: (v) => v * 1e-6, fromBase: (b) => b * 1e6 },
+                    { id: 'nm', name: 'Nanometers', symbol: 'nm', toBase: (v) => v * 1e-9, fromBase: (b) => b * 1e9 },
+                    { id: 'A', name: 'Angstroms', symbol: 'Å', toBase: (v) => v * 1e-10, fromBase: (b) => b * 1e10 },
+                    { id: 'in', name: 'Inches', symbol: 'in', toBase: (v) => v * 0.0254, fromBase: (b) => b / 0.0254 }
+                ]
+            },
+            amount: {
+                label: 'Amount (mol)',
+                defaultFrom: 'mol',
+                defaultTo: 'mmol',
+                defaultValue: 1,
+                note: 'One mole (mol) contains exactly 6.02214076 × 10²³ elementary entities (Avogadro constant).',
+                units: [
+                    { id: 'kmol', name: 'Kilomoles', symbol: 'kmol', toBase: (v) => v * 1000, fromBase: (b) => b / 1000 },
+                    { id: 'mol', name: 'Moles (SI)', symbol: 'mol', toBase: (v) => v, fromBase: (b) => b },
+                    { id: 'mmol', name: 'Millimoles', symbol: 'mmol', toBase: (v) => v * 1e-3, fromBase: (b) => b * 1e3 },
+                    { id: 'umol', name: 'Micromoles', symbol: 'µmol', toBase: (v) => v * 1e-6, fromBase: (b) => b * 1e6 },
+                    { id: 'nmol', name: 'Nanomoles', symbol: 'nmol', toBase: (v) => v * 1e-9, fromBase: (b) => b * 1e9 }
+                ]
+            }
+        }
+    },
     pressure: {
         label: 'Pressure',
         icon: 'fa-gauge-high',
@@ -89,9 +160,10 @@ function formatSmartNumber(num) {
 }
 
 export function mountTool(container) {
-    let activeCatKey = 'pressure';
-    let fromUnitId = CONVERSION_CATEGORIES.pressure.defaultFrom;
-    let toUnitId = CONVERSION_CATEGORIES.pressure.defaultTo;
+    let activeCatKey = 'base';
+    let activeDimKey = CONVERSION_CATEGORIES.base.defaultDimension;
+    let fromUnitId = CONVERSION_CATEGORIES.base.dimensions[activeDimKey].defaultFrom;
+    let toUnitId = CONVERSION_CATEGORIES.base.dimensions[activeDimKey].defaultTo;
     let molarMass = 58.44;
     let lastEdited = 'from'; // 'from' | 'to'
 
@@ -105,7 +177,7 @@ export function mountTool(container) {
                 </span>
                 <h2 class="lab-heading">Scientific Unit Converter</h2>
                 <p class="lab-subtitle">
-                    Bidirectional conversions for laboratory pressure, temperature, solution concentration, and reaction energy.
+                    Bidirectional conversions for SI base units, metric prefixes, pressure, temperature, concentration, and energy.
                 </p>
 
                 <div class="mt-md">
@@ -115,6 +187,24 @@ export function mountTool(container) {
 
             <!-- Active Converter Workspace -->
             <div class="lab-panel glass-panel">
+                <!-- Base Dimension Selector Bar (Shown for Base / SI Tab) -->
+                <div id="uc-dim-bar" class="uc-mw-bar hidden">
+                    <div class="uc-mw-top">
+                        <label for="uc-pq-input" class="lab-label">
+                            <i class="fa-solid fa-cubes" aria-hidden="true"></i>
+                            Physical Quantity
+                        </label>
+                        <div class="lab-pill-row" id="uc-dim-pills">
+                            ${Object.entries(CONVERSION_CATEGORIES.base.dimensions)
+                                .map(
+                                    ([key, dim]) =>
+                                        `<button type="button" class="lab-pill is-compact uc-dim-pill ${key === activeDimKey ? 'is-active' : ''}" data-dim="${key}">${dim.label}</button>`
+                                )
+                                .join('')}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Optional Molar Mass Bar (Shown for Concentration Tab) -->
                 <div id="uc-mw-bar" class="uc-mw-bar hidden">
                     <div class="uc-mw-top">
@@ -183,12 +273,13 @@ export function mountTool(container) {
 
             <!-- All Units Equivalent Grid -->
             <div class="lab-panel glass-panel">
-                <h3 class="lab-section-title">All Equivalents in <span id="uc-all-cat-label">Pressure</span></h3>
+                <h3 class="lab-section-title">All Equivalents in <span id="uc-all-cat-label">Mass (g)</span></h3>
                 <div id="uc-all-grid" class="uc-all-grid"></div>
             </div>
         </div>
     `;
 
+    const dimBar = container.querySelector('#uc-dim-bar');
     const mwBar = container.querySelector('#uc-mw-bar');
     const mwInput = container.querySelector('#uc-mw-input');
     const fromValInput = container.querySelector('#uc-from-val');
@@ -200,13 +291,23 @@ export function mountTool(container) {
     const allCatLabel = container.querySelector('#uc-all-cat-label');
     const allGrid = container.querySelector('#uc-all-grid');
 
-    function getUnit(catKey, unitId) {
-        return CONVERSION_CATEGORIES[catKey].units.find((u) => u.id === unitId) || CONVERSION_CATEGORIES[catKey].units[0];
+    function getActiveConfig() {
+        const cat = CONVERSION_CATEGORIES[activeCatKey];
+        if (cat.requiresDimension) {
+            return cat.dimensions[activeDimKey];
+        }
+        return cat;
+    }
+
+    function getUnit(unitId) {
+        const units = getActiveConfig().units;
+        return units.find((u) => u.id === unitId) || units[0];
     }
 
     function populateUnitSelects() {
         const cat = CONVERSION_CATEGORIES[activeCatKey];
-        const optionsHTML = cat.units
+        const config = getActiveConfig();
+        const optionsHTML = config.units
             .map((u) => `<option value="${u.id}">${u.name} (${u.symbol})</option>`)
             .join('');
 
@@ -215,15 +316,19 @@ export function mountTool(container) {
         fromUnitSelect.value = fromUnitId;
         toUnitSelect.value = toUnitId;
 
+        dimBar.classList.toggle('hidden', !cat.requiresDimension);
         mwBar.classList.toggle('hidden', !cat.requiresMolarMass);
-        noteEl.innerHTML = `<i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span>${cat.note}</span>`;
-        allCatLabel.textContent = cat.label;
+        noteEl.innerHTML = `<i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span>${config.note}</span>`;
+        allCatLabel.textContent = config.label;
+
+        container.querySelectorAll('.uc-dim-pill').forEach((pill) => {
+            pill.classList.toggle('is-active', pill.dataset.dim === activeDimKey);
+        });
     }
 
     function recalculate() {
-        const cat = CONVERSION_CATEGORIES[activeCatKey];
-        const fromUnit = getUnit(activeCatKey, fromUnitId);
-        const toUnit = getUnit(activeCatKey, toUnitId);
+        const fromUnit = getUnit(fromUnitId);
+        const toUnit = getUnit(toUnitId);
         const mw = Math.max(0.0001, parseFloat(mwInput.value) || molarMass || 58.44);
 
         let baseValue = NaN;
@@ -254,13 +359,13 @@ export function mountTool(container) {
     }
 
     function renderAllEquivalents(baseValue, mw) {
-        const cat = CONVERSION_CATEGORIES[activeCatKey];
+        const config = getActiveConfig();
         if (!Number.isFinite(baseValue)) {
             allGrid.innerHTML = `<p class="lab-subtitle">Enter a numeric value above to view all unit equivalents.</p>`;
             return;
         }
 
-        allGrid.innerHTML = cat.units
+        allGrid.innerHTML = config.units
             .map((u) => {
                 const val = u.fromBase(baseValue, mw);
                 const formatted = formatSmartNumber(val);
@@ -278,7 +383,6 @@ export function mountTool(container) {
                         </div>
                         <div class="uc-equiv-bottom">
                           <div class="uc-equiv-val">${formatted}</div>
-                          <div class="uc-equiv-name">${u.symbol}</div>
                         </div>
                     </button>
                 `;
@@ -290,11 +394,29 @@ export function mountTool(container) {
         if (!CONVERSION_CATEGORIES[catKey]) return;
         activeCatKey = catKey;
         const cat = CONVERSION_CATEGORIES[catKey];
-        fromUnitId = cat.defaultFrom;
-        toUnitId = cat.defaultTo;
+        if (cat.requiresDimension) {
+            activeDimKey = cat.defaultDimension;
+        }
+        const config = getActiveConfig();
+        fromUnitId = config.defaultFrom;
+        toUnitId = config.defaultTo;
         lastEdited = 'from';
 
-        fromValInput.value = cat.defaultValue;
+        fromValInput.value = config.defaultValue;
+        populateUnitSelects();
+        recalculate();
+    }
+
+    function switchDimension(dimKey) {
+        const cat = CONVERSION_CATEGORIES[activeCatKey];
+        if (!cat?.dimensions?.[dimKey]) return;
+        activeDimKey = dimKey;
+        const config = getActiveConfig();
+        fromUnitId = config.defaultFrom;
+        toUnitId = config.defaultTo;
+        lastEdited = 'from';
+
+        fromValInput.value = config.defaultValue;
         populateUnitSelects();
         recalculate();
     }
@@ -302,6 +424,13 @@ export function mountTool(container) {
     // Event Listeners
     bindLabTabs(container, UC_TABS, (newCat) => {
         switchCategory(newCat);
+    });
+
+    container.querySelectorAll('.uc-dim-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            playSound('click');
+            switchDimension(btn.dataset.dim);
+        });
     });
 
     fromValInput.addEventListener('input', () => {
