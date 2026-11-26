@@ -1,0 +1,137 @@
+/* Sudoku 9x9 Board & Keypad Styles */
+.board-wrapper {
+    border-radius: 12px;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    aspect-ratio: 1 / 1;
+    background-color: var(--white);
+    border: 3px solid var(--border-thick);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px var(--shadow-color);
+}
+
+.cell {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.1s, color 0.1s;
+}
+
+.cell:nth-child(3n) { border-right: 2px solid var(--border-thick); }
+.cell:nth-child(9n) { border-right: 1px solid var(--border-color); }
+.cell:nth-child(n+19):nth-child(-n+27),
+.cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--border-thick); }
+
+.cell.given { color: var(--cell-given-text); font-weight: 800; }
+.cell.user-input { color: var(--cell-user-text); }
+.cell.hint-cell { color: var(--cell-hint-text); }
+.cell.selected { background-color: var(--cell-selected) !important; }
+.cell.highlight { background-color: var(--white); }
+
+/* Duplicate Number Indicator */
+.cell.duplicate {
+    color: var(--error) !important;
+    font-weight: bold;
+}
+
+.cell.duplicate::after {
+    content: "!";
+    font-weight: 900;
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 0.7rem;
+    pointer-events: none;
+}
+
+/* Pencil Notes Grid */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.note-item {
+    font-size: 0.55rem;
+    font-weight: normal;
+    color: var(--text-color);
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 1–9 + Clear Keypad */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 20px;
+}
+
+.keypad-btn {
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    height: 45px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.keypad-btn:hover {
+    background-color: var(--cell-highlight);
+    color: var(--primary);
+}
+
+.keypad-btn:active {
+    background-color: var(--border-color);
+}
+
+.keypad-btn.completed {
+    background-color: var(--border-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.keypad.notes-active .keypad-btn {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.keypad.notes-active .keypad-btn:not([data-num="0"]) {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+@media (max-width: 450px) {
+    .cell { font-size: 1.2rem; }
+    .keypad-btn { font-size: 1.1rem; }
+    .keypad-btn[data-num="0"] { font-size: 0.9rem; }
+}

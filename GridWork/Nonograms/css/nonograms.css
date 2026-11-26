@@ -1,0 +1,261 @@
+/* Nonograms Matrix & Clue Header Styles */
+.board-wrapper {
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px 6px 8px 4px;
+    box-shadow: 0 10px 15px -3px var(--shadow-color);
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.top-section,
+.row-section {
+    display: flex;
+    width: 100%;
+}
+
+.empty-corner,
+.row-clues {
+    flex: 0 0 50px;
+    min-width: 0;
+}
+
+.col-clues {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+.col-clue {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 1;
+    padding-bottom: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--text-color);
+    border-right: 1px solid transparent;
+    transition: opacity 0.2s ease;
+}
+
+.row-section {
+    display: flex;
+    width: 100%;
+}
+
+.row-clues {
+    display: flex;
+    flex-direction: column;
+}
+
+.row-clue {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 1;
+    padding-right: 5px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    gap: 4px;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+    border-bottom: 1px solid transparent;
+    transition: opacity 0.2s ease;
+}
+
+.clue-satisfied {
+    opacity: 0.35;
+    text-decoration: line-through;
+}
+
+.game-board {
+    display: grid;
+    flex: 1;
+    background-color: var(--border-color);
+    border: 3px solid var(--border-thick);
+    border-radius: 8px;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+}
+
+.game-container[data-size="12"] .empty-corner,
+.game-container[data-size="12"] .row-clues {
+    flex: 0 0 46px;
+}
+
+.game-container[data-size="12"] .row-clue,
+.game-container[data-size="12"] .col-clue {
+    font-size: 0.65rem;
+    gap: 3px;
+    line-height: 1.05;
+}
+
+.game-container[data-size="12"] .row-clue {
+    padding-right: 4px;
+}
+
+.cell {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    background-color: var(--bg-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.1s;
+}
+
+.cell:hover {
+    background-color: var(--cell-highlight);
+}
+
+.cell.filled {
+    background-color: var(--cell-filled);
+}
+
+.cell.hint-cell.filled {
+    background-color: var(--cell-hint-fill);
+}
+
+.cell.crossed::before,
+.cell.crossed::after {
+    content: '';
+    position: absolute;
+    width: 55%;
+    height: 2px;
+    background-color: var(--error);
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.cell.crossed::before {
+    transform: rotate(45deg);
+}
+
+.cell.crossed::after {
+    transform: rotate(-45deg);
+}
+
+.border-right {
+    border-right: 2px solid var(--border-thick) !important;
+}
+
+.border-bottom {
+    border-bottom: 2px solid var(--border-thick) !important;
+}
+
+.pixel-guess-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 420px;
+    margin: 1.5rem auto 0;
+    padding: 0 1rem;
+}
+
+label.sr-only {
+  margin: 0 auto;
+  font-weight: 700;
+}
+
+.pixel-guess-bar[hidden] {
+    display: none;
+}
+
+.pixel-guess-input {
+    flex: 1 1 180px;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    font: inherit;
+    color: var(--text-primary, inherit);
+    background: var(--surface-elevated, var(--surface));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.16));
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pixel-guess-input:focus-visible {
+    outline: 2px solid var(--accent-color, #6366f1);
+    outline-offset: 2px;
+}
+
+.pixel-guess-input[aria-invalid="true"] {
+    border-color: var(--danger-color, #ef4444);
+    animation: guess-shake 0.28s ease;
+}
+
+.pixel-guess-submit {
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
+    font: inherit;
+    font-weight: 600;
+    color: var(--btn-primary-text, #ffffff);
+    background: var(--accent-color, #6366f1);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.pixel-guess-submit:hover {
+    filter: brightness(1.08);
+}
+
+.pixel-guess-feedback {
+    width: 100%;
+    min-height: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--danger-color, #ef4444);
+    text-align: center;
+}
+
+.pixel-guess-feedback.prompt {
+    color: var(--accent-color, #6366f1);
+    font-weight: 600;
+}
+
+@keyframes guess-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+
+@media (max-width: 450px) {
+    body {
+        padding: 8px 4px;
+    }
+
+    .board-wrapper {
+        padding: 8px 4px 6px 2px;
+        border-radius: 10px;
+    }
+
+    .game-board {
+        border-width: 2px;
+    }
+
+    .game-container[data-size="12"] .empty-corner,
+    .game-container[data-size="12"] .row-clues {
+        flex: 0 0 42px;
+    }
+
+    .game-container[data-size="12"] .row-clue {
+        padding-right: 3px;
+        gap: 2.5px;
+    }
+}

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nonogram Game</title>
+<style>
+    :root {
+        /* Exact Sudoku Theme Colors */
+        --bg-color: #f4f7f6;
+        --card-bg: #ffffff;
+        --text-color: #333;
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --border-color: #cbd5e1;
+        --thick-border-color: #0f172a;
+        --cell-selected: #e0e7ff;
+        --cell-highlight: #f1f5f9;
+        --cell-given: #0f172a;
+        --cell-input: #2563eb;
+        --error-color: #ef4444;
+        --hint-color: #10b981;
+
+        /* Nonogram specific implementation mapped to Sudoku colors */
+        --cell-filled: var(--cell-given);
+        --thick-border: 1px solid var(--thick-border-color);
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    h1 {
+        margin: 5px 0;
+        font-size: 1.8rem;
+        color: var(--primary);
+    }
+
+    .game-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 420px;
+    }
+
+    /* 1. Status Bar */
+    .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 420px;
+        margin-bottom: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .timer-display {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .timer-display:hover {
+        background-color: #e2e8f0;
+        color: var(--text-color);
+    }
+
+    /* 2. Difficulty Container */
+    .difficulty-container {
+        display: flex;
+        background-color: #e2e8f0;
+        border-radius: 9999px;
+        padding: 4px;
+        margin-bottom: 12px;
+        width: 100%;
+        max-width: 420px;
+        box-sizing: border-box;
+        justify-content: space-around;
+    }
+
+    .tab {
+        flex: 1;
+        background-color: transparent;
+        border: none;
+        padding: 7px 2px;
+        border-radius: 9999px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .tab:hover {
+        color: var(--text-color);
+    }
+
+    .tab.active {
+        background-color: var(--card-bg);
+        color: var(--primary);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 3. Controls Row */
+    .controls-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* 4. Board Wrapper */
+    .board-wrapper {
+        background: var(--card-bg);
+        padding: 20px 10px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    /* Pause Overlay Styles */
+    .pause-overlay {
+        display: none;
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        z-index: 10;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 10px;
+        color: var(--primary);
+    }
+
+    .pause-overlay h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .paused .pause-overlay {
+        display: flex;
+    }
+
+    .paused .game-container {
+        visibility: hidden;
+    }
+
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .top-section {
+        display: flex;
+        width: 100%;
+    }
+
+    .empty-corner {
+        flex: 0 0 22%;
+        display: flex;
+        box-sizing: border-box;
+    }
+
+    .col-clues {
+        display: flex;
+        flex: 1;
+    }
+
+    .col-clue {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        flex: 1;
+        padding-bottom: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+        border-right: 1px solid transparent;
+        color: var(--text-color);
+        box-sizing: border-box;
+    }
+
+    .row-section {
+        display: flex;
+        width: 100%;
+    }
+
+    .row-clues {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 22%;
+    }
+
+    .row-clue {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex: 1;
+        padding-right: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        gap: 10px;
+        border-bottom: 1px solid transparent;
+        color: var(--text-color);
+        box-sizing: border-box;
+    }
+
+    .grid {
+        display: grid;
+        background-color: var(--border-color);
+        border: var(--thick-border);
+        gap: 1px;
+        user-select: none;
+        touch-action: none;
+        flex: 1;
+    }
+
+    .cell {
+        aspect-ratio: 1;
+        width: 100%;
+        height: auto;
+        background-color: var(--card-bg);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .cell:hover {
+        background-color: var(--cell-highlight);
+    }
+
+    .cell.filled {
+        background-color: var(--cell-filled);
+    }
+
+    .cell.crossed::after {
+        content: 'X';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--error-color);
+        font-weight: 800;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .border-right { border-right: var(--thick-border) !important; }
+    .border-bottom { border-bottom: var(--thick-border) !important; }
+
+    /* 5. Tool Toolbar & Action Containers */
+    .toolbar-row {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .action-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        width: 100%;
+    }
+
+    /* Standard Button Styles */
+    .btn {
+         flex: 1;
+         background-color: var(--card-bg);
+         border: 1px solid var(--border-color);
+         padding: 10px 0;
+         border-radius: 8px;
+         font-size: 1rem;
+         font-weight: 600;
+         cursor: pointer;
+         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+        background-color: var(--primary-hover);
+        color: white;
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+    .btn-secondary {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        color: #64748b;
+        cursor: pointer;
+        flex: 2;
+    }
+    .btn-secondary:hover {
+        background-color: var(--cell-selected);
+        color: var(--primary);
+    }
+
+    #hintBtn {
+        background-color: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+    #hintBtn:hover {
+        background-color: #059669;
+        color: white;
+    }
+
+    #newGameBtn {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    #newGameBtn:hover {
+        background-color: var(--primary-hover);
+    }
+
+    #statsBtn {
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #b45309;
+        font-size: 1rem;
+        flex: 1;
+    }
+    #statsBtn:hover {
+        background-color: #fde68a;
+        color: #92400e;
+    }
+    #modeToggleBtn {
+      margin-bottom: 15px;
+      padding: 15px;
+    }
+    #modeToggleBtn:hover {
+      background-color: var(--cell-selected);
+      color: var(--primary);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .stats-modal {
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 420px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #64748b;
+        transition: color 0.2s;
+    }
+
+    .close-modal:hover {
+        color: var(--text-color);
+    }
+
+    .stats-modal h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--text-color);
+    }
+
+    .high-scores {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .high-scores th, .high-scores td {
+        padding: 12px 15px;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .high-scores th {
+        background-color: var(--cell-highlight);
+        font-weight: 600;
+        color: var(--text-color);
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+    }
+
+    .high-scores tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+</head>
+<body>
+
+    <div class="game-card">
+
+        <!-- 1. Status Bar -->
+        <div class="status-bar">
+            <h1>NONOGRAMS</h1>
+            <button class="timer-display" id="timerBtn" title="Click to Pause/Resume">⏱️ <span id="timerText">00:00</span></button>
+        </div>
+
+        <!-- 2. Difficulty Container -->
+        <div class="difficulty-container" id="difficultyTabs">
+            <button class="tab active" data-value="5">Easy</button>
+            <button class="tab" data-value="8">Medium</button>
+            <button class="tab" data-value="12">Hard</button>
+        </div>
+
+        <!-- 3. Controls Row -->
+        <div class="controls-row">
+            <button class="btn btn-secondary" id="undoBtn">↩️ Undo</button>
+            <button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+            <button class="btn btn-secondary" id="statsBtn">👑</button>
+        </div>
+
+        <!-- 4. Board Wrapper -->
+        <div class="board-wrapper" id="boardWrapper">
+            <div class="pause-overlay">
+                <h2>Game Paused</h2>
+                <span>Click timer to resume</span>
+            </div>
+
+            <div class="game-container" id="gameContainer">
+                <div class="top-section">
+                    <div class="empty-corner"></div>
+                    <div class="col-clues" id="colClues"></div>
+                </div>
+                <div class="row-section">
+                    <div class="row-clues" id="rowClues"></div>
+                    <div class="grid" id="grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Tool Toolbar (Mode Toggle & Undo) -->
+        <div class="toolbar-row">
+            <button class="btn fillBtn" id="modeToggleBtn">⬛ Fill</button>
+        </div>
+
+        <!-- 6. Action Container -->
+        <div class="action-container">
+            <button class="btn" id="hintBtn">💡 Hint</button>
+            <button class="btn" id="newGameBtn">🆕 New Game</button>
+        </div>
+
+    </div>
+
+    <!-- High Scores Modal -->
+    <div class="modal-overlay" id="statsModal">
+        <div class="stats-modal">
+            <button class="close-modal" id="closeModalBtn">✖</button>
+            <h3>High Scores</h3>
+            <table class="high-scores" id="highScoresTable">
+                <thead>
+                    <tr>
+                        <th>Difficulty</th>
+                        <th>Time</th>
+                        <th>Hints Used</th>
+                    </tr>
+                </thead>
+                <tbody id="highScoresBody">
+                    <!-- Scores dynamically populate here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    const gridEl = document.getElementById('grid');
+    const rowCluesEl = document.getElementById('rowClues');
+    const colCluesEl = document.getElementById('colClues');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statsBtn = document.getElementById('statsBtn');
+    const timerBtn = document.getElementById('timerBtn');
+    const timerText = document.getElementById('timerText');
+    const boardWrapper = document.getElementById('boardWrapper');
+    const gameContainer = document.getElementById('gameContainer');
+    const statsModal = document.getElementById('statsModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const highScoresBody = document.getElementById('highScoresBody');
+    const tabs = document.querySelectorAll('.tab');
+    const modeToggleBtn = document.getElementById('modeToggleBtn');
+    const undoBtn = document.getElementById('undoBtn');
+
+    const LOCAL_STORAGE_KEY = 'nonogramHighScores';
+
+    let size = 10;
+    let currentLevelIndex = 1;
+    let solution = [];
+    let playerGrid = [];
+    let isDragging = false;
+    let dragTargetState = null;
+    let hintsUsed = 0;
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let gameActive = false;
+    let isPaused = false;
+
+    // Mobile / Tool enhancements
+    let currentToolMode = 'fill'; // 'fill' or 'cross'
+    let undoStack = [];
+
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentLevelIndex = index;
+            initGame();
+        });
+    });
+
+    // Mode Toggle Button Logic
+    modeToggleBtn.addEventListener('click', () => {
+        if (currentToolMode === 'fill') {
+            currentToolMode = 'cross';
+            modeToggleBtn.innerHTML = '❌ Cross';
+            modeToggleBtn.style.color = 'var(--error-color)';
+            modeToggleBtn.style.borderColor = 'var(--error-color)';
+        } else {
+            currentToolMode = 'fill';
+            modeToggleBtn.innerHTML = '⬛ Fill';
+            modeToggleBtn.style.color = '#64748b';
+            modeToggleBtn.style.borderColor = 'var(--border-color)';
+        }
+    });
+
+    // Undo Button Logic
+    undoBtn.addEventListener('click', () => {
+        if (!gameActive || isPaused || undoStack.length === 0) return;
+        const lastMove = undoStack.pop();
+        playerGrid[lastMove.r][lastMove.c] = lastMove.prevVal;
+        updateCellUI(lastMove.r, lastMove.c);
+    });
+
+    // Pause/Resume Logic
+    timerBtn.addEventListener('click', () => {
+        if (!gameActive) return;
+
+        isPaused = !isPaused;
+        if (isPaused) {
+            boardWrapper.classList.add('paused');
+            timerBtn.innerHTML = `▶️ <span>Paused</span>`;
+        } else {
+            boardWrapper.classList.remove('paused');
+            updateTimerDisplay();
+        }
+    });
+
+    function initGame() {
+        const activeTab = document.querySelector('.tab.active');
+        size = parseInt(activeTab.dataset.value);
+        const levelName = activeTab.innerText.toLowerCase();
+
+        // Update container class/ID corresponding to active game mode difficulty
+        gameContainer.className = `game-container difficulty-${size} mode-${levelName}`;
+
+        hintsUsed = 0;
+        secondsElapsed = 0;
+        gameActive = true;
+        isPaused = false;
+        undoStack = [];
+        boardWrapper.classList.remove('paused');
+        updateTimerDisplay();
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if(gameActive && !isPaused) {
+                secondsElapsed++;
+                updateTimerDisplay();
+            }
+        }, 1000);
+
+        generateSolution();
+        renderClues();
+        renderGrid();
+    }
+
+    function resetGame() {
+        if (!solution.length) return;
+
+        undoStack = [];
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                playerGrid[r][c] = 0;
+                updateCellUI(r, c);
+            }
+        }
+
+        hintsUsed = 0;
+        secondsElapsed = 0;
+        gameActive = true;
+        isPaused = false;
+        boardWrapper.classList.remove('paused');
+        updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+        const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const s = String(secondsElapsed % 60).padStart(2, '0');
+        timerBtn.innerHTML = `⏱️ <span id="timerText">${m}:${s}</span>`;
+    }
+
+    function generateSolution() {
+        solution = [];
+        playerGrid = [];
+        for (let r = 0; r < size; r++) {
+            let row = [];
+            let playerRow = [];
+            for (let c = 0; c < size; c++) {
+                row.push(Math.random() > 0.45 ? 1 : 0);
+                playerRow.push(0);
+            }
+            solution.push(row);
+            playerGrid.push(playerRow);
+        }
+    }
+
+    function getClues(line) {
+        const clues = [];
+        let count = 0;
+        for (let val of line) {
+            if (val === 1) {
+                count++;
+            } else if (count > 0) {
+                clues.push(count);
+                count = 0;
+            }
+        }
+        if (count > 0) clues.push(count);
+        return clues.length > 0 ? clues : [0];
+    }
+
+    function renderClues() {
+            rowCluesEl.innerHTML = '';
+            colCluesEl.innerHTML = '';
+
+            const mid = Math.floor(size / 2);
+
+            for (let r = 0; r < size; r++) {
+                const clues = getClues(solution[r]);
+                const clueDiv = document.createElement('div');
+                clueDiv.className = 'row-clue';
+                // Only add the border if size is greater than 5 (medium/hard)
+                if (size > 5 && (r + 1) % mid === 0 && r !== size - 1) {
+                    clueDiv.style.borderBottom = 'var(--thick-border)';
+                }
+                clueDiv.innerHTML = clues.map(c => `<span>${c}</span>`).join('');
+                rowCluesEl.appendChild(clueDiv);
+            }
+
+            for (let c = 0; c < size; c++) {
+                const colData = [];
+                for (let r = 0; r < size; r++) colData.push(solution[r][c]);
+                const clues = getClues(colData);
+                const clueDiv = document.createElement('div');
+                clueDiv.className = 'col-clue';
+                // Only add the border if size is greater than 5 (medium/hard)
+                if (size > 5 && (c + 1) % mid === 0 && c !== size - 1) {
+                    clueDiv.style.borderRight = 'var(--thick-border)';
+                }
+                clueDiv.innerHTML = clues.map(c => `<span>${c}</span>`).join('');
+                colCluesEl.appendChild(clueDiv);
+            }
+        }
+
+        function renderGrid() {
+            gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            const mid = Math.floor(size / 2);
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    // Only add the border if size is greater than 5 (medium/hard)
+                    if (size > 5) {
+                        if ((c + 1) % mid === 0 && c !== size - 1) cell.classList.add('border-right');
+                        if ((r + 1) % mid === 0 && r !== size - 1) cell.classList.add('border-bottom');
+                    }
+
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+
+                    cell.addEventListener('mousedown', (e) => handleInteractionStart(e, r, c));
+                    cell.addEventListener('mouseenter', (e) => handleInteractionEnter(r, c));
+                    cell.addEventListener('contextmenu', (e) => e.preventDefault());
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+    function updateCellUI(r, c) {
+        const index = r * size + c;
+        const cell = gridEl.children[index];
+        if (!cell) return;
+        cell.classList.remove('filled', 'crossed');
+        if (playerGrid[r][c] === 1) cell.classList.add('filled');
+        if (playerGrid[r][c] === 2) cell.classList.add('crossed');
+    }
+
+    function handleInteractionStart(e, r, c) {
+        if (!gameActive || isPaused) return;
+        e.preventDefault();
+        isDragging = true;
+
+        const prevVal = playerGrid[r][c];
+        let targetState;
+
+        if (e.button === 2) {
+            // Right click always toggles cross
+            targetState = prevVal === 2 ? 0 : 2;
+        } else {
+            // Left click or touch uses toolbar mode
+            if (currentToolMode === 'fill') {
+                targetState = prevVal === 1 ? 0 : 1;
+            } else {
+                targetState = prevVal === 2 ? 0 : 2;
+            }
+        }
+
+        dragTargetState = targetState;
+        applyAction(r, c, dragTargetState);
+    }
+
+    function handleInteractionEnter(r, c) {
+        if (!isDragging || !gameActive || isPaused) return;
+        applyAction(r, c, dragTargetState);
+    }
+
+    function applyAction(r, c, newState) {
+        const prevVal = playerGrid[r][c];
+        if (prevVal === newState) return;
+
+        undoStack.push({ r, c, prevVal, newVal: newState });
+        playerGrid[r][c] = newState;
+        updateCellUI(r, c);
+        checkWin();
+    }
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        dragTargetState = null;
+    });
+
+    hintBtn.addEventListener('click', () => {
+        if (!gameActive || isPaused) return;
+
+        const incorrectCells = [];
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (solution[r][c] === 1 && playerGrid[r][c] !== 1) {
+                    incorrectCells.push({r, c, correctState: 1});
+                } else if (solution[r][c] === 0 && playerGrid[r][c] === 1) {
+                    incorrectCells.push({r, c, correctState: 2});
+                }
+            }
+        }
+
+        if (incorrectCells.length > 0) {
+            const randomCell = incorrectCells[Math.floor(Math.random() * incorrectCells.length)];
+            const prevVal = playerGrid[randomCell.r][randomCell.c];
+            undoStack.push({ r: randomCell.r, c: randomCell.c, prevVal, newVal: randomCell.correctState });
+            playerGrid[randomCell.r][randomCell.c] = randomCell.correctState;
+            updateCellUI(randomCell.r, randomCell.c);
+            hintsUsed++;
+            checkWin();
+        }
+    });
+
+    function checkWin() {
+        let isWin = true;
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (solution[r][c] === 1 && playerGrid[r][c] !== 1) isWin = false;
+                if (solution[r][c] === 0 && playerGrid[r][c] === 1) isWin = false;
+            }
+        }
+
+        if (isWin && gameActive) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            setTimeout(() => {
+                const timeString = document.getElementById('timerText').innerText;
+                alert(`Puzzle Solved! You completed the ${size}x${size} grid in ${timeString} using ${hintsUsed} hint(s).`);
+                saveHighScore(timeString);
+            }, 100);
+        }
+    }
+
+    // Local Storage Data Management
+    function loadHighScores() {
+        const scores = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+        highScoresBody.innerHTML = '';
+
+        if (scores.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="3" style="color: #94a3b8; font-style: italic;">No scores yet. Play a game!</td>`;
+            highScoresBody.appendChild(row);
+            return;
+        }
+
+        scores.forEach(score => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${score.levelName} (${score.size}x${score.size})</td>
+                <td>${score.timeStr}</td>
+                <td>${score.hints}</td>
+            `;
+            highScoresBody.appendChild(row);
+        });
+    }
+
+    function saveHighScore(timeStr) {
+        const scores = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+        const activeTab = document.querySelector('.tab.active');
+        const levelName = activeTab.innerText;
+
+        const newScore = {
+            levelName: levelName,
+            size: size,
+            timeStr: timeStr,
+            timeVal: secondsElapsed,
+            hints: hintsUsed
+        };
+
+        scores.push(newScore);
+        scores.sort((a, b) => {
+            if (a.timeVal !== b.timeVal) return a.timeVal - b.timeVal;
+            return a.hints - b.hints;
+        });
+
+        const topScoresArr = scores.slice(0, 10);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(topScoresArr));
+        loadHighScores();
+    }
+
+    newGameBtn.addEventListener('click', initGame);
+    resetBtn.addEventListener('click', resetGame);
+
+    statsBtn.addEventListener('click', () => {
+        loadHighScores();
+        statsModal.style.display = 'flex';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        statsModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === statsModal) {
+            statsModal.style.display = 'none';
+        }
+    });
+
+    // Initial load
+    loadHighScores();
+    initGame();
+</script>
+</body>
+</html>

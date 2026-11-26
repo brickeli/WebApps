@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="./shared/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridWork — Pure Logic Grid Puzzle Games | Free No-Guess Sudoku &amp; Nonograms</title>
+        <meta name="description" content="Play GridWork, a free, responsive suite of pure-logic grid puzzle web apps including no-guess Sudoku and Nonograms with Pixel Art mode, keyboard navigation, and zero trial-and-error." />
+        <meta name="keywords" content="GridWork, pure logic puzzles, no-guess Sudoku, no-guess Nonograms, Picross, grid puzzle games, free browser puzzles, responsive logic games, mobile web games" />
+
+        <meta property="og:site_name" content="GridWork" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://brickeli.github.io/WebApps/GridWork/" />
+        <meta property="og:title" content="GridWork — Pure Logic Grid Puzzle Games" />
+        <meta property="og:description" content="A responsive suite of deterministic, zero-guessing browser puzzles—featuring unique-solution Sudoku and line-verified Nonograms with Pixel Art challenges." />
+        <meta property="og:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-gridwork.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="GridWork pure-logic browser puzzle suite featuring Sudoku and Nonograms in high-contrast dark and light themes" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="GridWork — Pure Logic Grid Puzzle Games" />
+        <meta name="twitter:description" content="A responsive suite of deterministic, zero-guessing browser puzzles—featuring unique-solution Sudoku and line-verified Nonograms with Pixel Art challenges." />
+        <meta name="twitter:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-gridwork.png" />
+        <meta name="twitter:image:alt" content="GridWork pure-logic browser puzzle suite featuring Sudoku and Nonograms in high-contrast dark and light themes" />
+
+    <script>
+        (function() {
+            const theme = localStorage.getItem('gridwork_theme') || localStorage.getItem('sudoku_theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="./shared/css/tokens.css">
+    <link rel="stylesheet" href="./shared/css/base.css">
+    <link rel="stylesheet" href="./css/hub.css">
+</head>
+<body>
+    <header class="status-bar hub-header">
+        <div class="brand-stack">
+            <h1>GRIDWORK</h1>
+            <span class="app-subtitle">PURE LOGIC PUZZLES</span>
+        </div>
+        <button id="theme-menu-btn" class="menu-trigger-btn" aria-label="Toggle color theme">
+            <svg class="icon" id="theme-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            <span id="theme-status" class="toggle-status light-pill">LIGHT</span>
+        </button>
+    </header>
+
+    <main class="hub-main">
+        <p class="hub-intro">
+            Zero-guess browser puzzles engineered with deterministic deduction and keyboard-first accessibility.
+        </p>
+
+        <section class="game-grid" aria-label="Available Logic Games">
+            <!-- Sudoku Card -->
+            <a href="./sudoku/" class="game-card">
+                <div class="card-top">
+                    <div class="card-body">
+                        <h2>Sudoku</h2>
+                        <p>9×9 number placement with unique-solution carving, Auto Notes, and five human-graded logic tiers.</p>
+                    </div>
+                    <div class="card-preview sudoku-preview" aria-hidden="true">
+                        <span>9</span><span></span><span>4</span>
+                        <span></span><span>5</span><span></span>
+                        <span>2</span><span></span><span>8</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                  <span class="card-stat-pill" id="sudoku-stat-pill">0 Solved</span>
+                    <span class="card-meta">5 Difficulties • Notes Mode</span>
+                    <span class="play-cta">
+                        Play
+                        <svg class="icon" style="margin:0 0 0 4px;" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </span>
+                </div>
+            </a>
+
+            <!-- Nonograms Card -->
+            <a href="./nonograms/" class="game-card">
+                <div class="card-top">
+                    <div class="card-body">
+                        <h2>Nonograms</h2>
+                        <p>Line-deduction picture grids verified for 100% pure-logic solvability with drag and keyboard controls.</p>
+                    </div>
+                    <div class="card-preview nonogram-preview" aria-hidden="true">
+                        <span class="fill"></span><span></span><span class="fill"></span>
+                        <span class="fill"></span><span class="fill"></span><span class="fill"></span>
+                        <span></span><span class="fill"></span><span></span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="card-stat-pill" id="nonogram-stat-pill">0 Solved</span>
+                    <span class="card-meta">5×5 • 8×8 • 12×12</span>
+                    <span class="play-cta">
+                        Play
+                        <svg class="icon" style="margin:0 0 0 4px;" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </span>
+                </div>
+            </a>
+        </section>
+    </main>
+
+    <footer class="hub-footer">
+        <span>Built by <a href="https://hennessyshane.com/" target="_blank" rel="noopener">Brickeli</a></span>
+    </footer>
+
+    <script type="module" src="./js/hub.js"></script>
+</body>
+</html>

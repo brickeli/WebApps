@@ -1,0 +1,161 @@
+.hub-header {
+    margin-top: 8px;
+    margin-bottom: 14px;
+}
+
+.hub-main {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.hub-intro {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.game-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.game-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px;
+    text-decoration: none;
+    color: var(--text-color);
+    box-shadow: 0 6px 14px -2px var(--shadow-color);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: 0 10px 20px -4px var(--shadow-color);
+}
+
+.game-card:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+/* Mini 3x3 Visual Badges */
+.card-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--border-thick);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-color);
+}
+
+.card-preview span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.card-preview span:nth-child(3n) { border-right: none; }
+.card-preview span:nth-child(n+7) { border-bottom: none; }
+
+.nonogram-preview span.fill {
+    background-color: var(--primary);
+}
+
+.card-stat-pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    background-color: var(--cell-highlight);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.card-body {
+    margin: 0 15px 0 0;
+    flex: 1;
+}
+
+.card-body h2 {
+    margin: 0 0 4px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.card-body p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--text-color);
+    opacity: 0.82;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.card-meta {
+    opacity: 0.65;
+}
+
+.play-cta {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.hub-footer {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    padding: 20px 0 10px;
+    font-size: 0.78rem;
+    color: var(--text-color);
+    opacity: 0.65;
+}
+
+.hub-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.hub-footer a:hover {
+    text-decoration: underline;
+}

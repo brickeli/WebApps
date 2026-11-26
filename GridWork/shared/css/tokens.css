@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+/* Light Theme Tokens */
+:root {
+    --main-font: 'Plus Jakarta Sans', sans-serif;
+    --bg-color: #f8fafc;
+    --text-color: #0f172a;
+    --white: #ffffff;
+    --border-color: #e2e8f0;
+    --border-thick: #0f172a;
+    --primary: #4f46e5;
+    --cell-selected: #e0e7ff;
+    --cell-highlight: #f1f5f9;
+    --error: #dc2626;
+    --shadow-color: rgba(15, 23, 42, 0.1);
+
+    /* Game-Specific Cell Accents */
+    --cell-given-text: #0f172a;
+    --cell-user-text: #2563eb;
+    --cell-hint-text: #059669;
+    --cell-filled: #0f172a;
+    --cell-hint-fill: #059669;
+
+    /* Arcade Hint Button Tokens */
+    --hint-bg-start: #e0e7ff;
+    --hint-bg-end: #c7d2fe;
+    --hint-text: #3730a3;
+    --hint-border: #818cf8;
+    --hint-hover-bg: #4f46e5;
+    --hint-hover-text: #ffffff;
+    --hint-shadow: rgba(79, 70, 229, 0.25);
+
+    /* Arcade Undo Button Tokens */
+    --undo-bg-start: #fef3c7;
+    --undo-bg-end: #fde68a;
+    --undo-text: #b45309;
+    --undo-border: #f59e0b;
+    --undo-hover-bg: #d97706;
+    --undo-hover-text: #ffffff;
+    --undo-shadow: rgba(217, 119, 6, 0.25);
+}
+
+/* Dark Theme Tokens */
+[data-theme="dark"] {
+    --bg-color: #0f172a;
+    --text-color: #f8fafc;
+    --white: #1a2333;
+    --border-color: #334155;
+    --border-thick: #94a3b8;
+    --primary: #818cf8;
+    --cell-selected: #312e81;
+    --cell-highlight: #1e293b;
+    --error: #fca5a5;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+
+    /* Game-Specific Cell Accents */
+    --cell-given-text: #f8fafc;
+    --cell-user-text: #60a5fa;
+    --cell-hint-text: #34d399;
+    --cell-filled: #f8fafc;
+    --cell-hint-fill: #34d399;
+
+    /* Arcade Hint Button Tokens */
+    --hint-bg-start: #312e81;
+    --hint-bg-end: #1e1b4b;
+    --hint-text: #e0e7ff;
+    --hint-border: #6366f1;
+    --hint-hover-bg: #6366f1;
+    --hint-hover-text: #ffffff;
+    --hint-shadow: rgba(99, 102, 241, 0.35);
+
+    /* Arcade Undo Button Tokens */
+    --undo-bg-start: rgba(245, 158, 11, 0.15);
+    --undo-bg-end: rgba(217, 119, 6, 0.25);
+    --undo-text: #fbbf24;
+    --undo-border: #f59e0b;
+    --undo-hover-bg: #f59e0b;
+    --undo-hover-text: #0f172a;
+    --undo-shadow: rgba(245, 158, 11, 0.35);
+}
