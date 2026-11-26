@@ -236,10 +236,6 @@ label.sr-only {
 
 
 @media (max-width: 450px) {
-    body {
-        padding: 8px 4px;
-    }
-
     .board-wrapper {
         padding: 8px 4px 6px 2px;
         border-radius: 10px;
