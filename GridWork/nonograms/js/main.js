@@ -1,5 +1,4 @@
 // nonograms/js/main.js
-import { generatePureLogicPuzzle } from './solver.js';
 import * as UI from './ui.js';
 import { initTheme } from '../../shared/js/theme.js';
 import { createGameStorage, formatTime } from '../../shared/js/storage.js';
@@ -44,14 +43,73 @@ const state = {
     crossMode: false
 };
 
+const NONOGRAMS_HOW_TO = `
+    <h3>Goal</h3>
+    <p>Fill in cells to reveal a hidden grid pattern using the number clues on the top and left edges. Every puzzle is 100% solvable by logic—no guessing required.</p>
+    <h3>Clues</h3>
+    <ul>
+        <li>Each number shows a contiguous run of filled cells in that row or column, in order.</li>
+        <li>Separate runs must have at least <strong>one empty cell (×)</strong> between them.</li>
+        <li>A <strong>0</strong> clue means the entire line is empty.</li>
+    </ul>
+    <h3>Pixel Mode</h3>
+    <ul>
+        <li>Uncover enough of the picture to recognize the object, then type its name into the guess bar to solve the puzzle.</li>
+    </ul>
+    <h3>Controls &amp; Shortcuts</h3>
+    <ul>
+        <li><strong>Tap / Click</strong> to fill; <strong>Right-Click</strong> or toggle <strong>Cross Mode</strong> to mark known empty cells (<kbd>×</kbd>).</li>
+        <li><kbd>Arrows</kbd> move focus, <kbd>F</kbd> fill, <kbd>X</kbd> cross, <kbd>M</kbd> toggle mode, <kbd>Z</kbd> undo, <kbd>H</kbd> hint.</li>
+    </ul>
+`;
+
 const shell = initShell({
     storage,
+    title: 'NONOGRAMS',
+    difficulties: [
+        { label: 'Easy', dataset: { mode: 'standard', size: 5 } },
+        { label: 'Medium', dataset: { mode: 'standard', size: 8 } },
+        { label: 'Hard', dataset: { mode: 'standard', size: 12 } },
+        { label: 'Pixel', dataset: { mode: 'pixel-art', size: 10 } }
+    ],
+    modeToggle: {
+        icon: '<rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="none"/>',
+        label: 'Fill Mode:',
+        badgeText: 'ON',
+        badgeState: 'on'
+    },
+    howToHtml: NONOGRAMS_HOW_TO,
+    onReset: resetPuzzle,
+    onNewGame: initGame,
     onStatsClose: () => setFocus(state.focused.r, state.focused.c, true),
+    onHowToClose: () => setFocus(state.focused.r, state.focused.c, true),
     onWinClose: () => {
         initGame();
         setFocus(0, 0, true);
     }
 });
+
+const diffBtns = document.querySelectorAll('.diff-btn');
+diffBtns.forEach(btn => btn.addEventListener('click', () => {
+    diffBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode || 'standard';
+    state.size = Number(btn.dataset.size) || 10;
+    state.difficultyLabel = btn.dataset.label;
+    initGame();
+}));
+
+document.getElementById('mode-toggle')?.addEventListener('click', () => {
+    state.crossMode = !state.crossMode;
+    UI.renderModeUI(state.crossMode);
+});
+
+[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
+    el?.addEventListener('click', togglePause);
+});
+
+document.getElementById('undo-btn')?.addEventListener('click', performUndo);
+document.getElementById('hint-btn')?.addEventListener('click', performHint);
 
 function setFocus(r, c, moveDom = true) {
     const next = {
@@ -290,29 +348,7 @@ UI.dom.boardEl.addEventListener('touchmove', (e) => {
 );
 
 // --- Controls & Drawer ---
-initTheme(UI.dom.themeMenuBtn);
-
-UI.dom.diffBtns.forEach(btn => btn.addEventListener('click', () => {
-    UI.setActiveDifficultyBtn(btn);
-    state.mode = btn.dataset.mode || 'standard';
-    state.size = Number(btn.dataset.size) || 10;
-    state.difficultyLabel = btn.dataset.label;
-    initGame();
-}));
-
-UI.dom.modeToggleBtn.addEventListener('click', () => {
-    state.crossMode = !state.crossMode;
-    UI.renderModeUI(state.crossMode);
-});
-
-[UI.dom.timerBtn, UI.dom.pauseOverlay].forEach(el => el.addEventListener('click', togglePause));
-UI.dom.undoBtn.addEventListener('click', performUndo);
-UI.dom.hintBtn.addEventListener('click', performHint);
-
-UI.dom.resetMenuBtn.addEventListener('click', () => { shell.setSidePanelOpen(false); resetPuzzle(); });
-UI.dom.newgameMenuBtn.addEventListener('click', () => { shell.setSidePanelOpen(false); initGame(); });
-UI.dom.statsMenuBtn.addEventListener('click', () => { shell.setSidePanelOpen(false); shell.showStatsModal(); });
-
+initTheme(document.getElementById('theme-menu-btn'));
 UI.dom.guessBar?.addEventListener('submit', handlePixelGuessSubmit);
 
 // --- Keyboard Navigation & Shortcuts ---
@@ -324,7 +360,7 @@ document.addEventListener('keydown', (e) => {
         shell.handleGlobalEscape();
         return;
     }
-    if (shell.isStatsModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
+    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
 
     const key = e.key.toLowerCase();
     const noMod = !e.ctrlKey && !e.metaKey;

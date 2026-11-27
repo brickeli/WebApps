@@ -41,13 +41,70 @@ const state = {
     timerId: null
 };
 
+const SUDOKU_HOW_TO = `
+    <h3>Goal</h3>
+    <p>Fill the 9×9 grid so every row, column, and 3×3 box contains the digits <strong>1 through 9</strong> without repeats.</p>
+    <h3>Tools</h3>
+    <ul>
+        <li><strong>Notes Mode:</strong> Pencil in small candidate digits inside empty cells to track possibilities.</li>
+        <li><strong>Auto Notes:</strong> Automatically populates valid candidates for all open cells.</li>
+        <li><strong>Undo &amp; Hint:</strong> Step backward through moves or reveal a single verified cell.</li>
+    </ul>
+    <h3>Controls &amp; Shortcuts</h3>
+    <ul>
+        <li>Select a cell and tap a number on the keypad—or use <kbd>Arrows</kbd> and keys <kbd>1</kbd>–<kbd>9</kbd>.</li>
+        <li><kbd>N</kbd> toggle Notes, <kbd>Backspace</kbd> clear cell, <kbd>Z</kbd> undo, <kbd>H</kbd> hint.</li>
+    </ul>
+`;
+
 const shell = initShell({
     storage,
-    onStatsClose: () => {
-        if (state.selectedCell !== null) UI.dom.boardEl.children[state.selectedCell]?.focus();
+    title: 'SUDOKU',
+    difficulties: [
+        { label: 'Easy', dataset: { clues: 38 } },
+        { label: 'Medium', dataset: { clues: 32 } },
+        { label: 'Hard', dataset: { clues: 27 } },
+        { label: 'Expert', dataset: { clues: 23 } },
+        { label: 'Master', dataset: { clues: 19 } }
+    ],
+    modeToggle: {
+        icon: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+        label: 'Notes Mode:',
+        badgeText: 'OFF',
+        badgeState: 'off'
     },
-    onWinClose: () => newGame()
+    howToHtml: SUDOKU_HOW_TO,
+    extraMenuItems: [{
+        id: 'autonotes-menu-btn',
+        label: 'Auto Notes',
+        icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+        badgeId: 'autonotes-status',
+        badgeText: 'OFF'
+    }],
+    onReset: resetPuzzle,
+    onNewGame: newGame
 });
+
+const diffBtns = document.querySelectorAll('.diff-btn');
+diffBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        diffBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.currentClues = Number(btn.dataset.clues);
+        state.currentDiffLabel = btn.dataset.label;
+        newGame();
+    });
+});
+
+document.getElementById('mode-toggle')?.addEventListener('click', toggleNotesMode);
+
+[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
+    el?.addEventListener('click', togglePause);
+});
+
+document.getElementById('undo-btn')?.addEventListener('click', undo);
+document.getElementById('hint-btn')?.addEventListener('click', provideHint);
+document.getElementById('autonotes-menu-btn')?.addEventListener('click', toggleAutoNotes);
 
 function triggerRender() {
     UI.renderBoard(state.board, state.solution, state.givens, state.hints, state.notes, state.selectedCell);
@@ -337,37 +394,18 @@ function newGame() {
 }
 
 // --- Event Wiring ---
-initTheme(UI.dom.themeMenuBtn);
-
-UI.dom.diffBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        UI.setActiveDifficultyBtn(btn);
-        state.currentClues = Number(btn.dataset.clues);
-        state.currentDiffLabel = btn.dataset.label;
-        newGame();
-    });
-});
+initTheme(document.getElementById('theme-menu-btn'));
 
 UI.dom.keypadBtns.forEach(btn => {
     btn.addEventListener('click', () => inputNumber(Number(btn.dataset.num)));
 });
-
-UI.dom.notesBtn?.addEventListener('click', toggleNotesMode);
-[UI.dom.timerBtn, UI.dom.pauseOverlay].forEach(el => el?.addEventListener('click', togglePause));
-UI.dom.undoBtn?.addEventListener('click', undo);
-UI.dom.hintBtn?.addEventListener('click', provideHint);
-
-UI.dom.autoNotesMenuBtn?.addEventListener('click', toggleAutoNotes);
-UI.dom.newgameMenuBtn?.addEventListener('click', () => { shell.setSidePanelOpen(false); newGame(); });
-UI.dom.resetMenuBtn?.addEventListener('click', () => { shell.setSidePanelOpen(false); resetPuzzle(); });
-UI.dom.statsMenuBtn?.addEventListener('click', () => { shell.setSidePanelOpen(false); shell.showStatsModal(); });
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         shell.handleGlobalEscape();
         return;
     }
-    if (shell.isStatsModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
+    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();

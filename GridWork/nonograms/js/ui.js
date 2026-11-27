@@ -5,50 +5,47 @@ export const dom = {
     boardEl: document.getElementById('board'),
     rowCluesEl: document.getElementById('row-clues'),
     colCluesEl: document.getElementById('col-clues'),
-    timerBtn: document.getElementById('timer-btn'),
-    timerText: document.getElementById('timer-text'),
-    pauseOverlay: document.getElementById('pause-overlay'),
-    diffBtns: document.querySelectorAll('.diff-btn'),
-    modeToggleBtn: document.getElementById('mode-toggle'),
-    modeIcon: document.getElementById('mode-icon'),
-    modeLabel: document.getElementById('mode-label'),
-    modeBadge: document.getElementById('mode-badge'),
-    themeMenuBtn: document.getElementById('theme-menu-btn'),
-    resetMenuBtn: document.getElementById('reset-menu-btn'),
-    newgameMenuBtn: document.getElementById('newgame-menu-btn'),
-    statsMenuBtn: document.getElementById('stats-menu-btn'),
-    hintBtn: document.getElementById('hint-btn'),
-    undoBtn: document.getElementById('undo-btn'),
     guessBar: document.getElementById('pixel-guess-bar'),
     guessInput: document.getElementById('pixel-guess-input'),
     guessFeedback: document.getElementById('pixel-guess-feedback')
 };
 
-export function setActiveDifficultyBtn(activeBtn) {
-    dom.diffBtns.forEach(btn => btn.classList.remove('active'));
-    activeBtn.classList.add('active');
-}
-
 export function renderModeUI(crossMode) {
-    dom.modeToggleBtn.classList.toggle('cross-active', crossMode);
-    dom.modeToggleBtn.setAttribute('aria-pressed', String(crossMode));
+    const modeToggleBtn = document.getElementById('mode-toggle');
+    if (!modeToggleBtn) return;
+
+    const modeIcon = document.getElementById('mode-icon');
+    const modeLabel = document.getElementById('mode-label');
+    const modeBadge = document.getElementById('mode-badge');
+
+    modeToggleBtn.classList.toggle('cross-active', crossMode);
+    modeToggleBtn.setAttribute('aria-pressed', String(crossMode));
+
     if (crossMode) {
-        dom.modeIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
-        dom.modeLabel.textContent = 'Cross Mode:';
-        dom.modeBadge.textContent = 'ON';
-        dom.modeBadge.className = 'user-notes toggle-status on';
+        if (modeIcon) modeIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+        if (modeLabel) modeLabel.textContent = 'Cross Mode:';
     } else {
-        dom.modeIcon.innerHTML = '<rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="none"/>';
-        dom.modeLabel.textContent = 'Fill Mode:';
-        dom.modeBadge.textContent = 'ON';
-        dom.modeBadge.className = 'user-notes toggle-status on';
+        if (modeIcon) modeIcon.innerHTML = '<rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="none"/>';
+        if (modeLabel) modeLabel.textContent = 'Fill Mode:';
+    }
+
+    if (modeBadge) {
+        modeBadge.textContent = 'ON';
+        modeBadge.className = 'user-notes toggle-status on';
     }
 }
 
 export function renderTimerUI(timeStr, isPaused) {
-    dom.timerBtn.classList.toggle('paused', isPaused);
-    dom.pauseOverlay.style.display = isPaused ? 'flex' : 'none';
-    dom.timerText.textContent = isPaused ? 'Paused' : timeStr;
+    const timerBtn = document.getElementById('timer-btn');
+    const timerText = document.getElementById('timer-text');
+    const pauseOverlay = document.getElementById('pause-overlay');
+
+    timerBtn?.classList.toggle('paused', isPaused);
+    if (pauseOverlay) {
+        pauseOverlay.classList.toggle('visible', isPaused);
+        pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+    }
+    if (timerText) timerText.textContent = isPaused ? 'Paused' : timeStr;
 }
 
 export function renderClues(solution) {

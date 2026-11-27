@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="../shared/assets/favicon.svg">
+    <title>GridWork — Pure Logic KenKen | Free No-Guess Math &amp; Logic Grid Puzzle</title>
+    <meta name="description" content="Play GridWork KenKen, a free, responsive arithmetic logic puzzle engineered with unique-solution cage generation, candidate notes, keyboard navigation, and zero guessing." />
+    <meta name="keywords" content="GridWork, KenKen, Calcudoku, Mathdoku, pure logic KenKen, no-guess KenKen, free online KenKen, responsive logic puzzle" />
+
+    <meta property="og:site_name" content="GridWork" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://brickeli.github.io/WebApps/GridWork/kenken/" />
+    <meta property="og:title" content="GridWork — Pure Logic KenKen" />
+    <meta property="og:description" content="No-guess KenKen engineered with unique-solution cage verification, pencil notes, and high-contrast dark and light themes." />
+    <meta property="og:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-kenken.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-kenken.png" />
+
+    <script>
+        (function () {
+            const theme = localStorage.getItem('gridwork_theme') || localStorage.getItem('sudoku_theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../shared/css/tokens.css" />
+    <link rel="stylesheet" href="../shared/css/base.css" />
+    <link rel="stylesheet" href="css/kenken.css" />
+</head>
+<body>
+    <div class="board-wrapper">
+        <div id="board" class="game-board board-frame" role="grid" aria-label="KenKen grid"></div>
+    </div>
+
+    <div id="keypad" class="keypad" aria-label="Number keypad"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

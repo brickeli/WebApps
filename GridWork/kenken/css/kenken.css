@@ -1,0 +1,119 @@
+/* kenken/css/kenken.css */
+.game-board {
+    --grid-size: 4;
+    --cell-size: calc(100cqw / var(--grid-size));
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
+    grid-template-rows: repeat(var(--grid-size), 1fr);
+    aspect-ratio: 1 / 1;
+    background-color: var(--white);
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+.cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: calc(var(--cell-size) * 0.22);
+    background-color: var(--bg-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: clamp(0.95rem, calc(var(--cell-size) * 0.48), 2.2rem);
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.cell:hover {
+    background-color: var(--cell-highlight);
+}
+
+.cell.selected {
+    background-color: var(--cell-selected) !important;
+}
+
+.cell.peer-highlight {
+    background-color: var(--white);
+}
+
+.cell.user-input {
+    color: var(--cell-user-text);
+}
+
+.cell.hint-cell {
+    color: var(--cell-hint-text);
+}
+
+/* Thick Cage Boundaries */
+.cell.cage-right {
+    border-right: 2.5px solid var(--border-thick);
+}
+
+.cell.cage-bottom {
+    border-bottom: 2.5px solid var(--border-thick);
+}
+
+/* Top-Left Cage Arithmetic Clue */
+.cage-clue {
+    position: absolute;
+    top: calc(var(--cell-size) * 0.06);
+    left: calc(var(--cell-size) * 0.08);
+    font-size: clamp(0.6rem, calc(5.2rem / var(--grid-size)), 0.78rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+    pointer-events: none;
+}
+
+/* Rule Violation / Math Mismatch Feedback */
+.cell.conflict {
+    color: var(--error) !important;
+    background-color: color-mix(in srgb, var(--error) 10%, var(--bg-color));
+}
+
+.cell.conflict::after {
+    content: '!';
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.68rem;
+    font-weight: 900;
+    color: var(--error);
+    pointer-events: none;
+}
+
+/* Candidate Notes Grid */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+    padding: calc(var(--cell-size) * 0.24) calc(var(--cell-size) * 0.04) calc(var(--cell-size) * 0.04);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.note-item {
+    font-size: clamp(0.45rem, calc(var(--cell-size) * 0.18), 0.72rem);
+    font-weight: 600;
+    color: var(--text-color);
+    opacity: 0.72;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keypad.notes-active .keypad-btn {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.keypad.notes-active .keypad-btn:not([data-num="0"]) {
+    font-size: 0.78rem;
+}

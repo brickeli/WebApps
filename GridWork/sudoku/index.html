@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="../shared/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridWork — Pure Logic Sudoku | Free No-Guess 9×9 Puzzle</title>
+        <meta name="description" content="Play GridWork Sudoku, a free, responsive 9×9 logic puzzle engineered with unique-solution board carving, human-graded difficulty tiers, Auto Notes, and zero guessing." />
+        <meta name="keywords" content="GridWork, Sudoku, pure logic Sudoku, no-guess Sudoku, free online Sudoku, responsive Sudoku, 9x9 logic puzzle" />
+
+        <meta property="og:site_name" content="GridWork" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://brickeli.github.io/WebApps/GridWork/sudoku/" />
+        <meta property="og:title" content="GridWork — Pure Logic Sudoku" />
+        <meta property="og:description" content="No-guess 9×9 Sudoku engineered with unique-solution board carving, Auto Notes, and five human-graded difficulty tiers." />
+        <meta property="og:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-sudoku.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-sudoku.png" />
+        <meta name="twitter:image:alt" content="GridWork responsive 9x9 Sudoku board interface in high-contrast dark and light themes" />
+
+    <script>
+        (function() {
+            const theme = localStorage.getItem('gridwork_theme') || localStorage.getItem('sudoku_theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../shared/css/tokens.css">
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="css/sudoku.css">
+</head>
+<body>
+    <div class="board-wrapper board-frame">
+        <div class="game-board" id="board"></div>
+    </div>
+
+    <div class="keypad">
+        <button class="keypad-btn" id="key-1" data-num="1"><span class="key-num">1</span></button>
+        <button class="keypad-btn" id="key-2" data-num="2"><span class="key-num">2</span></button>
+        <button class="keypad-btn" id="key-3" data-num="3"><span class="key-num">3</span></button>
+        <button class="keypad-btn" id="key-4" data-num="4"><span class="key-num">4</span></button>
+        <button class="keypad-btn" id="key-5" data-num="5"><span class="key-num">5</span></button>
+        <button class="keypad-btn" id="key-6" data-num="6"><span class="key-num">6</span></button>
+        <button class="keypad-btn" id="key-7" data-num="7"><span class="key-num">7</span></button>
+        <button class="keypad-btn" id="key-8" data-num="8"><span class="key-num">8</span></button>
+        <button class="keypad-btn" id="key-9" data-num="9"><span class="key-num">9</span></button>
+        <button class="keypad-btn" data-num="0">Clear</button>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

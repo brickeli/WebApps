@@ -89,6 +89,29 @@
     background-color: var(--primary);
 }
 
+
+.hitori-preview span {
+    position: relative;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.hitori-preview span.shaded {
+    background-color: var(--cell-selected);
+    color: var(--text-color);
+}
+
+.hitori-preview span.circled::after {
+    content: '';
+    position: absolute;
+    inset: 12%;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    pointer-events: none;
+}
+
 .card-stat-pill {
     font-size: 0.72rem;
     font-weight: 700;

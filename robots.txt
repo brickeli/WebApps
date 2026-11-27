@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://brickeli.github.io/WebApps/GridWork/sitemap.xml
+Sitemap: https://brickeli.github.io/WebApps/Reactle/sitemap.xml

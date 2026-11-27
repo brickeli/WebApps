@@ -2,9 +2,7 @@
 .board-wrapper {
     background-color: var(--white);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
     padding: 10px 6px 8px 4px;
-    box-shadow: 0 10px 15px -3px var(--shadow-color);
 }
 
 .game-container {
@@ -44,11 +42,6 @@
     color: var(--text-color);
     border-right: 1px solid transparent;
     transition: opacity 0.2s ease;
-}
-
-.row-section {
-    display: flex;
-    width: 100%;
 }
 
 .row-clues {
@@ -169,8 +162,8 @@
 }
 
 label.sr-only {
-  margin: 0 auto;
-  font-weight: 700;
+    margin: 0 auto;
+    font-weight: 700;
 }
 
 .pixel-guess-bar[hidden] {
@@ -182,20 +175,20 @@ label.sr-only {
     min-height: 2.5rem;
     padding: 0.5rem 0.75rem;
     font: inherit;
-    color: var(--text-primary, inherit);
-    background: var(--surface-elevated, var(--surface));
-    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.16));
+    color: var(--text-color);
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pixel-guess-input:focus-visible {
-    outline: 2px solid var(--accent-color, #6366f1);
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
 
 .pixel-guess-input[aria-invalid="true"] {
-    border-color: var(--danger-color, #ef4444);
+    border-color: var(--error);
     animation: guess-shake 0.28s ease;
 }
 
@@ -204,8 +197,8 @@ label.sr-only {
     padding: 0.5rem 1rem;
     font: inherit;
     font-weight: 600;
-    color: var(--btn-primary-text, #ffffff);
-    background: var(--accent-color, #6366f1);
+    color: #ffffff;
+    background: var(--primary);
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -219,12 +212,12 @@ label.sr-only {
     width: 100%;
     min-height: 1.25rem;
     font-size: 0.85rem;
-    color: var(--danger-color, #ef4444);
+    color: var(--error);
     text-align: center;
 }
 
 .pixel-guess-feedback.prompt {
-    color: var(--accent-color, #6366f1);
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -233,7 +226,6 @@ label.sr-only {
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
 }
-
 
 @media (max-width: 450px) {
     .board-wrapper {

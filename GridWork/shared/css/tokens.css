@@ -30,14 +30,6 @@
     --hint-hover-text: #ffffff;
     --hint-shadow: rgba(79, 70, 229, 0.25);
 
-    /* Arcade Undo Button Tokens */
-    --undo-bg-start: #fef3c7;
-    --undo-bg-end: #fde68a;
-    --undo-text: #b45309;
-    --undo-border: #f59e0b;
-    --undo-hover-bg: #d97706;
-    --undo-hover-text: #ffffff;
-    --undo-shadow: rgba(217, 119, 6, 0.25);
 }
 
 /* Dark Theme Tokens */
@@ -69,12 +61,4 @@
     --hint-hover-text: #ffffff;
     --hint-shadow: rgba(99, 102, 241, 0.35);
 
-    /* Arcade Undo Button Tokens */
-    --undo-bg-start: rgba(245, 158, 11, 0.15);
-    --undo-bg-end: rgba(217, 119, 6, 0.25);
-    --undo-text: #fbbf24;
-    --undo-border: #f59e0b;
-    --undo-hover-bg: #f59e0b;
-    --undo-hover-text: #0f172a;
-    --undo-shadow: rgba(245, 158, 11, 0.35);
 }

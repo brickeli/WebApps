@@ -1,20 +1,8 @@
 // sudoku/js/ui.js
 export const dom = {
     boardEl: document.getElementById('board'),
-    timerBtn: document.getElementById('timer-btn'),
-    timerText: document.getElementById('timer-text'),
-    pauseOverlay: document.getElementById('pause-overlay'),
-    diffBtns: document.querySelectorAll('.diff-btn'),
     keypad: document.querySelector('.keypad'),
-    keypadBtns: document.querySelectorAll('.keypad-btn[data-num]'),
-    notesBtn: document.getElementById('mode-toggle'),
-    autoNotesMenuBtn: document.getElementById('auto-notes-menu-btn'),
-    themeMenuBtn: document.getElementById('theme-menu-btn'),
-    resetMenuBtn: document.getElementById('reset-menu-btn'),
-    newgameMenuBtn: document.getElementById('newgame-menu-btn'),
-    statsMenuBtn: document.getElementById('stats-menu-btn'),
-    hintBtn: document.getElementById('hint-btn'),
-    undoBtn: document.getElementById('undo-btn')
+    keypadBtns: document.querySelectorAll('.keypad-btn[data-num]')
 };
 
 export function initBoardUI(onSelectCell) {
@@ -30,24 +18,27 @@ export function initBoardUI(onSelectCell) {
     }
 }
 
-export function setActiveDifficultyBtn(activeBtn) {
-    dom.diffBtns.forEach(btn => btn.classList.remove('active'));
-    activeBtn.classList.add('active');
-}
-
 export function renderTimerUI(timeStr, isPaused) {
-    dom.timerBtn.classList.toggle('paused', isPaused);
-    dom.pauseOverlay.style.display = isPaused ? 'flex' : 'none';
-    if (dom.timerText) {
-        dom.timerText.textContent = isPaused ? 'Resume' : timeStr;
-    } else {
-        dom.timerBtn.textContent = isPaused ? 'Resume' : timeStr;
+    const timerBtn = document.getElementById('timer-btn');
+    const timerText = document.getElementById('timer-text');
+    const pauseOverlay = document.getElementById('pause-overlay');
+
+    timerBtn?.classList.toggle('paused', isPaused);
+    if (pauseOverlay) {
+        pauseOverlay.classList.toggle('visible', isPaused);
+        pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+    }
+    if (timerText) {
+        timerText.textContent = isPaused ? 'Resume' : timeStr;
+    } else if (timerBtn) {
+        timerBtn.textContent = isPaused ? 'Resume' : timeStr;
     }
 }
 
 export function renderNotesModeUI(isNotesMode) {
-    dom.notesBtn?.classList.toggle('notes-active', isNotesMode);
-    dom.notesBtn?.setAttribute('aria-pressed', String(isNotesMode));
+    const notesBtn = document.getElementById('mode-toggle');
+    notesBtn?.classList.toggle('notes-active', isNotesMode);
+    notesBtn?.setAttribute('aria-pressed', String(isNotesMode));
     dom.keypad?.classList.toggle('notes-active', isNotesMode);
 
     const badge = document.getElementById('mode-badge');
@@ -58,12 +49,13 @@ export function renderNotesModeUI(isNotesMode) {
 }
 
 export function updateAutoNotesMenuLabel(isEnabled) {
-    dom.autoNotesMenuBtn?.classList.toggle('active-toggle', isEnabled);
-    const status = document.getElementById('auto-notes-status');
-    if (status) {
-        status.textContent = isEnabled ? 'ON' : 'OFF';
-        status.className = `toggle-status ${isEnabled ? 'on' : 'off'}`;
-    }
+    const badge = document.getElementById('autonotes-status');
+    const btn = document.getElementById('autonotes-menu-btn');
+    if (!badge) return;
+
+    badge.textContent = isEnabled ? 'ON' : 'OFF';
+    badge.className = `toggle-status ${isEnabled ? 'on' : 'off'}`;
+    btn?.setAttribute('aria-pressed', String(isEnabled));
 }
 
 export function highlightCellPeers(index) {

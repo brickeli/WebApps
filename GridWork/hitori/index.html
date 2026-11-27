@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="../shared/assets/favicon.svg">
+    <title>GridWork — Pure Logic Hitori | Free No-Guess Number Shading Puzzle</title>
+    <meta name="description" content="Play GridWork Hitori, a free, responsive logic puzzle engineered with connectivity-verified generation, keyboard navigation, and zero trial-and-error guessing." />
+    <meta name="keywords" content="GridWork, Hitori, pure logic Hitori, no-guess Hitori, free online Hitori, Nikoli puzzle, responsive logic game" />
+
+    <meta property="og:site_name" content="GridWork" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://brickeli.github.io/WebApps/GridWork/hitori/" />
+    <meta property="og:title" content="GridWork — Pure Logic Hitori" />
+    <meta property="og:description" content="No-guess Hitori engineered with deterministic elimination, single-region connectivity checks, and high-contrast dark and light themes." />
+    <meta property="og:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-hitori.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-hitori.png" />
+
+    <script>
+        (function () {
+            const theme = localStorage.getItem('gridwork_theme') || localStorage.getItem('sudoku_theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../shared/css/tokens.css" />
+    <link rel="stylesheet" href="../shared/css/base.css" />
+    <link rel="stylesheet" href="css/hitori.css" />
+</head>
+<body>
+
+    <div class="board-wrapper board-frame">
+        <div id="board" class="hitori-board" role="grid" aria-label="Hitori grid"></div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

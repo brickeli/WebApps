@@ -1,18 +1,11 @@
-/* Sudoku 9x9 Board & Keypad Styles */
-.board-wrapper {
-    border-radius: 12px;
-}
-
+/* Sudoku 9x9 Board & Notes Styles */
 .game-board {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
     grid-template-rows: repeat(9, 1fr);
     aspect-ratio: 1 / 1;
     background-color: var(--white);
-    border: 3px solid var(--border-thick);
-    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 15px -3px var(--shadow-color);
 }
 
 .cell {
@@ -78,48 +71,6 @@
     justify-content: center;
 }
 
-/* 1–9 + Clear Keypad */
-.keypad {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    width: 100%;
-    max-width: 420px;
-    margin-bottom: 20px;
-}
-
-.keypad-btn {
-    background-color: var(--white);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    height: 45px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease-in-out;
-    box-shadow: 0 2px 4px var(--shadow-color);
-}
-
-.keypad-btn:hover {
-    background-color: var(--cell-highlight);
-    color: var(--primary);
-}
-
-.keypad-btn:active {
-    background-color: var(--border-color);
-}
-
-.keypad-btn.completed {
-    background-color: var(--border-color);
-    color: var(--text-color);
-    border-color: var(--border-color);
-    cursor: not-allowed;
-    opacity: 0.4;
-}
-
 .keypad.notes-active .keypad-btn {
     color: var(--primary);
     border-color: var(--primary);
@@ -132,6 +83,4 @@
 
 @media (max-width: 450px) {
     .cell { font-size: 1.2rem; }
-    .keypad-btn { font-size: 1.1rem; }
-    .keypad-btn[data-num="0"] { font-size: 0.9rem; }
 }

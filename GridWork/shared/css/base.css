@@ -314,13 +314,152 @@ hr {
     color: var(--primary);
 }
 
+/* How To Play Modal */
+.howto-modal-content {
+    text-align: left;
+    max-width: 440px;
+}
+
+.howto-modal-content h2 {
+    text-align: center;
+}
+
+.howto-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0.75rem 0 1.25rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.howto-body h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    margin: 0.25rem 0 0;
+}
+
+.howto-body p {
+    margin: 0;
+}
+
+.howto-body ul {
+    margin: 0;
+    padding-left: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.howto-body kbd {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.78rem;
+    font-family: inherit;
+    font-weight: 600;
+    border-radius: 4px;
+    background: var(--cell-highlight);
+    border: 1px solid var(--border-color);
+}
+
+
 /* Shared Board Wrapper & Pause Overlay */
 .board-wrapper {
     position: relative;
     width: 100%;
     max-width: 420px;
     margin-bottom: 15px;
+    border-radius: 12px;
     overflow: hidden;
+
+}
+
+.board-frame {
+    border: 3px solid var(--border-thick);
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px var(--shadow-color);
+    user-select: none;
+}
+
+/* Shared Number Keypad (Sudoku, KenKen) */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 20px;
+}
+
+.keypad-btn {
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    height: 45px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.keypad-btn:hover {
+    background-color: var(--cell-highlight);
+    color: var(--primary);
+}
+
+.keypad-btn:active {
+    background-color: var(--border-color);
+}
+
+.keypad-btn.completed {
+    background-color: var(--border-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.keypad-btn .key-num {
+  display: inline-block;
+  transform: translate(0, 0) scale(1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), font-size 0.25s ease;
+}
+
+/* Base Notes Mode Styles for Keypad */
+.keypad.notes-active .keypad-btn {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.keypad.notes-active .keypad-btn:not([data-num="0"]) .key-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* 3x3 Coordinate Offsets via Transform */
+.keypad.notes-active .keypad-btn[data-num="1"] .key-num { transform: translate(-12px, -5px); }
+.keypad.notes-active .keypad-btn[data-num="2"] .key-num { transform: translate(0, -5px); }
+.keypad.notes-active .keypad-btn[data-num="3"] .key-num { transform: translate(12px, -5px); }
+.keypad.notes-active .keypad-btn[data-num="4"] .key-num { transform: translate(-12px, 0); }
+.keypad.notes-active .keypad-btn[data-num="5"] .key-num { transform: translate(0, 0); }
+.keypad.notes-active .keypad-btn[data-num="6"] .key-num { transform: translate(12px, 0); }
+.keypad.notes-active .keypad-btn[data-num="7"] .key-num { transform: translate(-12px, 5px); }
+.keypad.notes-active .keypad-btn[data-num="8"] .key-num { transform: translate(0, 5px); }
+.keypad.notes-active .keypad-btn[data-num="9"] .key-num { transform: translate(12px, 5px); }
+
+/* Keep Clear Button Text Centered */
+.keypad.notes-active .keypad-btn.clear .key-num {
+  transform: translate(0, 0) scale(0.9);
 }
 
 .pause-overlay {

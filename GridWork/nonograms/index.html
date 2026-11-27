@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TFPF9M56R"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-1TFPF9M56R');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../shared/assets/favicon.svg">
+    <title>GridWork — Pure Logic Nonograms | Free No-Guess Picross Puzzle</title>
+        <meta name="description" content="Play GridWork Nonograms, a free, responsive picture logic puzzle with line-deduction verification, Pixel Art challenges, keyboard navigation, and zero guessing." />
+        <meta name="keywords" content="GridWork, Nonograms, Picross, Griddlers, pure logic Nonograms, no-guess Nonograms, pixel art puzzle, free online Nonograms" />
+
+        <meta property="og:site_name" content="GridWork" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://brickeli.github.io/WebApps/GridWork/nonograms/index.html" />
+        <meta property="og:title" content="GridWork — Pure Logic Nonograms" />
+        <meta property="og:description" content="No-guess Nonograms engineered with line-deduction verification, Pixel Art mode, and high-contrast dark and light themes." />
+        <meta property="og:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-nonograms.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://brickeli.github.io/WebApps/GridWork/shared/assets/og-nonograms.png" />
+        <meta name="twitter:image:alt" content="GridWork responsive Nonograms grid interface in high-contrast dark and light themes" />
+    <script>
+        (function() {
+            const theme = localStorage.getItem('gridwork_theme') || localStorage.getItem('sudoku_theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="../shared/css/tokens.css">
+    <link rel="stylesheet" href="../shared/css/base.css">
+    <link rel="stylesheet" href="css/nonograms.css">
+</head>
+<body>
+    <div class="board-wrapper">
+        <div class="game-container" id="game-container">
+            <div class="top-section">
+                <div class="empty-corner"></div>
+                <div class="col-clues" id="col-clues"></div>
+            </div>
+            <div class="row-section">
+                <div class="row-clues" id="row-clues"></div>
+                <div class="game-board" id="board"></div>
+            </div>
+        </div>
+        <form id="pixel-guess-bar" class="pixel-guess-bar" hidden>
+            <label for="pixel-guess-input" class="sr-only">Identify the pixel art object</label>
+            <input
+                type="text"
+                id="pixel-guess-input"
+                class="pixel-guess-input"
+                placeholder="What is the picture? (e.g., Mushroom)"
+                autocomplete="off"
+                spellcheck="false"
+            />
+            <button type="submit" id="pixel-guess-submit" class="pixel-guess-submit">Guess</button>
+            <span id="pixel-guess-feedback" class="pixel-guess-feedback" role="status" aria-live="polite"></span>
+        </form>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
