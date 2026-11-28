@@ -1,8 +1,10 @@
 // nonograms/js/main.js
 import * as UI from './ui.js';
 import { initTheme } from '../../shared/js/theme.js';
-import { createGameStorage, formatTime } from '../../shared/js/storage.js';
+import { createGameStorage } from '../../shared/js/storage.js';
 import { initShell } from '../../shared/js/shell.js';
+import { createGameController, createKeyboardRouter } from '../../shared/js/gameController.js';
+import { gridNavTarget } from '../../shared/js/grid.js';
 import { applySEO } from '../../shared/js/seo.js';
 import { getPuzzleForMode, checkPixelArtGuess } from './pixelArt.js';
 
@@ -37,7 +39,6 @@ const state = {
     dragTarget: null,
     hintsUsed: 0,
     seconds: 0,
-    timerId: null,
     active: false,
     paused: false,
     crossMode: false
@@ -89,6 +90,15 @@ const shell = initShell({
     }
 });
 
+const game = createGameController({
+    state,
+    shell,
+    storage,
+    renderTimer: UI.renderTimerUI,
+    onResume: () => setFocus(state.focused.r, state.focused.c, true)
+});
+game.bindControls();
+
 const diffBtns = document.querySelectorAll('.diff-btn');
 diffBtns.forEach(btn => btn.addEventListener('click', () => {
     diffBtns.forEach(b => b.classList.remove('active'));
@@ -99,14 +109,11 @@ diffBtns.forEach(btn => btn.addEventListener('click', () => {
     initGame();
 }));
 
-document.getElementById('mode-toggle')?.addEventListener('click', () => {
+function toggleCrossMode() {
     state.crossMode = !state.crossMode;
     UI.renderModeUI(state.crossMode);
-});
-
-[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
-    el?.addEventListener('click', togglePause);
-});
+}
+document.getElementById('mode-toggle')?.addEventListener('click', toggleCrossMode);
 
 document.getElementById('undo-btn')?.addEventListener('click', performUndo);
 document.getElementById('hint-btn')?.addEventListener('click', performHint);
@@ -141,10 +148,6 @@ function initGame() {
 
     Object.assign(state, {
         size: puzzle.size,
-        hintsUsed: 0,
-        seconds: 0,
-        active: true,
-        paused: false,
         solvedEarly: false,
         pixelMeta: puzzle.pixelMeta,
         undoStack: [],
@@ -155,13 +158,7 @@ function initGame() {
     state.hintCells.clear();
 
     UI.toggleGuessBar(state.mode === 'pixel-art');
-    UI.renderTimerUI('00:00', false);
-    clearInterval(state.timerId);
-    state.timerId = setInterval(() => {
-        if (state.active && !state.paused) {
-            UI.renderTimerUI(formatTime(++state.seconds), false);
-        }
-    }, 1000);
+    game.start();
 
     UI.renderClues(state.solution);
     UI.renderBoard({
@@ -181,8 +178,9 @@ function initGame() {
 
 function resetPuzzle() {
     if (!state.solution.length) return;
-    Object.assign(state, { hintsUsed: 0, seconds: 0, active: true, paused: false, undoStack: [] });
+    state.undoStack = [];
     state.hintCells.clear();
+    game.start();
 
     for (let r = 0; r < state.size; r++) {
         for (let c = 0; c < state.size; c++) {
@@ -190,15 +188,7 @@ function resetPuzzle() {
             syncCell(r, c);
         }
     }
-    UI.renderTimerUI('00:00', false);
     setFocus(state.focused.r, state.focused.c, true);
-}
-
-function togglePause() {
-    if (!state.active) return;
-    state.paused = !state.paused;
-    UI.renderTimerUI(formatTime(state.seconds), state.paused);
-    if (!state.paused) setFocus(state.focused.r, state.focused.c, true);
 }
 
 function applyAction(r, c, newState) {
@@ -259,10 +249,6 @@ function checkWin(guessedCorrectly = false) {
 
     if (!gridSolved) return;
 
-    state.active = false;
-    clearInterval(state.timerId);
-    const finalTime = formatTime(state.seconds);
-
     if (state.mode === 'pixel-art' && state.pixelMeta) {
         const solvedIds = JSON.parse(localStorage.getItem('gridwork_nonograms_pixel_solved') || '[]');
         if (!solvedIds.includes(state.pixelMeta.id)) {
@@ -271,21 +257,11 @@ function checkWin(guessedCorrectly = false) {
         }
     }
 
-    storage.saveStat({
-        difficulty: `${state.difficultyLabel} (${state.size}×${state.size})`,
-        hints: state.hintsUsed,
-        timeVal: state.seconds
-    });
-
     const titleNote = state.mode === 'pixel-art' && state.pixelMeta
         ? ` — <strong>${state.pixelMeta.title}</strong>`
         : '';
 
-    setTimeout(() => {
-        shell.showWinModal(
-            `You solved <strong>${state.difficultyLabel} (${state.size}×${state.size})</strong>${titleNote} in <strong>${finalTime}</strong> with <strong>${state.hintsUsed}</strong> hint${state.hintsUsed === 1 ? '' : 's'}!`
-        );
-    }, 120);
+    game.complete({ difficulty: `${state.difficultyLabel} (${state.size}×${state.size})`, detail: titleNote });
 }
 
 function handlePixelGuessSubmit(e) {
@@ -352,53 +328,40 @@ initTheme(document.getElementById('theme-menu-btn'));
 UI.dom.guessBar?.addEventListener('submit', handlePixelGuessSubmit);
 
 // --- Keyboard Navigation & Shortcuts ---
-const ARROW_DELTAS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+const isCellFocused = () => document.activeElement?.classList.contains('cell');
 
-document.addEventListener('keydown', (e) => {
-    if (e.target.matches('input, textarea')) return;
-    if (e.key === 'Escape') {
-        shell.handleGlobalEscape();
-        return;
-    }
-    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
-
-    const key = e.key.toLowerCase();
-    const noMod = !e.ctrlKey && !e.metaKey;
-
-    if (key === 'p' && noMod) { e.preventDefault(); return togglePause(); }
-    if (!state.active || state.paused) return;
-
+// F / X act on the focused cell (focusing it first if the keyboard focus is elsewhere).
+const markCell = (target) => () => {
     const { r, c } = state.focused;
-    const cellFocused = document.activeElement?.classList.contains('cell');
+    if (!isCellFocused()) setFocus(r, c, true);
+    applyAction(r, c, state.playerGrid[r][c] === target ? 0 : target);
+};
 
-    if (ARROW_DELTAS[e.key]) {
-        e.preventDefault();
-        const [dr, dc] = ARROW_DELTAS[e.key];
-        return setFocus(r + dr, c + dc, true);
-    }
-
-    if (cellFocused && (e.key === ' ' || e.key === 'Enter')) {
-        e.preventDefault();
-        const target = state.crossMode ? 2 : 1;
-        return applyAction(r, c, state.playerGrid[r][c] === target ? 0 : target);
-    }
-
-    if (cellFocused && (e.key === 'Backspace' || e.key === 'Delete')) {
-        e.preventDefault();
-        return applyAction(r, c, 0);
-    }
-
-    const shortcuts = {
-        f: () => { if (!cellFocused) setFocus(r, c, true); applyAction(r, c, state.playerGrid[r][c] === 1 ? 0 : 1); },
-        x: () => { if (!cellFocused) setFocus(r, c, true); applyAction(r, c, state.playerGrid[r][c] === 2 ? 0 : 2); },
-        m: () => { state.crossMode = !state.crossMode; UI.renderModeUI(state.crossMode); },
-        h: performHint,
-        z: performUndo
-    };
-
-    if (shortcuts[key] && (key === 'z' || noMod)) {
-        e.preventDefault();
-        shortcuts[key]();
+createKeyboardRouter({
+    shell,
+    game,
+    grid: {
+        rows: () => state.size,
+        position: () => state.focused,
+        moveTo: (r, c) => setFocus(r, c, true)
+    },
+    keys: { f: markCell(1), x: markCell(2), m: toggleCrossMode, n: toggleCrossMode, h: performHint, z: performUndo },
+    ctrlKeys: { z: performUndo },
+    onKey: (e) => {
+        if (!isCellFocused()) return false;
+        const { r, c } = state.focused;
+        if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            const target = state.crossMode ? 2 : 1;
+            applyAction(r, c, state.playerGrid[r][c] === target ? 0 : target);
+            return true;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            applyAction(r, c, 0);
+            return true;
+        }
+        return false;
     }
 });
 

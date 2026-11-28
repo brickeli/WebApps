@@ -2,8 +2,10 @@
 import { generateKenKenPuzzle, isCageSatisfied } from './solver.js';
 import * as UI from './ui.js';
 import { initTheme } from '../../shared/js/theme.js';
-import { createGameStorage, formatTime } from '../../shared/js/storage.js';
+import { createGameStorage } from '../../shared/js/storage.js';
 import { initShell } from '../../shared/js/shell.js';
+import { createGameController, createKeyboardRouter } from '../../shared/js/gameController.js';
+import { gridNavTarget } from '../../shared/js/grid.js';
 import { applySEO } from '../../shared/js/seo.js';
 
 applySEO({
@@ -51,7 +53,6 @@ const state = {
     isNotesMode: false,
     hintsUsed: 0,
     seconds: 0,
-    timerId: null,
     active: false,
     paused: false
 };
@@ -82,6 +83,15 @@ const shell = initShell({
     }
 });
 
+const game = createGameController({
+    state,
+    shell,
+    storage,
+    renderTimer: UI.renderTimerUI,
+    onResume: () => UI.focusCell(state.size, state.selected.r, state.selected.c)
+});
+game.bindControls();
+
 // Bind shell-injected controls
 const diffBtns = document.querySelectorAll('.diff-btn');
 diffBtns.forEach(btn => {
@@ -95,10 +105,6 @@ diffBtns.forEach(btn => {
 });
 
 document.getElementById('mode-toggle')?.addEventListener('click', toggleNotesMode);
-
-[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
-    el?.addEventListener('click', togglePause);
-});
 
 document.getElementById('undo-btn')?.addEventListener('click', performUndo);
 document.getElementById('hint-btn')?.addEventListener('click', performHint);
@@ -138,21 +144,11 @@ function initGame() {
             Array.from({ length: puzzle.size }, () => Array(puzzle.size + 1).fill(false))
         ),
         undoStack: [],
-        selected: { r: 0, c: 0 },
-        hintsUsed: 0,
-        seconds: 0,
-        active: true,
-        paused: false
+        selected: { r: 0, c: 0 }
     });
     state.hintCells.clear();
 
-    UI.renderTimerUI('00:00', false);
-    clearInterval(state.timerId);
-    state.timerId = setInterval(() => {
-        if (state.active && !state.paused) {
-            UI.renderTimerUI(formatTime(++state.seconds), false);
-        }
-    }, 1000);
+    game.start();
 
     UI.renderKeypad(state.size, state.isNotesMode, inputNumber);
     UI.renderBoard({
@@ -168,21 +164,14 @@ function initGame() {
 
 function resetPuzzle() {
     if (!state.solution.length) return;
-    Object.assign(state, { hintsUsed: 0, seconds: 0, active: true, paused: false, undoStack: [] });
+    state.undoStack = [];
     state.hintCells.clear();
     state.playerGrid = Array.from({ length: state.size }, () => Array(state.size).fill(0));
     state.notes = Array.from({ length: state.size }, () =>
         Array.from({ length: state.size }, () => Array(state.size + 1).fill(false))
     );
-    UI.renderTimerUI('00:00', false);
+    game.start();
     sync();
-}
-
-function togglePause() {
-    if (!state.active) return;
-    state.paused = !state.paused;
-    UI.renderTimerUI(formatTime(state.seconds), state.paused);
-    if (!state.paused) UI.focusCell(state.size, state.selected.r, state.selected.c);
 }
 
 function recordMove() {
@@ -289,70 +278,34 @@ function checkWin() {
         if (!isCageSatisfied(cage, vals)) return;
     }
 
-    state.active = false;
-    clearInterval(state.timerId);
-    const finalTime = formatTime(state.seconds);
-
-    storage.saveStat({
-        difficulty: `${state.difficultyLabel} (${size}×${size})`,
-        hints: state.hintsUsed,
-        timeVal: state.seconds
-    });
-
-    setTimeout(() => {
-        shell.showWinModal(
-            `You solved <strong>${state.difficultyLabel} (${size}×${size})</strong> in <strong>${finalTime}</strong> with <strong>${state.hintsUsed}</strong> hint${state.hintsUsed === 1 ? '' : 's'}!`
-        );
-    }, 120);
+    game.complete({ difficulty: `${state.difficultyLabel} (${size}×${size})` });
 }
 
 // --- Event Wiring ---
 initTheme(document.getElementById('theme-menu-btn'));
 
-const ARROW_DELTAS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        shell.handleGlobalEscape();
-        return;
-    }
-    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
-
-    const key = e.key.toLowerCase();
-    const noMod = !e.ctrlKey && !e.metaKey;
-
-    if (key === 'p' && noMod) { e.preventDefault(); return togglePause(); }
-    if (!state.active || state.paused) return;
-
-    const { r, c } = state.selected;
-
-    if (ARROW_DELTAS[e.key]) {
-        e.preventDefault();
-        const [dr, dc] = ARROW_DELTAS[e.key];
-        const nr = Math.max(0, Math.min(state.size - 1, r + dr));
-        const nc = Math.max(0, Math.min(state.size - 1, c + dc));
-        return selectCell(nr, nc, true);
-    }
-
-    if (e.key >= '1' && e.key <= String(state.size)) {
-        e.preventDefault();
-        return inputNumber(Number(e.key));
-    }
-
-    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
-        e.preventDefault();
-        return inputNumber(0);
-    }
-
-    const shortcuts = {
-        n: toggleNotesMode,
-        h: performHint,
-        z: performUndo
-    };
-
-    if (shortcuts[key] && (key === 'z' || noMod)) {
-        e.preventDefault();
-        shortcuts[key]();
+createKeyboardRouter({
+    shell,
+    game,
+    grid: {
+        rows: () => state.size,
+        position: () => state.selected,
+        moveTo: (r, c) => selectCell(r, c, true)
+    },
+    keys: { n: toggleNotesMode, m: toggleNotesMode, h: performHint, z: performUndo },
+    ctrlKeys: { z: performUndo },
+    onKey: (e) => {
+        if (e.key >= '1' && e.key <= String(state.size)) {
+            e.preventDefault();
+            inputNumber(Number(e.key));
+            return true;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+            e.preventDefault();
+            inputNumber(0);
+            return true;
+        }
+        return false;
     }
 });
 

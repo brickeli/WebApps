@@ -13,6 +13,12 @@ export const dom = {
     hintBtn: document.getElementById('hint-btn')
 };
 
+import { createGrid } from '../../shared/js/grid.js';
+
+let grid = null;
+
+const STATE_WORDS = ['unmarked', 'shaded', 'circled'];
+
 const MODE_CONFIG = {
     false: {
         icon: '<rect x="4" y="4" width="16" height="16" rx="2" fill="#4f46e5" stroke="none"/>',
@@ -33,6 +39,9 @@ export function renderTimerUI(formattedTime, isPaused) {
     const timerDisplay = document.getElementById('timer-text');
     const pauseOverlay = document.getElementById('pause-overlay');
     const timerBtn = document.getElementById('timer-btn');
+
+    // While paused the board is hidden, so remove it from the tab order and accessibility tree.
+    dom.boardEl.inert = isPaused;
 
     if (timerDisplay) timerDisplay.textContent = formattedTime;
     if (pauseOverlay) {
@@ -64,17 +73,14 @@ export function renderModeUI(safeMode) {
 
 export function renderBoard({ size, numbers, playerGrid, hintCells, onCellClick, onCellRightClick, onCellFocus }) {
     dom.boardEl.style.setProperty('--grid-size', size);
-    dom.boardEl.innerHTML = '';
-
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
+    grid = createGrid({
+        el: dom.boardEl,
+        rows: size,
+        label: 'Hitori grid',
+        createCell: (r, c) => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'hitori-cell';
-            btn.dataset.r = r;
-            btn.dataset.c = c;
-            btn.setAttribute('role', 'gridcell');
-            btn.setAttribute('aria-label', `Row ${r + 1}, Column ${c + 1}, number ${numbers[r][c]}`);
 
             const span = document.createElement('span');
             span.className = 'cell-num';
@@ -86,35 +92,41 @@ export function renderBoard({ size, numbers, playerGrid, hintCells, onCellClick,
                 e.preventDefault();
                 onCellRightClick(r, c);
             });
-            btn.addEventListener('focus', () => onCellFocus(r, c));
-
-            dom.boardEl.appendChild(btn);
-        }
-    }
+            return btn;
+        },
+        onFocusCell: onCellFocus
+    });
 
     syncBoardUI(size, numbers, playerGrid, hintCells);
 }
 
 export function syncBoardUI(size, numbers, playerGrid, hintCells) {
     const conflicts = computeConflicts(size, numbers, playerGrid);
-    const cells = dom.boardEl.children;
 
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            const cell = cells[r * size + c];
+            const cell = grid.cellAt(r, c);
             if (!cell) continue;
+            const key = `${r},${c}`;
             const state = playerGrid[r][c]; // 0 = unknown, 1 = shaded, 2 = circled
+            const isConflict = conflicts.has(key);
             cell.classList.toggle('shaded', state === 1);
             cell.classList.toggle('circled', state === 2);
-            cell.classList.toggle('hinted', hintCells.has(`${r},${c}`));
-            cell.classList.toggle('conflict', conflicts.has(`${r},${c}`));
+            cell.classList.toggle('hinted', hintCells.has(key));
+            cell.classList.toggle('conflict', isConflict);
+
+            // The label carries the number AND the player's mark, which the visuals show by color/shape.
+            const parts = [`Row ${r + 1}, column ${c + 1}`, `number ${numbers[r][c]}`, STATE_WORDS[state]];
+            if (hintCells.has(key)) parts.push('hint');
+            cell.setAttribute('aria-label', parts.join(', '));
+            if (isConflict) cell.setAttribute('aria-invalid', 'true');
+            else cell.removeAttribute('aria-invalid');
         }
     }
 }
 
 export function focusCell(size, r, c) {
-    const cell = dom.boardEl.children[r * size + c];
-    cell?.focus();
+    grid.focus(r, c);
 }
 
 function computeConflicts(size, numbers, playerGrid) {

@@ -12,6 +12,7 @@
     touch-action: manipulation;
 }
 
+/* Row wrappers exist for ARIA grid semantics only; keep the CSS grid layout intact. */
 .cell {
     position: relative;
     display: flex;
@@ -50,11 +51,11 @@
 
 /* Thick Cage Boundaries */
 .cell.cage-right {
-    border-right: 2.5px solid var(--border-thick);
+    border-right: 2.75px solid var(--border-thick);
 }
 
 .cell.cage-bottom {
-    border-bottom: 2.5px solid var(--border-thick);
+    border-bottom: 2.75px solid var(--border-thick);
 }
 
 /* Top-Left Cage Arithmetic Clue */

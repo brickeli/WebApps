@@ -79,3 +79,5 @@
     color: var(--error);
     border-color: var(--error);
 }
+
+/* Row wrappers exist for ARIA grid semantics only; keep the CSS grid layout intact. */

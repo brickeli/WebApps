@@ -10,6 +10,15 @@ export const dom = {
     guessFeedback: document.getElementById('pixel-guess-feedback')
 };
 
+import { createGrid } from '../../shared/js/grid.js';
+
+let grid = null;
+
+// Clues are read as "Row 3 clues: 2 1" (+ ", complete" once the player's fills match).
+function clueLabel(kind, index, clues, isSatisfied) {
+    return `${kind} ${index + 1} clues: ${clues.join(' ')}${isSatisfied ? ', complete' : ''}`;
+}
+
 export function renderModeUI(crossMode) {
     const modeToggleBtn = document.getElementById('mode-toggle');
     if (!modeToggleBtn) return;
@@ -40,6 +49,9 @@ export function renderTimerUI(timeStr, isPaused) {
     const timerText = document.getElementById('timer-text');
     const pauseOverlay = document.getElementById('pause-overlay');
 
+    // While paused the board is hidden, so remove it from the tab order and accessibility tree.
+    dom.boardEl.inert = isPaused;
+
     timerBtn?.classList.toggle('paused', isPaused);
     if (pauseOverlay) {
         pauseOverlay.classList.toggle('visible', isPaused);
@@ -62,6 +74,8 @@ export function renderClues(solution) {
             clueDiv.style.borderBottom = '2px solid var(--border-thick)';
         }
         clueDiv.innerHTML = clues.map(c => `<span>${c}</span>`).join('');
+        clueDiv.setAttribute('role', 'group');
+        clueDiv.setAttribute('aria-label', clueLabel('Row', r, clues, false));
         dom.rowCluesEl.appendChild(clueDiv);
     }
 
@@ -73,6 +87,8 @@ export function renderClues(solution) {
             clueDiv.style.borderRight = '2px solid var(--border-thick)';
         }
         clueDiv.innerHTML = clues.map(c => `<span>${c}</span>`).join('');
+        clueDiv.setAttribute('role', 'group');
+        clueDiv.setAttribute('aria-label', clueLabel('Column', c, clues, false));
         dom.colCluesEl.appendChild(clueDiv);
     }
 }
@@ -81,15 +97,21 @@ export function updateClueCompletion(solution, playerGrid) {
     const size = solution.length;
 
     for (let r = 0; r < size; r++) {
-        const target = getClues(solution[r]).join(',');
+        const targetClues = getClues(solution[r]);
+        const target = targetClues.join(',');
         const current = getClues(playerGrid[r].map(v => (v === 1 ? 1 : 0))).join(',');
-        dom.rowCluesEl.children[r]?.classList.toggle('clue-satisfied', target === current);
+        const rowClueEl = dom.rowCluesEl.children[r];
+        rowClueEl?.classList.toggle('clue-satisfied', target === current);
+        rowClueEl?.setAttribute('aria-label', clueLabel('Row', r, targetClues, target === current));
     }
 
     for (let c = 0; c < size; c++) {
-        const target = getClues(solution.map(row => row[c])).join(',');
+        const targetClues = getClues(solution.map(row => row[c]));
+        const target = targetClues.join(',');
         const current = getClues(playerGrid.map(row => (row[c] === 1 ? 1 : 0))).join(',');
-        dom.colCluesEl.children[c]?.classList.toggle('clue-satisfied', target === current);
+        const colClueEl = dom.colCluesEl.children[c];
+        colClueEl?.classList.toggle('clue-satisfied', target === current);
+        colClueEl?.setAttribute('aria-label', clueLabel('Column', c, targetClues, target === current));
     }
 }
 
@@ -103,19 +125,17 @@ export function buildCellAriaLabel(solution, playerGrid, r, c) {
 
 export function renderBoard({ size, difficultyLabel, solution, playerGrid, handlers }) {
     dom.boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-    dom.boardEl.setAttribute('role', 'grid');
-    dom.boardEl.setAttribute('aria-label', `${difficultyLabel} ${size} by ${size} Nonogram Grid`);
-    dom.boardEl.innerHTML = '';
     const mid = Math.floor(size / 2);
     const container = document.getElementById('game-container');
     if (container) container.dataset.size = size;
 
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
+    grid = createGrid({
+        el: dom.boardEl,
+        rows: size,
+        label: `${difficultyLabel} ${size} by ${size} Nonogram Grid`,
+        createCell: (r, c) => {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.tabIndex = 0;
-            cell.setAttribute('role', 'gridcell');
             cell.setAttribute('aria-label', buildCellAriaLabel(solution, playerGrid, r, c));
 
             if (size > 5) {
@@ -123,22 +143,18 @@ export function renderBoard({ size, difficultyLabel, solution, playerGrid, handl
                 if ((r + 1) % mid === 0 && r !== size - 1) cell.classList.add('border-bottom');
             }
 
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-
-            cell.addEventListener('focus', () => handlers.onCellFocus(r, c));
             cell.addEventListener('mousedown', (e) => handlers.onCellStart(e, r, c, e.button === 2));
             cell.addEventListener('mouseenter', () => handlers.onCellEnter(r, c));
             cell.addEventListener('touchstart', (e) => handlers.onCellStart(e, r, c, false), { passive: false });
             cell.addEventListener('contextmenu', (e) => e.preventDefault());
-
-            dom.boardEl.appendChild(cell);
-        }
-    }
+            return cell;
+        },
+        onFocusCell: handlers.onCellFocus
+    });
 }
 
 export function updateCellUI({ size, solution, playerGrid, hintCells, r, c }) {
-    const cell = dom.boardEl.children[r * size + c];
+    const cell = grid.cellAt(r, c);
     if (!cell) return;
     cell.classList.remove('filled', 'crossed', 'hint-cell');
     if (playerGrid[r][c] === 1) {
@@ -151,10 +167,11 @@ export function updateCellUI({ size, solution, playerGrid, hintCells, r, c }) {
 }
 
 export function updateFocusedCellUI(size, prevCell, nextCell, moveDomFocus = true) {
-    dom.boardEl.children[prevCell.r * size + prevCell.c]?.classList.remove('focused');
-    const nextEl = dom.boardEl.children[nextCell.r * size + nextCell.c];
+    grid.cellAt(prevCell.r, prevCell.c)?.classList.remove('focused');
+    const nextEl = grid.cellAt(nextCell.r, nextCell.c);
     if (nextEl) {
         nextEl.classList.add('focused');
+        grid.setTabbable(nextCell.r, nextCell.c);
         if (moveDomFocus) nextEl.focus();
     }
 }

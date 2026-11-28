@@ -247,3 +247,5 @@ label.sr-only {
         gap: 2.5px;
     }
 }
+
+/* Row wrappers exist for ARIA grid semantics only; keep the CSS grid layout intact. */

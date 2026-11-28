@@ -2,8 +2,10 @@
 import { isValid, solveSudoku, countSolutions, evaluatePuzzleLogic } from './solver.js';
 import * as UI from './ui.js';
 import { initTheme } from '../../shared/js/theme.js';
-import { createGameStorage, formatTime } from '../../shared/js/storage.js';
+import { createGameStorage } from '../../shared/js/storage.js';
 import { initShell } from '../../shared/js/shell.js';
+import { createGameController, createKeyboardRouter } from '../../shared/js/gameController.js';
+import { gridNavTarget } from '../../shared/js/grid.js';
 import { applySEO } from '../../shared/js/seo.js';
 
 applySEO({
@@ -34,11 +36,10 @@ const state = {
     currentDiffLabel: 'Easy',
     isNotesMode: false,
     isAutoNotesEnabled: false,
-    isPaused: false,
-    isGameWon: false,
-    hintCount: 0,
-    timerSeconds: 0,
-    timerId: null
+    active: false,
+    paused: false,
+    hintsUsed: 0,
+    seconds: 0
 };
 
 const SUDOKU_HOW_TO = `
@@ -85,6 +86,15 @@ const shell = initShell({
     onNewGame: newGame
 });
 
+const game = createGameController({
+    state,
+    shell,
+    storage,
+    renderTimer: UI.renderTimerUI,
+    onResume: () => { if (state.selectedCell !== null) selectCell(state.selectedCell, true); }
+});
+game.bindControls();
+
 const diffBtns = document.querySelectorAll('.diff-btn');
 diffBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -97,10 +107,6 @@ diffBtns.forEach(btn => {
 });
 
 document.getElementById('mode-toggle')?.addEventListener('click', toggleNotesMode);
-
-[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
-    el?.addEventListener('click', togglePause);
-});
 
 document.getElementById('undo-btn')?.addEventListener('click', undo);
 document.getElementById('hint-btn')?.addEventListener('click', provideHint);
@@ -121,16 +127,16 @@ function recordMove() {
 }
 
 function selectCell(index, moveDomFocus = false) {
-    if (state.isPaused) return;
+    if (state.paused) return;
     state.selectedCell = index;
     UI.highlightCellPeers(index);
     if (moveDomFocus && index !== null) {
-        UI.dom.boardEl.children[index]?.focus();
+        UI.focusCell(index);
     }
 }
 
 function undo() {
-    if (!state.undoStack.length || state.isGameWon || state.isPaused) return;
+    if (!state.undoStack.length || !state.active || state.paused) return;
     const prev = state.undoStack.pop();
     state.board = prev.board;
     state.notes = prev.notes;
@@ -142,13 +148,13 @@ function undo() {
 }
 
 function toggleNotesMode() {
-    if (state.isPaused) return;
+    if (state.paused) return;
     state.isNotesMode = !state.isNotesMode;
     UI.renderNotesModeUI(state.isNotesMode);
 }
 
 function toggleAutoNotes() {
-    if (state.isPaused || state.isGameWon) return;
+    if (state.paused || !state.active) return;
     state.isAutoNotesEnabled = !state.isAutoNotesEnabled;
     UI.updateAutoNotesMenuLabel(state.isAutoNotesEnabled);
 
@@ -158,25 +164,6 @@ function toggleAutoNotes() {
         state.notes.forEach(cellNotes => cellNotes.fill(false));
         triggerRender();
     }
-}
-
-function togglePause() {
-    if (state.isGameWon) return;
-    state.isPaused = !state.isPaused;
-    UI.renderTimerUI(formatTime(state.timerSeconds), state.isPaused);
-}
-
-function startTimer() {
-    clearInterval(state.timerId);
-    state.timerSeconds = 0;
-    state.isPaused = false;
-    UI.renderTimerUI('00:00', false);
-
-    state.timerId = setInterval(() => {
-        if (!state.isGameWon && !state.isPaused) {
-            UI.renderTimerUI(formatTime(++state.timerSeconds), false);
-        }
-    }, 1000);
 }
 
 function clearPeerNotes(index, val) {
@@ -208,7 +195,7 @@ function autoFillNotes() {
 
 function inputNumber(num) {
     const idx = state.selectedCell;
-    if (idx === null || state.givens[idx] || state.isGameWon || state.isPaused) return;
+    if (idx === null || state.givens[idx] || !state.active || state.paused) return;
 
     recordMove();
 
@@ -235,7 +222,7 @@ function inputNumber(num) {
 }
 
 function provideHint() {
-    if (state.isGameWon || state.isPaused) return;
+    if (!state.active || state.paused) return;
     recordMove();
 
     let targetIdx = state.selectedCell;
@@ -253,7 +240,7 @@ function provideHint() {
     state.board[targetIdx] = state.solution[targetIdx];
     state.notes[targetIdx].fill(false);
     state.hints[targetIdx] = true;
-    state.hintCount++;
+    state.hintsUsed++;
     clearPeerNotes(targetIdx, state.solution[targetIdx]);
     selectCell(targetIdx, false);
 
@@ -263,7 +250,7 @@ function provideHint() {
 }
 
 function resetPuzzle() {
-    if (state.isGameWon || state.isPaused) return;
+    if (!state.active || state.paused) return;
     state.undoStack.length = 0;
 
     for (let i = 0; i < 81; i++) {
@@ -282,21 +269,7 @@ function checkWinCondition() {
     const isComplete = state.board.every((val, idx) => val !== 0 && isValid(state.board, idx, val));
     if (!isComplete) return;
 
-    state.isGameWon = true;
-    clearInterval(state.timerId);
-    const finalTime = formatTime(state.timerSeconds);
-
-    storage.saveStat({
-        difficulty: state.currentDiffLabel,
-        hints: state.hintCount,
-        timeVal: state.timerSeconds
-    });
-
-    setTimeout(() => {
-        shell.showWinModal(
-            `You solved <strong>${state.currentDiffLabel}</strong> in <strong>${finalTime}</strong> with <strong>${state.hintCount}</strong> hint${state.hintCount === 1 ? '' : 's'}!`
-        );
-    }, 100);
+    game.complete({ difficulty: state.currentDiffLabel });
 }
 
 function canSafelyRemoveClue(boardState, idx, minBoxGivens) {
@@ -319,8 +292,6 @@ function canSafelyRemoveClue(boardState, idx, minBoxGivens) {
 }
 
 function newGame() {
-    state.isGameWon = false;
-    state.hintCount = 0;
     state.undoStack.length = 0;
 
     let minLogicTier = 1;
@@ -390,7 +361,7 @@ function newGame() {
 
     if (state.isAutoNotesEnabled) autoFillNotes();
     else triggerRender();
-    startTimer();
+    game.start();
 }
 
 // --- Event Wiring ---
@@ -400,34 +371,29 @@ UI.dom.keypadBtns.forEach(btn => {
     btn.addEventListener('click', () => inputNumber(Number(btn.dataset.num)));
 });
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        shell.handleGlobalEscape();
-        return;
+createKeyboardRouter({
+    shell,
+    game,
+    grid: {
+        rows: () => 9,
+        position: () => (state.selectedCell === null
+            ? null
+            : { r: Math.floor(state.selectedCell / 9), c: state.selectedCell % 9 }),
+        moveTo: (r, c) => selectCell(r * 9 + c, true)
+    },
+    keys: { n: toggleNotesMode, m: toggleNotesMode, h: provideHint, z: undo },
+    ctrlKeys: { z: undo },
+    onKey: (e) => {
+        if (e.key >= '1' && e.key <= '9') {
+            inputNumber(parseInt(e.key, 10));
+            return true;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+            inputNumber(0);
+            return true;
+        }
+        return false;
     }
-    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
-
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        undo();
-        return;
-    }
-
-    if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        togglePause();
-        return;
-    }
-
-    if (state.selectedCell === null || state.isGameWon || state.isPaused) return;
-
-    if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key, 10));
-    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') inputNumber(0);
-    else if (e.key.toLowerCase() === 'n') toggleNotesMode();
-    else if (e.key === 'ArrowUp' && state.selectedCell >= 9) { e.preventDefault(); selectCell(state.selectedCell - 9, true); }
-    else if (e.key === 'ArrowDown' && state.selectedCell < 72) { e.preventDefault(); selectCell(state.selectedCell + 9, true); }
-    else if (e.key === 'ArrowLeft' && state.selectedCell % 9 !== 0) { e.preventDefault(); selectCell(state.selectedCell - 1, true); }
-    else if (e.key === 'ArrowRight' && state.selectedCell % 9 !== 8) { e.preventDefault(); selectCell(state.selectedCell + 1, true); }
 });
 
 UI.initBoardUI((idx) => selectCell(idx, false));

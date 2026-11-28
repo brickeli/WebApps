@@ -111,17 +111,17 @@ function injectShellMarkup({
 
     if (!document.getElementById('stats-modal')) {
         document.body.insertAdjacentHTML('beforeend', `
-            <div id="stats-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+            <dialog id="stats-modal" class="modal" aria-labelledby="stats-title">
                 <div class="modal-content">
                     <h2 id="stats-title">COMPLETED PUZZLE STATS</h2>
                     <div class="stats-table-container">
                         <table id="stats-table">
                             <thead>
                                 <tr>
-                                    <th data-sort="timestamp">Date ⇅</th>
-                                    <th data-sort="difficulty">Diff ⇅</th>
-                                    <th data-sort="hints">Hints ⇅</th>
-                                    <th data-sort="timeVal">Time ⇅</th>
+                                    <th data-sort="timestamp" scope="col" aria-sort="none"><button type="button" class="sort-btn">Date ⇅</button></th>
+                                    <th data-sort="difficulty" scope="col" aria-sort="none"><button type="button" class="sort-btn">Diff ⇅</button></th>
+                                    <th data-sort="hints" scope="col" aria-sort="none"><button type="button" class="sort-btn">Hints ⇅</button></th>
+                                    <th data-sort="timeVal" scope="col" aria-sort="none"><button type="button" class="sort-btn">Time ⇅</button></th>
                                 </tr>
                             </thead>
                             <tbody id="stats-body"></tbody>
@@ -132,25 +132,25 @@ function injectShellMarkup({
                         Close
                     </button>
                 </div>
-            </div>
+            </dialog>
         `);
     }
 
     if (!document.getElementById('win-modal')) {
         document.body.insertAdjacentHTML('beforeend', `
-            <div id="win-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="win-title">
+            <dialog id="win-modal" class="modal" aria-labelledby="win-title" aria-describedby="win-message">
                 <div class="modal-content" style="text-align: center;">
                     <h2 id="win-title">Puzzle Solved!</h2>
                     <p id="win-message"></p>
                     <button id="close-win-btn" class="action-btn hint">Awesome!</button>
                 </div>
-            </div>
+            </dialog>
         `);
     }
 
     if (!document.getElementById('howto-modal')) {
         document.body.insertAdjacentHTML('beforeend', `
-            <div id="howto-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+            <dialog id="howto-modal" class="modal" aria-labelledby="howto-title">
                 <div class="modal-content howto-modal-content">
                     <h2 id="howto-title">HOW TO PLAY</h2>
                     <hr>
@@ -160,7 +160,13 @@ function injectShellMarkup({
                         Got It
                     </button>
                 </div>
-            </div>
+            </dialog>
+        `);
+    }
+    if (!document.getElementById('sr-live')) {
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+            <div id="sr-alert" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
         `);
     }
     if (boardWrapper && !document.getElementById('pause-overlay')) {
@@ -189,6 +195,21 @@ function injectShellMarkup({
             `);
         }
     }
+}
+
+let liveTimer = null;
+
+/**
+ * Announce a message to screen readers without changing the visible UI.
+ * Polite by default; pass { assertive: true } for errors or conflicts.
+ */
+export function announce(message, { assertive = false } = {}) {
+    const region = document.getElementById(assertive ? 'sr-alert' : 'sr-live');
+    if (!region) return;
+    region.textContent = '';
+    clearTimeout(liveTimer);
+    // Re-setting after a tick lets repeated identical messages be re-read.
+    liveTimer = setTimeout(() => { region.textContent = message; }, 50);
 }
 
 export function initShell({
@@ -277,49 +298,39 @@ export function initShell({
         });
     }
 
+    function openDialog(dialog, focusEl) {
+        if (!dialog || dialog.open) return;
+        dialog.showModal();
+        focusEl?.focus();
+    }
+
+    // Callbacks run from the native 'close' event so Escape, the Close button,
+    // backdrop clicks and dialog.close() all take the same path exactly once.
+    function closeDialog(dialog) {
+        if (dialog?.open) dialog.close();
+    }
+
     function showStatsModal() {
         renderStatsTable();
-        if (dom.statsModal) dom.statsModal.style.display = 'flex';
-        dom.closeStatsBtn?.focus();
+        openDialog(dom.statsModal, dom.closeStatsBtn);
     }
+    function hideStatsModal() { closeDialog(dom.statsModal); }
+    function isStatsModalOpen() { return Boolean(dom.statsModal?.open); }
 
-    function hideStatsModal() {
-        if (dom.statsModal) dom.statsModal.style.display = 'none';
-        onStatsClose?.();
-    }
-
-    function isStatsModalOpen() {
-        return dom.statsModal?.style.display === 'flex';
-    }
-
-    function showHowToModal() {
-        if (dom.howtoModal) dom.howtoModal.style.display = 'flex';
-        dom.closeHowtoBtn?.focus();
-    }
-
-    function hideHowToModal() {
-        if (dom.howtoModal) dom.howtoModal.style.display = 'none';
-        onHowToClose?.();
-    }
-
-    function isHowToModalOpen() {
-        return dom.howtoModal?.style.display === 'flex';
-    }
+    function showHowToModal() { openDialog(dom.howtoModal, dom.closeHowtoBtn); }
+    function hideHowToModal() { closeDialog(dom.howtoModal); }
+    function isHowToModalOpen() { return Boolean(dom.howtoModal?.open); }
 
     function showWinModal(htmlMessage) {
         if (dom.winMessage) dom.winMessage.innerHTML = htmlMessage;
-        if (dom.winModal) dom.winModal.style.display = 'flex';
-        dom.closeWinBtn?.focus();
+        openDialog(dom.winModal, dom.closeWinBtn);
     }
+    function hideWinModal() { closeDialog(dom.winModal); }
+    function isWinModalOpen() { return Boolean(dom.winModal?.open); }
 
-    function hideWinModal() {
-        if (dom.winModal) dom.winModal.style.display = 'none';
-        onWinClose?.();
-    }
-
-    function isWinModalOpen() {
-        return dom.winModal?.style.display === 'flex';
-    }
+    dom.statsModal?.addEventListener('close', () => onStatsClose?.());
+    dom.howtoModal?.addEventListener('close', () => onHowToClose?.());
+    dom.winModal?.addEventListener('close', () => onWinClose?.());
 
     // Wire shared drawer & modal controls
     dom.menuBtn?.addEventListener('click', () => setSidePanelOpen(!isSidePanelOpen()));
@@ -342,6 +353,10 @@ export function initShell({
         th.addEventListener('click', () => {
             const key = th.dataset.sort;
             sortConfig = { key, asc: sortConfig.key === key ? !sortConfig.asc : true };
+            dom.statsHeaders.forEach(h => h.setAttribute(
+                'aria-sort',
+                h.dataset.sort === key ? (sortConfig.asc ? 'ascending' : 'descending') : 'none'
+            ));
             renderStatsTable();
         });
     });
@@ -350,10 +365,9 @@ export function initShell({
     dom.closeHowtoBtn?.addEventListener('click', hideHowToModal);
     dom.closeWinBtn?.addEventListener('click', hideWinModal);
 
-    window.addEventListener('click', (e) => {
-        if (e.target === dom.statsModal) hideStatsModal();
-        if (e.target === dom.howtoModal) hideHowToModal();
-        if (e.target === dom.winModal) hideWinModal();
+    // Clicks on the backdrop target the <dialog> element itself.
+    [dom.statsModal, dom.howtoModal, dom.winModal].forEach(dialog => {
+        dialog?.addEventListener('click', (e) => { if (e.target === dialog) closeDialog(dialog); });
     });
 
     function handleGlobalEscape() {
@@ -365,6 +379,7 @@ export function initShell({
     }
 
     return {
+        announce,
         setSidePanelOpen,
         isSidePanelOpen,
         showStatsModal,

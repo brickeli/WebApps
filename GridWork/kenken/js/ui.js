@@ -6,6 +6,18 @@ export const dom = {
     keypadEl: document.getElementById('keypad')
 };
 
+import { createGrid } from '../../shared/js/grid.js';
+
+let grid = null;
+
+const OP_WORDS = { '+': 'plus', '−': 'minus', '×': 'times', '÷': 'divided by' };
+
+// "12×" -> "12 times"; a single-cell cage has no operator, e.g. "3" -> "3".
+function speakClue(label) {
+    const op = OP_WORDS[label.slice(-1)];
+    return op ? `${label.slice(0, -1)} ${op}` : label;
+}
+
 export function renderKeypad(size, isNotesMode, onInput) {
     dom.keypadEl.innerHTML = '';
     dom.keypadEl.style.gridTemplateColumns = `repeat(${Math.min(size + 1, 5)}, 1fr)`;
@@ -33,6 +45,9 @@ export function renderTimerUI(timeStr, isPaused) {
     const timerText = document.getElementById('timer-text');
     const pauseOverlay = document.getElementById('pause-overlay');
 
+    // While paused the board is hidden, so remove it from the tab order and accessibility tree.
+    dom.boardEl.inert = isPaused;
+
     timerBtn?.classList.toggle('paused', isPaused);
     if (pauseOverlay) {
         pauseOverlay.classList.toggle('visible', isPaused);
@@ -56,7 +71,6 @@ export function renderNotesModeUI(isNotesMode) {
 
 export function renderBoard({ size, cages, playerGrid, hintCells, notes, selected, onSelectCell }) {
     dom.boardEl.style.setProperty('--grid-size', size);
-    dom.boardEl.innerHTML = '';
 
     const cageMap = Array.from({ length: size }, () => Array(size).fill(null));
     const anchorMap = new Map();
@@ -67,23 +81,20 @@ export function renderBoard({ size, cages, playerGrid, hintCells, notes, selecte
         anchorMap.set(`${anchor.r},${anchor.c}`, cage.label);
     });
 
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
+    grid = createGrid({
+        el: dom.boardEl,
+        rows: size,
+        label: 'KenKen grid',
+        createCell: (r, c) => {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.tabIndex = 0;
-            cell.setAttribute('role', 'gridcell');
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-
             if (c < size - 1 && cageMap[r][c] !== cageMap[r][c + 1]) cell.classList.add('cage-right');
             if (r < size - 1 && cageMap[r][c] !== cageMap[r + 1][c]) cell.classList.add('cage-bottom');
-
             cell.addEventListener('click', () => onSelectCell(r, c, false));
-            cell.addEventListener('focus', () => onSelectCell(r, c, false));
-            dom.boardEl.appendChild(cell);
-        }
-    }
+            return cell;
+        },
+        onFocusCell: (r, c) => onSelectCell(r, c, false)
+    });
 
     syncBoardUI({ size, cages, playerGrid, hintCells, notes, selected, anchorMap });
 }
@@ -94,12 +105,16 @@ export function syncBoardUI({ size, cages, playerGrid, hintCells, notes, selecte
         cages.forEach(cage => anchorMap.set(`${cage.cells[0].r},${cage.cells[0].c}`, cage.label));
     }
 
+    const cageOf = new Map();
+    cages.forEach(cage => cage.cells.forEach(({ r, c }) => cageOf.set(`${r},${c}`, cage)));
+
     const conflicts = computeConflicts(size, cages, playerGrid);
+    if (selected) grid.setTabbable(selected.r, selected.c);
     const counts = Array(size + 1).fill(0);
 
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            const cell = dom.boardEl.children[r * size + c];
+            const cell = grid.cellAt(r, c);
             if (!cell) continue;
 
             const val = playerGrid[r][c];
@@ -113,12 +128,18 @@ export function syncBoardUI({ size, cages, playerGrid, hintCells, notes, selecte
             cell.classList.toggle('hint-cell', val !== 0 && hintCells.has(key));
             cell.classList.toggle('conflict', conflicts.has(key));
 
+            if (isSelected) cell.setAttribute('aria-selected', 'true');
+            else cell.removeAttribute('aria-selected');
+            if (conflicts.has(key)) cell.setAttribute('aria-invalid', 'true');
+            else cell.removeAttribute('aria-invalid');
+
             cell.innerHTML = '';
             const clueText = anchorMap.get(key);
             if (clueText) {
                 const clueEl = document.createElement('span');
                 clueEl.className = 'cage-clue';
                 clueEl.textContent = clueText;
+                clueEl.setAttribute('aria-hidden', 'true');
                 cell.appendChild(clueEl);
             }
 
@@ -136,9 +157,27 @@ export function syncBoardUI({ size, cages, playerGrid, hintCells, notes, selecte
                         if (cellNotes[n]) item.textContent = String(n);
                         grid.appendChild(item);
                     }
+                    grid.setAttribute('aria-hidden', 'true');
                     cell.appendChild(grid);
                 }
             }
+
+            // Accessible name: position, value or notes, cage clue, and hint/conflict state.
+            const cage = cageOf.get(key);
+            const parts = [`Row ${r + 1}, column ${c + 1}`];
+            if (val !== 0) {
+                parts.push(String(val));
+                if (hintCells.has(key)) parts.push('hint');
+            } else {
+                const noted = [];
+                notes[r][c].forEach((on, n) => { if (on && n > 0) noted.push(n); });
+                parts.push(noted.length ? `empty, notes ${noted.join(' ')}` : 'empty');
+            }
+            if (cage) {
+                const cellCount = cage.cells.length;
+                parts.push(`cage ${speakClue(cage.label)}, ${cellCount} ${cellCount === 1 ? 'cell' : 'cells'}`);
+            }
+            cell.setAttribute('aria-label', parts.join(', '));
         }
     }
 
@@ -179,5 +218,5 @@ function computeConflicts(size, cages, playerGrid) {
 }
 
 export function focusCell(size, r, c) {
-    dom.boardEl.children[r * size + c]?.focus();
+    grid.focus(r, c);
 }

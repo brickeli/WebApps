@@ -2,8 +2,10 @@
 import { generateHitoriPuzzle, areUnshadedConnected } from './solver.js';
 import * as UI from './ui.js';
 import { initTheme } from '../../shared/js/theme.js';
-import { createGameStorage, formatTime } from '../../shared/js/storage.js';
+import { createGameStorage } from '../../shared/js/storage.js';
 import { initShell } from '../../shared/js/shell.js';
+import { createGameController, createKeyboardRouter } from '../../shared/js/gameController.js';
+import { gridNavTarget } from '../../shared/js/grid.js';
 import { applySEO } from '../../shared/js/seo.js';
 
 applySEO({
@@ -50,7 +52,6 @@ const state = {
     safeMode: false,
     hintsUsed: 0,
     seconds: 0,
-    timerId: null,
     active: false,
     paused: false
 };
@@ -81,6 +82,15 @@ const shell = initShell({
     }
 });
 
+const game = createGameController({
+    state,
+    shell,
+    storage,
+    renderTimer: UI.renderTimerUI,
+    onResume: () => UI.focusCell(state.size, state.focused.r, state.focused.c)
+});
+game.bindControls();
+
 // Bind controls after initShell injects them
 const diffBtns = document.querySelectorAll('.diff-btn');
 diffBtns.forEach(btn => {
@@ -93,14 +103,11 @@ diffBtns.forEach(btn => {
     });
 });
 
-document.getElementById('mode-toggle')?.addEventListener('click', () => {
+function toggleSafeMode() {
     state.safeMode = !state.safeMode;
     UI.renderModeUI(state.safeMode);
-});
-
-[document.getElementById('timer-btn'), document.getElementById('pause-overlay')].forEach(el => {
-    el?.addEventListener('click', togglePause);
-});
+}
+document.getElementById('mode-toggle')?.addEventListener('click', toggleSafeMode);
 
 document.getElementById('undo-btn')?.addEventListener('click', performUndo);
 document.getElementById('hint-btn')?.addEventListener('click', performHint);
@@ -117,21 +124,11 @@ function initGame() {
         solution: puzzle.solution,
         playerGrid: Array.from({ length: puzzle.size }, () => new Array(puzzle.size).fill(0)),
         undoStack: [],
-        focused: { r: 0, c: 0 },
-        hintsUsed: 0,
-        seconds: 0,
-        active: true,
-        paused: false
+        focused: { r: 0, c: 0 }
     });
     state.hintCells.clear();
 
-    UI.renderTimerUI('00:00', false);
-    clearInterval(state.timerId);
-    state.timerId = setInterval(() => {
-        if (state.active && !state.paused) {
-            UI.renderTimerUI(formatTime(++state.seconds), false);
-        }
-    }, 1000);
+    game.start();
 
     UI.renderBoard({
         size: state.size,
@@ -146,18 +143,11 @@ function initGame() {
 
 function resetPuzzle() {
     if (!state.numbers.length) return;
-    Object.assign(state, { hintsUsed: 0, seconds: 0, active: true, paused: false, undoStack: [] });
+    state.undoStack = [];
     state.hintCells.clear();
     state.playerGrid = Array.from({ length: state.size }, () => new Array(state.size).fill(0));
-    UI.renderTimerUI('00:00', false);
+    game.start();
     sync();
-}
-
-function togglePause() {
-    if (!state.active) return;
-    state.paused = !state.paused;
-    UI.renderTimerUI(formatTime(state.seconds), state.paused);
-    if (!state.paused) UI.focusCell(state.size, state.focused.r, state.focused.c);
 }
 
 function setCellState(r, c, nextVal) {
@@ -249,68 +239,35 @@ function checkWin() {
     // 3. All unshaded cells form one connected region
     if (!areUnshadedConnected(size, (r, c) => state.playerGrid[r][c] === 1)) return;
 
-    state.active = false;
-    clearInterval(state.timerId);
-    const finalTime = formatTime(state.seconds);
-
-    storage.saveStat({
-        difficulty: `${state.difficultyLabel} (${size}×${size})`,
-        hints: state.hintsUsed,
-        timeVal: state.seconds
-    });
-
-    setTimeout(() => {
-        shell.showWinModal(
-            `You solved <strong>${state.difficultyLabel} (${size}×${size})</strong> in <strong>${finalTime}</strong> with <strong>${state.hintsUsed}</strong> hint${state.hintsUsed === 1 ? '' : 's'}!`
-        );
-    }, 120);
+    game.complete({ difficulty: `${state.difficultyLabel} (${size}×${size})` });
 }
 
 // --- Event Wiring ---
 initTheme(document.getElementById('theme-menu-btn'));
 
-const ARROW_DELTAS = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        shell.handleGlobalEscape();
-        return;
-    }
-    if (shell.isStatsModalOpen() || shell.isHowToModalOpen() || shell.isWinModalOpen() || shell.isSidePanelOpen()) return;
-
-    const key = e.key.toLowerCase();
-    const noMod = !e.ctrlKey && !e.metaKey;
-
-    if (key === 'p' && noMod) { e.preventDefault(); return togglePause(); }
-    if (!state.active || state.paused) return;
-
+const toggleCell = (target) => () => {
     const { r, c } = state.focused;
+    setCellState(r, c, state.playerGrid[r][c] === target ? 0 : target);
+};
 
-    if (ARROW_DELTAS[e.key]) {
+createKeyboardRouter({
+    shell,
+    game,
+    grid: {
+        rows: () => state.size,
+        position: () => state.focused,
+        moveTo: (r, c) => {
+            state.focused = { r, c };
+            UI.focusCell(state.size, r, c);
+        }
+    },
+    keys: { s: toggleCell(1), c: toggleCell(2), m: toggleSafeMode, n: toggleSafeMode, h: performHint, z: performUndo },
+    ctrlKeys: { z: performUndo },
+    onKey: (e) => {
+        if (e.key !== 'Backspace' && e.key !== 'Delete') return false;
         e.preventDefault();
-        const [dr, dc] = ARROW_DELTAS[e.key];
-        const nr = Math.max(0, Math.min(state.size - 1, r + dr));
-        const nc = Math.max(0, Math.min(state.size - 1, c + dc));
-        state.focused = { r: nr, c: nc };
-        return UI.focusCell(state.size, nr, nc);
-    }
-
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-        e.preventDefault();
-        return setCellState(r, c, 0);
-    }
-
-    const shortcuts = {
-        s: () => setCellState(r, c, state.playerGrid[r][c] === 1 ? 0 : 1),
-        c: () => setCellState(r, c, state.playerGrid[r][c] === 2 ? 0 : 2),
-        m: () => { state.safeMode = !state.safeMode; UI.renderModeUI(state.safeMode); },
-        h: performHint,
-        z: performUndo
-    };
-
-    if (shortcuts[key] && (key === 'z' || noMod)) {
-        e.preventDefault();
-        shortcuts[key]();
+        setCellState(state.focused.r, state.focused.c, 0);
+        return true;
     }
 });
 
